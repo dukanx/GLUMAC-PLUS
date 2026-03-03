@@ -11,23 +11,26 @@ public class LoyaltyProgram {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String nivo;
+
     private double popust;
 
-    // Veza sa korisnicima (jedan loyalty program ima više korisnika)
+    @Column(name = "prag_bodova")
+    private int pragBodova;
+
     @OneToMany(mappedBy = "loyaltyProgram")
     private List<Korisnik> korisnici;
 
-    // Prazan konstruktor
     public LoyaltyProgram() {}
 
-    // Konstruktor
-    public LoyaltyProgram(String nivo, double popust) {
+
+    public LoyaltyProgram(String nivo, double popust, int pragBodova) {
         this.nivo = nivo;
         this.popust = popust;
+        this.pragBodova = pragBodova;
     }
 
-    // Getteri i setteri
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -39,5 +42,13 @@ public class LoyaltyProgram {
 
     public List<Korisnik> getKorisnici() { return korisnici; }
     public void setKorisnici(List<Korisnik> korisnici) { this.korisnici = korisnici; }
+
+    public int getPragBodova() {
+        return pragBodova;
+    }
+
+    public void setPragBodova(int pragBodova) {
+        this.pragBodova = pragBodova;
+    }
 }
 

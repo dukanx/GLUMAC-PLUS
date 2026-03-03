@@ -12,25 +12,23 @@ public class StavkaPorudzbine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Koliko kom/g/ml… (double po tvojoj želji) */
+
     @Positive
     private double kolicina;
 
-    /** Jedinična cena u trenutku poručivanja (snapshot) */
+
     @Positive
     private double cena;
 
-    /** Ukupan iznos stavke = kolicina * cena (snapshot) */
+
     @Positive
     private double iznosStavke;
 
-    /** Veza ka porudžbini (više stavki pripada jednoj porudžbini) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "porudzbina_id", nullable = false)
     @NotNull
     private Porudzbina porudzbina;
 
-    /** Veza ka proizvodu (više stavki može referencirati isti proizvod) */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "proizvod_id", nullable = false)
     @NotNull
@@ -46,7 +44,7 @@ public class StavkaPorudzbine {
         this.proizvod = proizvod;
     }
 
-    // Getteri / setteri
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -70,5 +68,6 @@ public class StavkaPorudzbine {
 
     public Proizvod getProizvod() { return proizvod; }
     public void setProizvod(Proizvod proizvod) { this.proizvod = proizvod; }
+
 }
 

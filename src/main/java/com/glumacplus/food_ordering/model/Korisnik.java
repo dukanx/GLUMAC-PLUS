@@ -2,6 +2,7 @@ package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
 
+
 @Entity
 @Table(name = "korisnik")
 public class Korisnik {
@@ -10,28 +11,36 @@ public class Korisnik {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String ime;
+
+    @Column(nullable = false,unique = true)
     private String email;
+
+    @Column(nullable = false)
     private String lozinka;
+
+    @Column(name = "broj_bodova")
     private double brojBodova;
 
-    // Veza sa loyalty programom (mnogo korisnika može imati isti program)
     @ManyToOne
     @JoinColumn(name = "loyalty_program_id")
     private LoyaltyProgram loyaltyProgram;
 
-    // Prazan konstruktor
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Uloga uloga;
+
     public Korisnik() {}
 
-    // Konstruktor
-    public Korisnik(String ime, String email, String lozinka, double brojBodova) {
+    public Korisnik(String ime, String email, String lozinka, double brojBodova, Uloga uloga) {
         this.ime = ime;
         this.email = email;
         this.lozinka = lozinka;
         this.brojBodova = brojBodova;
+        this.uloga=uloga;
     }
 
-    // Getteri i setteri
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -49,5 +58,8 @@ public class Korisnik {
 
     public LoyaltyProgram getLoyaltyProgram() { return loyaltyProgram; }
     public void setLoyaltyProgram(LoyaltyProgram loyaltyProgram) { this.loyaltyProgram = loyaltyProgram; }
+
+    public Uloga getUloga() { return uloga; }
+    public void setUloga(Uloga uloga) { this.uloga = uloga; }
 }
 

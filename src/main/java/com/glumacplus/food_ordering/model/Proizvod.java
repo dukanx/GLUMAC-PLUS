@@ -10,19 +10,21 @@ public class Proizvod {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String naziv;
     private String tip;
+
+    @Column(nullable = false)
     private double cena;
+
     private String jedinicaMere;
     private double kalorije;
     private double proteini;
     private double masti;
     private double ugljeniHidrati;
 
-    // Prazan konstruktor - potreban za JPA
     public Proizvod() {}
 
-    // Konstruktor za lakše testiranje / kreiranje objekata
     public Proizvod(String naziv, String tip, double cena, String jedinicaMere,
                     double kalorije, double proteini, double masti, double ugljeniHidrati) {
         this.naziv = naziv;
@@ -35,7 +37,6 @@ public class Proizvod {
         this.ugljeniHidrati = ugljeniHidrati;
     }
 
-    // Getteri i setteri
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

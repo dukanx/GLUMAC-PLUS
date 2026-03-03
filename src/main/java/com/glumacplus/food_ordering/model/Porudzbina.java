@@ -1,59 +1,112 @@
+
 package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "porudzbina")
+
+@Table(name = "porudzbine")
 public class Porudzbina {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date datum;
+    @Column(nullable = false)
+    private LocalDateTime datum;
 
+    @Column(name = "ukupan_iznos")
     private double ukupanIznos;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private StatusPorudzbine status;
 
-    // Veza: jedna porudzbina pripada jednom korisniku
-    @ManyToOne
-    @JoinColumn(name = "korisnik_id")
-    private Korisnik korisnik;
+    @Column(name = "originalna_cena")
+    private double originalnaCena;
 
-    // Veza: jedna porudzbina ima više stavki
-    @OneToMany(mappedBy = "porudzbina", cascade = CascadeType.ALL)
-    private List<StavkaPorudzbine> stavke;
+    @OneToMany(mappedBy = "porudzbina", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StavkaPorudzbine> stavke = new ArrayList<>();
 
-    public Porudzbina() {}
 
-    public Porudzbina(Date datum, double ukupanIznos, StatusPorudzbine status, Korisnik korisnik) {
-        this.datum = datum;
-        this.ukupanIznos = ukupanIznos;
-        this.status = status;
-        this.korisnik = korisnik;
+
+    @Column(name = "korisnik_id")
+    private Long korisnikId;
+
+
+    public Long getKorisnikId() {
+        return korisnikId;
     }
 
-    // Getteri i setteri
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setKorisnikId(Long korisnikId) {
+        this.korisnikId = korisnikId;
+    }
 
-    public Date getDatum() { return datum; }
-    public void setDatum(Date datum) { this.datum = datum; }
+    public List<StavkaPorudzbine> getStavke() {
+        return stavke;
+    }
 
-    public double getUkupanIznos() { return ukupanIznos; }
-    public void setUkupanIznos(double ukupanIznos) { this.ukupanIznos = ukupanIznos; }
+    public void setStavke(List<StavkaPorudzbine> stavke) {
+        this.stavke = stavke;
+    }
 
-    public StatusPorudzbine getStatus() { return status; }
-    public void setStatus(StatusPorudzbine status) { this.status = status; }
 
-    public Korisnik getKorisnik() { return korisnik; }
-    public void setKorisnik(Korisnik korisnik) { this.korisnik = korisnik; }
+    public void dodajStavku(StavkaPorudzbine stavka) {
+        stavke.add(stavka);
+        stavka.setPorudzbina(this);
+    }
 
-    public List<StavkaPorudzbine> getStavke() { return stavke; }
-    public void setStavke(List<StavkaPorudzbine> stavke) { this.stavke = stavke; }
+    public Porudzbina(Double ukupanIznos) {
+        this.ukupanIznos = ukupanIznos;
+        this.datum = LocalDateTime.now();
+        this.status = StatusPorudzbine.U_PRIPREMI;
+    }
+    public Porudzbina() {
+        this.datum = LocalDateTime.now();
+        this.status = StatusPorudzbine.U_PRIPREMI;
+        this.ukupanIznos = 0.0;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDateTime getDatum() {
+        return datum;
+    }
+
+    public void setDatum(LocalDateTime datum) {
+        this.datum = datum;
+    }
+
+    public double getUkupanIznos() {
+        return ukupanIznos;
+    }
+
+    public void setUkupanIznos(double ukupanIznos) {
+        this.ukupanIznos = ukupanIznos;
+    }
+
+    public StatusPorudzbine getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusPorudzbine status) {
+        this.status = status;
+    }
+
+    public double getOriginalnaCena() {
+        return originalnaCena;
+    }
+
+    public void setOriginalnaCena(double originalnaCena) {
+        this.originalnaCena = originalnaCena;
+    }
 }
