@@ -1,0 +1,176 @@
+/* src/pages/LoginPage.css */
+
+/* =======================
+   Layout
+======================= */
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+
+/* =======================
+   Login Card
+======================= */
+
+.login-form {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 420px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+/* =======================
+   Global transitions
+======================= */
+
+.login-form * {
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+
+/* =======================
+   Form Group
+======================= */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+/* =======================
+   Inputs
+======================= */
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  background-color: #fafafa;
+}
+
+.form-group input:focus {
+  border-color: #4CAF50;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  outline: none;
+}
+
+/* Error input state */
+.form-group input.error {
+  border-color: #e74c3c;
+  background-color: #fff5f5;
+}
+
+.form-group input.error:focus {
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+}
+
+/* =======================
+   Error text
+======================= */
+
+.error-text {
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* =======================
+   Button
+======================= */
+
+.login-btn {
+  background: linear-gradient(135deg, #4CAF50, #43a047);
+  color: #ffffff;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+
+  box-shadow: 0 6px 15px rgba(76, 175, 80, 0.35);
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(76, 175, 80, 0.45);
+}
+
+.login-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+}
+
+/* Disabled / loading */
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* =======================
+   Extra text / links
+======================= */
+
+.animated-prijava {
+  text-align: center;
+  margin-top: 10px;
+ font-size: 32px;  
+   color: #555;
+   
+
+}
+
+.animated-prijava a {
+  color: #4CAF50;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.animated-prijava a:hover {
+  color: #388e3c;
+  text-decoration: underline;
+}
+
+/* =======================
+   Animations
+======================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

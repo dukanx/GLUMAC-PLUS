@@ -1,0 +1,92 @@
+.istorija-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.istorija-naslov {
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 30px;
+}
+
+.loading-text {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 1.2em;
+    color: #666;
+}
+
+.porudzbine-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.porudzbina-kartica {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.porudzbina-kartica:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.kartica-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.datum {
+    color: #555;
+    font-weight: 500;
+}
+
+.cena-badge {
+    background-color: #4CAF50;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.separator {
+    height: 1px;
+    background-color: #eee;
+    margin: 10px 0;
+}
+
+.stavke-lista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stavke-lista li {
+    padding: 5px 0;
+    color: #444;
+}
+
+/* Prazna stanja */
+.prazna-istorija {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.dugme-idi-na-meni {
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-top: 15px;
+}

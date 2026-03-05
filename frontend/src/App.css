@@ -1,0 +1,164 @@
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+/* Globalni dugmići */
+.btn-primary {
+  background-color: #ff9800;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Body i padding za stranice sa navbarom */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Lato', sans-serif;
+  min-height: 100vh;
+}
+
+.page-with-navbar-offset {
+  padding-top: 100px;
+}
+
+/* NAVBAR */
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background: transparent;
+  box-shadow: none;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.navbar-container.scrolled {
+  background: rgba(18, 18, 18, 0.85);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* LOGO */
+.navbar-logo img, .logo-img {
+  height: 80px; /* veći logo */
+  object-fit: contain;
+}
+/* CENTRALNI LINKOVI */
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-left: 120px; /* po potrebi pomeri malo desno */
+}
+
+.nav-link {
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  font-weight: 400;
+  padding: 5px 0;
+  font-size: 1.2rem; /* veći font */
+  transition: color 0.3s ease, border-bottom 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #d5e783;
+  border-bottom: 2px solid #d5e783;
+}
+
+.nav-link.active {
+  border-bottom: 2px solid #4CAF50;
+  color: #4CAF50;
+}
+
+/* Loyalty posebni stil */
+.nav-link.loyalty-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* centrira vertikalno */
+  position: relative;      /* za apsolutno pozicioniran emoji-ja */
+  height: 1.5em;           /* fiksna visina koja se NE menja */
+}
+
+.nav-link.loyalty-link .emoji {
+  position: absolute;
+  top: 100%;               /* stavlja se odmah ispod teksta */
+  left: 50%;
+  transform: translateX(-50%); /* centriramo horizontalno */
+  font-size: 1.2em;
+  pointer-events: none;    /* da klik ide na link, ne na emoji */
+}
+
+
+.loyalty-link {
+  color: #ffd700 !important;
+  font-weight: bold;
+}
+
+/* DESNI DEO - korisnik / login */
+.navbar-login {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  
+}
+
+.nav-user-name {
+  color: white;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.nav-btn, .nav-btn-logout {
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 10px 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.nav-btn {
+  background-color: #fcfcfc;
+  color: rgb(14, 14, 14);
+}
+
+.nav-btn:hover {
+  background-color: #a9b4a9;
+  transform: translateY(-2px);
+}
+
+.nav-btn-logout {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.nav-btn-logout:hover {
+  background-color: #b71c1c;
+}
+
+/* Placeholder za centriranje kad nema linkova */
+.nav-link.placeholder {
+  visibility: hidden;
+}
+
+.nav-link.active {
+  border-bottom: 3px solid #4CAF50; /* zelena crtica */
+  padding-bottom: 2px;             /* da crtica ne dira tekst */
+  font-weight: bold;
+}
