@@ -1,0 +1,13 @@
+* {
+  box-sizing: border-box; /* Bitno da padding ne kvari sirinu */
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Lato, sans-serif; /* Ili font koji volis */
+  background-color: #0c0c0c; /* Malo sivkasta pozadina za ceo sajt */
+  min-height: 100vh;
+}
