@@ -35,6 +35,11 @@ public class ProizvodController {
         return ResponseEntity.ok(service.getAll(term));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ProizvodViewDto> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getById(id));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
     public ResponseEntity<ProizvodViewDto> update(@PathVariable Long id, @RequestBody @Valid ProizvodDto dto) {

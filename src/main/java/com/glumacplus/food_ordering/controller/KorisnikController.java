@@ -2,6 +2,7 @@ package com.glumacplus.food_ordering.controller;
 
 
 import com.glumacplus.food_ordering.dto.KorisnikDto;
+import com.glumacplus.food_ordering.dto.KorisnikMeUpdateDto;
 import com.glumacplus.food_ordering.dto.KorisnikViewDto;
 import com.glumacplus.food_ordering.service.KorisnikService;
 import jakarta.validation.Valid;
@@ -44,5 +45,17 @@ public class KorisnikController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<KorisnikViewDto> getByEmail(@RequestParam String email) {
         return ResponseEntity.ok(service.findByEmail(email));
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<KorisnikViewDto> getCurrentUser() {
+        return ResponseEntity.ok(service.getCurrentUser());
+    }
+
+    @PatchMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<KorisnikViewDto> updateCurrentUser(@RequestBody @Valid KorisnikMeUpdateDto dto) {
+        return ResponseEntity.ok(service.updateCurrentUser(dto));
     }
 }

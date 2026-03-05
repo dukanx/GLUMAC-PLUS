@@ -36,6 +36,12 @@ public class ProizvodService {
                 .collect(Collectors.toList());
     }
 
+    public ProizvodViewDto getById(Long id) {
+        Proizvod proizvod = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proizvod nije pronađen"));
+        return ProizvodMapper.toViewDto(proizvod);
+    }
+
     public ProizvodViewDto create(ProizvodDto dto) {
         if (repository.existsByNazivAndTip(dto.getNaziv(), dto.getTip())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Proizvod već postoji!");
