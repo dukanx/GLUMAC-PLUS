@@ -5,36 +5,37 @@ import './LoginPage.css';
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [greska, setGreska] = useState(""); 
-  
+  const [greska, setGreska] = useState("");
 
-  const navigate = useNavigate(); 
 
-  
+  const navigate = useNavigate();
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setGreska(""); 
+    setGreska("");
 
     try {
-     
+
       const response = await fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST', 
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        
-        body: JSON.stringify({ 
-            email: email, 
-            lozinka: password 
-        }), 
+
+        body: JSON.stringify({
+          email: email,
+          lozinka: password
+        }),
       });
 
-     
+
       if (response.ok) {
         const data = await response.json();
 
-        sessionStorage.setItem("korisnik", JSON.stringify(data.korisnik)); 
+        sessionStorage.setItem("korisnik", JSON.stringify(data.korisnik));
         sessionStorage.setItem("token", data.token);
+        window.dispatchEvent(new Event('korisnikUpdate'));
         navigate("/meni");
       } else {
         setGreska("Pogrešan email ili lozinka!");
@@ -49,15 +50,15 @@ export default function LoginPage() {
   return (
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
-        <h2 className="animated-prijava"  style={{ textAlign: 'center', marginBottom: '20px' , color: '#333', }}>Prijava</h2>
+        <h2 className="animated-prijava" style={{ textAlign: 'center', marginBottom: '20px', color: '#333', }}>Prijava</h2>
 
         {/* Prikaz greske ako postoji */}
         {greska && <p style={{ color: 'red', textAlign: 'center' }}>{greska}</p>}
 
         <div className="form-group">
           <label>Email adresa:</label>
-          <input 
-            type="email" 
+          <input
+            type="email"
             placeholder="example@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -67,8 +68,8 @@ export default function LoginPage() {
 
         <div className="form-group">
           <label>Lozinka:</label>
-          <input 
-            type="password" 
+          <input
+            type="password"
             placeholder="Vasa lozinka"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

@@ -195,7 +195,7 @@ export default function HomePage() {
           <span>·</span>
           <Link to="/loyalty">Loyalty</Link>
           <span>·</span>
-          <Link to="/porudzbine">Porudžbine</Link>
+          <Link to="/istorija">Porudžbine</Link>
         </div>
       </footer>
 
