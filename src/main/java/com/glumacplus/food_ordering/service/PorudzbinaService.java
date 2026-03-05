@@ -1,6 +1,5 @@
 package com.glumacplus.food_ordering.service;
 
-import com.glumacplus.food_ordering.controller.KorisnikController;
 import com.glumacplus.food_ordering.dto.*;
 import com.glumacplus.food_ordering.model.*;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
@@ -48,11 +47,19 @@ public class PorudzbinaService {
 
     }
 
+    public Page<PorudzbinaViewDto> getAllPaged(StatusPorudzbine status, int pageNo, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "id"));
+
+        Page<Porudzbina> page = status == null
+                ? porudzbinaRepo.findAll(pageable)
+                : porudzbinaRepo.findByStatus(status, pageable);
+
+        return page.map(PorudzbinaMapper::toViewDto);
+    }
+
     public PorudzbinaViewDto create(PorudzbinaDto dto) {
 
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Korisnik trenutniKorisnik = korisnikRepo.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Niste ulogovani"));
+        Korisnik trenutniKorisnik = getCurrentUserEntity();
 
         Porudzbina por = new Porudzbina();
         por.setKorisnikId(trenutniKorisnik.getId());
@@ -102,15 +109,11 @@ public class PorudzbinaService {
 
         Porudzbina p = porudzbinaRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Porudzbina sa ID-em" + id + " ne postoji"));
-        Porudzbina porudzbina = porudzbinaRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Porudzbina ne postoji"));
 
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Korisnik trenutniKorisnik = korisnikRepo.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Niste ulogovani"));
+        Korisnik trenutniKorisnik = getCurrentUserEntity();
 
 
-        if (trenutniKorisnik.getUloga() == Uloga.KORISNIK && !porudzbina.getKorisnikId().equals(trenutniKorisnik.getId())) {
+        if (trenutniKorisnik.getUloga() == Uloga.KORISNIK && !p.getKorisnikId().equals(trenutniKorisnik.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Nemate pravo pristupa ovoj porudžbini!");
         }
 
@@ -160,10 +163,7 @@ public class PorudzbinaService {
 
     public List<PorudzbinaViewDto> getMyOrders(int pageNo, int pageSize) {
 
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        Korisnik korisnik = korisnikRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Korisnik nije nadjen"));
+        Korisnik korisnik = getCurrentUserEntity();
 
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "id"));
 
@@ -172,5 +172,29 @@ public class PorudzbinaService {
         return page.getContent().stream()
                 .map(PorudzbinaMapper::toViewDto)
                 .collect(Collectors.toList());
+    }
+
+    public void cancelMyOrder(Long id) {
+        Korisnik korisnik = getCurrentUserEntity();
+
+        Porudzbina porudzbina = porudzbinaRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Porudžbina ne postoji"));
+
+        if (!porudzbina.getKorisnikId().equals(korisnik.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Možete otkazati samo svoju porudžbinu");
+        }
+
+        if (porudzbina.getStatus() != StatusPorudzbine.U_PRIPREMI) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Porudžbina se može otkazati samo dok je u pripremi");
+        }
+
+        porudzbina.setStatus(StatusPorudzbine.OTKAZANA);
+        porudzbinaRepo.save(porudzbina);
+    }
+
+    private Korisnik getCurrentUserEntity() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return korisnikRepo.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Niste ulogovani"));
     }
 }

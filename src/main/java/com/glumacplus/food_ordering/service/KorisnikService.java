@@ -1,6 +1,7 @@
 package com.glumacplus.food_ordering.service;
 
 import com.glumacplus.food_ordering.dto.KorisnikDto;
+import com.glumacplus.food_ordering.dto.KorisnikMeUpdateDto;
 import com.glumacplus.food_ordering.dto.KorisnikMapper;
 import com.glumacplus.food_ordering.dto.KorisnikViewDto;
 import com.glumacplus.food_ordering.model.Korisnik;
@@ -9,6 +10,7 @@ import com.glumacplus.food_ordering.model.Uloga;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
 import com.glumacplus.food_ordering.repository.LoyaltyProgramRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -75,5 +77,27 @@ public class KorisnikService {
 
         k = korisnikRepo.save(k);
         return KorisnikMapper.toViewDto(k);
+    }
+
+    public KorisnikViewDto getCurrentUser() {
+        return KorisnikMapper.toViewDto(getCurrentUserEntity());
+    }
+
+    public KorisnikViewDto updateCurrentUser(KorisnikMeUpdateDto dto) {
+        Korisnik korisnik = getCurrentUserEntity();
+        korisnik.setIme(dto.getIme());
+
+        if (dto.getNovaLozinka() != null && !dto.getNovaLozinka().isBlank()) {
+            korisnik.setLozinka(passwordEncoder.encode(dto.getNovaLozinka()));
+        }
+
+        korisnik = korisnikRepo.save(korisnik);
+        return KorisnikMapper.toViewDto(korisnik);
+    }
+
+    private Korisnik getCurrentUserEntity() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return korisnikRepo.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Niste ulogovani"));
     }
 }

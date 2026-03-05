@@ -6,10 +6,13 @@ import com.glumacplus.food_ordering.dto.KorisnikMapper;
 import com.glumacplus.food_ordering.dto.KorisnikViewDto;
 import com.glumacplus.food_ordering.model.Korisnik;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthenticationService {
@@ -53,5 +56,14 @@ public class AuthenticationService {
                 .token(jwtToken)
                 .korisnik(korisnikViewDto)
                 .build();
+    }
+
+    public KorisnikViewDto getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Korisnik korisnik = korisnikRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Niste ulogovani"));
+
+        return KorisnikMapper.toViewDto(korisnik);
     }
 }
