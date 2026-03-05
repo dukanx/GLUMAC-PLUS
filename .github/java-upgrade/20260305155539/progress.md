@@ -107,7 +107,25 @@
     - Result: ✅ Baseline compilation and tests both succeeded
     - Notes: tests passed 100% (no failures observed)
   - **Deferred Work**: None
-  - **Commit**:  - Step 2: Setup Baseline - Compile: SUCCESS, Tests: 100% passed
+  - **Commit**: 603d21d - Step 2: Setup Baseline - Compile: SUCCESS, Tests: 100% passed
+
+- **Step 3: Bump Java target version to 21**
+  - **Status**: ✅ Completed
+  - **Changes Made**:
+    - Updated `<java.version>` in pom.xml from 17 to 21
+  - **Review Code Changes**:
+    - Sufficiency: ✅ Property updated, no additional config required
+    - Necessity: ✅ Change directly addresses upgrade goal
+      - Functional Behavior: ✅ Preserved
+      - Security Controls: ✅ Preserved
+  - **Verification**:
+    - Command: `./mvnw clean compile test-compile -q`
+    - JDK: /home/dukanx/.jdk/jdk-21.0.8/bin
+    - Build tool: ./mvnw
+    - Result: ✅ Compilation SUCCESS
+    - Notes: tests not executed in this step
+  - **Deferred Work**: None
+  - **Commit**:  - Step 3: Bump Java target version to 21 - Compile: SUCCESS
 
 
 <!--
