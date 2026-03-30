@@ -1,77 +1,97 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import logo from '../assets/logo.png';
-import '../App.css';
+import styles from './Navbar.module.css';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 export default function Navbar() {
+  const { korisnik, logout } = useAuth();
+  const { ukupnoStavki } = useCart();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
-  const [korisnik, setKorisnik] = useState(() => {
-    const json = sessionStorage.getItem('korisnik');
-    return json ? JSON.parse(json) : null;
-  });
+  const uloga = (korisnik as any)?.uloga;
 
+  // Scroll listener
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Prati login/logout promene u istoj tab-i
-  useEffect(() => {
-    const handleUpdate = () => {
-      const json = sessionStorage.getItem('korisnik');
-      setKorisnik(json ? JSON.parse(json) : null);
-    };
-    window.addEventListener('korisnikUpdate', handleUpdate);
-    return () => window.removeEventListener('korisnikUpdate', handleUpdate);
-  }, []);
+
 
   const handleLogout = () => {
-    sessionStorage.removeItem('korisnik');
-    sessionStorage.removeItem('mojaKorpa');
-    setKorisnik(null);
+    logout();
     window.location.href = '/';
   };
 
+  const navLinkKlasa = ({ isActive }: { isActive: boolean }) =>
+    `${styles.navLink} ${isActive ? styles.navLinkAktivan : ''}`;
+
   return (
-    <nav className={`navbar-container ${scrolled ? 'scrolled' : ''}`}>
+    <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ''}`}>
 
       {/* LOGO */}
-      <div className="navbar-logo">
-        <Link to="/">
-          <img src={logo} alt="GLUMAC PLUS" className="logo-img" />
-        </Link>
-      </div>
+      <Link to="/" className={styles.logo}>
+        <img src={logo} alt="Glumac Plus" className={styles.logoImg} />
+      </Link>
 
-      {/* NAVIGACIJA */}
-      <div className="navbar-center">
-        <NavLink to="/meni" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+      {/* CENTAR — navigacija */}
+      <div className={styles.center}>
+        <NavLink to="/meni" className={navLinkKlasa}>
           Meni
         </NavLink>
         {korisnik && (
           <>
-            <NavLink to="/loyalty" className={({ isActive }) => `nav-link loyalty-link ${isActive ? 'active' : ''}`}>
-              <span className="link-text">Loyalty</span>
-              <span className="emoji">𖢻</span>
+            <NavLink to="/loyalty" className={navLinkKlasa}>
+              Loyalty
             </NavLink>
-            <NavLink to="/istorija" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <NavLink to="/istorija" className={navLinkKlasa}>
               Porudžbine
             </NavLink>
+            {(uloga === 'ADMIN' || uloga === 'ZAPOSLENI') && (
+              <NavLink to="/admin" className={navLinkKlasa}>
+                Panel
+              </NavLink>
+            )}
           </>
         )}
       </div>
 
-      {/* LOGIN / LOGOUT */}
-      <div className="navbar-login">
+      {/* DESNO — auth */}
+      <div className={styles.desno}>
         {korisnik ? (
           <>
-            <span className="nav-user-name">{korisnik.ime}</span>
-            <button onClick={handleLogout} className="nav-btn-logout">Odjavi se</button>
+            <div className={styles.korisnikInfo}>
+              <span className={styles.korisnikIme}>{korisnik.ime}</span>
+              <span className={styles.korisnikBodovi}>
+                {korisnik.brojBodova} bodova
+              </span>
+            </div>
+            <button
+              className={styles.korpaIkona}
+              onClick={() => navigate('/meni')}
+              aria-label="Korpa"
+            >
+              🛒
+              {ukupnoStavki > 0 && (
+                <span className={styles.korpaBadge}>{ukupnoStavki}</span>
+              )}
+            </button>
+            <button onClick={handleLogout} className={styles.dugmeOdjava}>
+              Odjavi se
+            </button>
           </>
         ) : (
-          <Link to="/login">
-            <button className="nav-btn">Prijava</button>
-          </Link>
+          <>
+            <Link to="/login" className={styles.dugmePrijava}>
+              Prijava
+            </Link>
+            <Link to="/register" className={styles.dugmeRegistracija}>
+              Registracija
+            </Link>
+          </>
         )}
       </div>
 
