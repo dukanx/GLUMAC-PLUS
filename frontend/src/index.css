@@ -1,13 +1,42 @@
-* {
-  box-sizing: border-box; /* Bitno da padding ne kvari sirinu */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+
+:root {
+  --krem: #f2e8d9;
+  --krem-tamni: #ebceae;
+  --braon-svetli: #bb9162;
+  --braon: #865337;
+  --braon-tamni: #52301f;
+  --tekst: #1f1e17;
+  --tekst-sivi: #726e6c;
+  --zelena: #354119;
+  --stolica: #636a72;
+  --akcent: #f58089;
+
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Lato', sans-serif;
+
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 32px;
+  --space-lg: 64px;
+  --space-xl: 120px;
+
+  --radius-sm: 4px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  font-family: Lato, sans-serif; /* Ili font koji volis */
-  background-color: #0c0c0c; /* Malo sivkasta pozadina za ceo sajt */
+  background-color: var(--krem);
+  color: var(--tekst);
+  font-family: var(--font-body);
   min-height: 100vh;
 }
