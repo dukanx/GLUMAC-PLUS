@@ -1,204 +1,252 @@
 import styles from './HomePage.module.css';
 import { Link } from 'react-router-dom';
-import backgroundImage from '../assets/bg1.png';
 
 export default function HomePage() {
   return (
     <div className={styles.page}>
 
-      {/* ── HERO ── */}
-      <section
-        className={styles.hero}
-        style={{ '--hero-bg': `url(${backgroundImage})` } as React.CSSProperties}
-      >
-        <div className={styles.heroNoise} />
-        <div className={styles.spotlight} />
+      {/* HERO */}
+      <section className={styles.hero}>
+        <video
+          className={styles.heroVideo}
+          autoPlay
+          muted
+          loop
+          playsInline
+        >
+          <source
+            src="https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4"
+            type="video/mp4"
+          />
+        </video>
 
-        <div className={styles.heroInner}>
-          <div className={styles.heroBadge}>✦ Dorćol, Beograd</div>
-          <h1 className={styles.heroTitle}>
-            <span className={styles.heroTitleMain}>Glumac</span>
-            <span className={styles.heroTitleAccent}>Plus</span>
-          </h1>
-          <p className={styles.heroSub}>
-            Palačinke koje pamtiš. Napravljene za one koji znaju razliku.
+        <div className={styles.heroOverlay} />
+
+        <div className={styles.heroSadrzaj}>
+          <p className={styles.heroTagline}>Dorćol · Beograd</p>
+          <h1 className={styles.heroNaslov}>Glumac Plus</h1>
+          <p className={styles.heroOpis}>
+            Palačinke koje ostaju u sećanju.
           </p>
-
-          <div className={styles.heroCtas}>
-            <Link to="/meni" className={styles.ctaPrimary}>
+          <div className={styles.heroDugmadi}>
+            <Link to="/meni" className={styles.dugmePrimarno}>
               Poruči odmah
-              <span className={styles.ctaArrow}>→</span>
             </Link>
-            <Link to="/loyalty" className={styles.ctaSecondary}>
+            <Link to="/loyalty" className={styles.dugmeSekundarno}>
               Loyalty program
             </Link>
           </div>
-
-          <div className={styles.heroStats}>
-            <div className={styles.stat}>
-              <span className={styles.statNum}>4</span>
-              <span className={styles.statLabel}>loyalty nivoa</span>
-            </div>
-            <div className={styles.statDivider} />
-            <div className={styles.stat}>
-              <span className={styles.statNum}>20%</span>
-              <span className={styles.statLabel}>max popust</span>
-            </div>
-            <div className={styles.statDivider} />
-            <div className={styles.stat}>
-              <span className={styles.statNum}>∞</span>
-              <span className={styles.statLabel}>razloga da dođeš</span>
-            </div>
-          </div>
         </div>
 
-        <div className={styles.heroImageWrap}>
-          <div className={styles.heroImageGlow} />
-          <img
-            src="https://images.unsplash.com/photo-1546861256-33e6f3e53c0c?q=80&w=1070&auto=format&fit=crop"
-            alt="Glumac Plus palačinke"
-            className={styles.heroImage}
-          />
-        </div>
-
-        <div className={styles.heroScroll}>
-          <span>skroluj</span>
-          <div className={styles.heroScrollLine} />
+        <div className={styles.heroSkrol}>
+          <span>↓</span>
         </div>
       </section>
 
-      {/* ── MENI PREVIEW ── */}
-      <section className={styles.menuSection}>
-        <div className={styles.sectionLabel}>— Naš meni —</div>
-        <h2 className={styles.sectionTitle}>Zvezde programa</h2>
 
-        <div className={styles.menuGrid}>
+      {/* MENI PREVIEW */}
+      <section className={styles.meniSekcija}>
+        <div className={styles.sekcijaHeader}>
+          <span className={styles.sekcijaOznaka}>— Iz našeg menija —</span>
+          <h2 className={styles.sekcijaNaslov}>Popularno danas</h2>
+        </div>
+
+        <div className={styles.meniGrid}>
           {[
             {
-              emoji: '🍫',
-              name: 'Nutella & Banana',
-              desc: 'Topla nutela, sveža banana, šlag po izboru. Naša najtraženija.',
-              tag: 'Bestseler',
-              tagColor: '#f4a261',
+              slika: 'https://images.unsplash.com/photo-1519676867240-f03562e64548?w=600&auto=format&fit=crop',
+              naziv: 'Nutella & Banana',
+              opis: 'Topla nutela, sveža banana, šlag po izboru.',
+              tag: 'Bestseler'
             },
             {
-              emoji: '🍯',
-              name: 'Plazma & Med',
-              desc: 'Domaći med, mlevena plazma, kremasto i jednostavno.',
-              tag: 'Klasik',
-              tagColor: '#90be6d',
+              slika: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&auto=format&fit=crop',
+              naziv: 'Plazma & Med',
+              opis: 'Domaći med, mlevena plazma, kremasto i jednostavno.',
+              tag: 'Klasik'
             },
             {
-              emoji: '🧀',
-              name: 'Šunka & Kačkavalj',
-              desc: 'Slana varijanta za pravi obrok. Grill finish.',
-              tag: 'Slano',
-              tagColor: '#4cc9f0',
+              slika: 'https://images.unsplash.com/photo-1528736235302-52922df5c122?w=600&auto=format&fit=crop',
+              naziv: 'Šunka & Kačkavalj',
+              opis: 'Slana varijanta za pravi obrok. Grill finish.',
+              tag: 'Slano'
             },
             {
-              emoji: '🍓',
-              name: 'Sezonska palačinka',
-              desc: 'Šta nam donese sezona — to stavljamo unutra. Uvek sveže.',
-              tag: 'Sezonski',
-              tagColor: '#e63946',
+              slika: 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?w=600&auto=format&fit=crop',
+              naziv: 'Sezonska',
+              opis: 'Šta nam donese sezona — uvek sveže, uvek drugačije.',
+              tag: 'Sezonski'
             },
-          ].map((item) => (
-            <div key={item.name} className={styles.menuCard}>
-              <div className={styles.menuCardTag} style={{ color: item.tagColor }}>
-                {item.tag}
+          ].map(item => (
+            <div key={item.naziv} className={styles.meniKartica}>
+              <div className={styles.meniKarticaSlika}>
+                <img src={item.slika} alt={item.naziv} />
+                <span className={styles.meniKarticaTag}>{item.tag}</span>
               </div>
-              <div className={styles.menuCardEmoji}>{item.emoji}</div>
-              <h3 className={styles.menuCardName}>{item.name}</h3>
-              <p className={styles.menuCardDesc}>{item.desc}</p>
-              <Link to="/meni" className={styles.menuCardLink}>
-                Dodaj u korpu <span>+</span>
-              </Link>
+              <div className={styles.meniKarticaTekst}>
+                <h3 className={styles.meniKarticaNaziv}>{item.naziv}</h3>
+                <p className={styles.meniKarticaOpis}>{item.opis}</p>
+                <Link to="/meni" className={styles.meniKarticaLink}>
+                  Pogledaj meni →
+                </Link>
+              </div>
             </div>
           ))}
         </div>
-
-        <div className={styles.menuCta}>
-          <Link to="/meni" className={styles.ctaPrimary}>
-            Ceo meni →
-          </Link>
-        </div>
       </section>
 
-      {/* ── LOYALTY ── */}
-      <section className={styles.loyaltySection}>
-        <div className={styles.loyaltyBg} />
-        <div className={styles.loyaltyContent}>
-          <div className={styles.sectionLabel}>— Loyalty program —</div>
-          <h2 className={styles.sectionTitle}>Od Nove zvezde do Oskara</h2>
-          <p className={styles.loyaltySub}>
+      {/* LOYALTY */}
+      <section className={styles.loyaltySekcija}>
+        <div className={styles.loyaltyLevo}>
+          <span className={styles.sekcijaOznaka}>— Loyalty program —</span>
+          <h2 className={styles.sekcijaNaslov}>Nagrađujemo верност</h2>
+          <p className={styles.loyaltyOpis}>
             Svaka porudžbina donosi bodove. Više bodova — veći popust.
-            Naš top nivo nosi naziv koji zaslužuje.
+            Naš najviši nivo nosi naziv koji zaslužuje.
           </p>
-
-          <div className={styles.loyaltyLevels}>
-            {[
-              { name: 'Nova zvezda', pts: '0 pts', discount: '0%', active: false },
-              { name: 'Epizodista', pts: '100 pts', discount: '5%', active: false },
-              { name: 'Glavna uloga', pts: '500 pts', discount: '10%', active: false },
-              { name: '🏆 Oscar za palačinke', pts: '1000 pts', discount: '20%', active: true },
-            ].map((lvl, i) => (
-              <div key={i} className={`${styles.loyaltyLevel} ${lvl.active ? styles.loyaltyLevelActive : ''}`}>
-                <div className={styles.loyaltyLevelName}>{lvl.name}</div>
-                <div className={styles.loyaltyLevelPts}>{lvl.pts}</div>
-                <div className={styles.loyaltyLevelDiscount}>{lvl.discount}</div>
-              </div>
-            ))}
-          </div>
-
-          <Link to="/loyalty" className={styles.ctaPrimary} style={{ marginTop: '40px', display: 'inline-flex' }}>
+          <Link to="/loyalty" className={styles.dugmePrimarno}>
             Pogledaj svoj status
           </Link>
         </div>
+
+        <div className={styles.loyaltyDesno}>
+          {[
+            { naziv: 'Nova zvezda', prag: '0 bodova', popust: '0%', aktivan: false },
+            { naziv: 'Epizodista', prag: '100 bodova', popust: '5%', aktivan: false },
+            { naziv: 'Glavna uloga', prag: '500 bodova', popust: '10%', aktivan: false },
+            { naziv: '🏆 Oscar za palačinke', prag: '1000 bodova', popust: '20%', aktivan: true },
+          ].map((nivo, i) => (
+            <div
+              key={i}
+              className={`${styles.loyaltyNivo} ${nivo.aktivan ? styles.loyaltyNivoAktivan : ''}`}
+            >
+              <div className={styles.loyaltyNivoLevo}>
+                <span className={styles.loyaltyNivoNaziv}>{nivo.naziv}</span>
+                <span className={styles.loyaltyNivoPrag}>{nivo.prag}</span>
+              </div>
+              <span className={styles.loyaltyNivoPopust}>{nivo.popust}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
-      {/* ── GALLERY ── */}
-      <section className={styles.gallerySection}>
-        <div className={styles.sectionLabel}>— Galerija —</div>
-        <h2 className={styles.sectionTitle}>Izgled je bitan</h2>
+      {/* GALERIJA */}
+      <section className={styles.galerijaSekcija}>
+        <div className={styles.sekcijaHeader}>
+          <span className={styles.sekcijaOznaka}>— Naš lokal —</span>
+          <h2 className={styles.sekcijaNaslov}>Dođi, vidi, ostani</h2>
+        </div>
 
-        <div className={styles.galleryGrid}>
-          <div className={`${styles.galleryItem} ${styles.galleryItemTall}`}>
-            <img
-              src="https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&auto=format&fit=crop"
-              alt="Palačinke"
-            />
-            <div className={styles.galleryOverlay}>Slatke</div>
-          </div>
-          <div className={styles.galleryItem}>
-            <img
-              src="https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=800&auto=format&fit=crop"
-              alt="Hrana"
-            />
-            <div className={styles.galleryOverlay}>Sveže</div>
-          </div>
-          <div className={styles.galleryItem}>
+        <div className={styles.galerijaGrid}>
+          <div className={`${styles.galerijaStavka} ${styles.galerijaStavkaVelika}`}>
             <img
               src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop"
-              alt="Restoran"
+              alt="Enterijer lokala"
             />
-            <div className={styles.galleryOverlay}>Ambijent</div>
+            <div className={styles.galerijaOverlay}>Ambijent</div>
+          </div>
+
+          <div className={styles.galerijaStavka}>
+            <img
+              src="https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&auto=format&fit=crop"
+              alt="Palačinke"
+            />
+            <div className={styles.galerijaOverlay}>Slatke</div>
+          </div>
+
+          <div className={styles.galerijaStavka}>
+            <img
+              src="https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=600&auto=format&fit=crop"
+              alt="Hrana"
+            />
+            <div className={styles.galerijaOverlay}>Sveže</div>
+          </div>
+
+          <div className={styles.galerijaStavka}>
+            <img
+              src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&auto=format&fit=crop"
+              alt="Detalji"
+            />
+            <div className={styles.galerijaOverlay}>Detalji</div>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className={styles.footer}>
-        <div className={styles.footerBrand}>Glumac Plus</div>
-        <div className={styles.footerSub}>Palačinke · Dorćol · Beograd · 2026</div>
-        <div className={styles.footerLinks}>
-          <Link to="/meni">Meni</Link>
-          <span>·</span>
-          <Link to="/loyalty">Loyalty</Link>
-          <span>·</span>
-          <Link to="/istorija">Porudžbine</Link>
+      {/* DOSTAVA */}
+      <section className={styles.dostavaSekcija}>
+        <div className={styles.sekcijaHeader}>
+          <span className={styles.sekcijaOznaka}>— Naručite online —</span>
+          <h2 className={styles.sekcijaNaslov}>Dostava na vašu adresu</h2>
         </div>
-      </footer>
 
-    </div>
+        <div className={styles.dostavaGrid}>
+
+          <a
+            href="https://glovoapp.com/en/rs/belgrade/stores/glumac-plus-beg"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${styles.dostavaKartica} ${styles.dostavaGlovo}`}
+          >
+            <div className={styles.dostavaLogo}>
+              <span className={styles.dostavaLogoSlovo}>G</span>
+            </div>
+            <div className={styles.dostavaTekst}>
+              <span className={styles.dostavaIme}>Glovo</span>
+              <span className={styles.dostavaOpis}>Poruči putem Glovo aplikacije</span>
+            </div>
+            <span className={styles.dostavaStrelica}>→</span>
+          </a>
+
+          <a
+            href="https://wolt.com/en/srb/belgrade/restaurant/palainkarnica-glumac-plus"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${styles.dostavaKartica} ${styles.dostavaWolt}`}
+          >
+            <div className={styles.dostavaLogo}>
+              <span className={styles.dostavaLogoSlovo}>W</span>
+            </div>
+            <div className={styles.dostavaTekst}>
+              <span className={styles.dostavaIme}>Wolt</span>
+              <span className={styles.dostavaOpis}>Poruči putem Wolt aplikacije</span>
+            </div>
+            <span className={styles.dostavaStrelica}>→</span>
+          </a>
+
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      < footer className={styles.footer} >
+        <div className={styles.footerGore}>
+          <div className={styles.footerBrend}>
+            <h3 className={styles.footerLogo}>Glumac Plus</h3>
+            <p className={styles.footerSlogan}>
+              Palačinke koje pamtiš.
+            </p>
+          </div>
+
+          <div className={styles.footerNavigacija}>
+            <span className={styles.footerNaslov}>Navigacija</span>
+            <Link to="/meni">Meni</Link>
+            <Link to="/loyalty">Loyalty program</Link>
+            <Link to="/porudzbine">Moje porudžbine</Link>
+            <Link to="/login">Prijava</Link>
+          </div>
+
+          <div className={styles.footerKontakt}>
+            <span className={styles.footerNaslov}>Pronađi nas</span>
+            <p>📍 Dorćol, Beograd</p>
+            <p>🕐 Pon–Ned: 09:00–22:00</p>
+            <p>📞 +381 11 123 4567</p>
+          </div>
+        </div>
+
+        <div className={styles.footerDole}>
+          <span>© 2026 Glumac Plus · Sva prava zadržana</span>
+        </div>
+      </footer >
+
+    </div >
   );
 }
