@@ -1,0 +1,85 @@
+/* ── SHIMMER ANIMACIJA ── */
+@keyframes shimmer {
+    0% {
+        background-position: -400px 0;
+    }
+
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+.shimmerStyle {
+    background: linear-gradient(90deg,
+            rgba(134, 83, 55, 0.06) 25%,
+            rgba(134, 83, 55, 0.12) 50%,
+            rgba(134, 83, 55, 0.06) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.4s infinite linear;
+    border-radius: 6px;
+}
+
+/* ── GRID ── */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+/* ── KARTICA ── */
+.kartica {
+    background: #fff;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid rgba(134, 83, 55, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.slika {
+    height: 165px;
+    background: linear-gradient(90deg, rgba(134, 83, 55, 0.06) 25%, rgba(134, 83, 55, 0.12) 50%, rgba(134, 83, 55, 0.06) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+
+.telo {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.linija {
+    height: 13px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, rgba(134, 83, 55, 0.06) 25%, rgba(134, 83, 55, 0.12) 50%, rgba(134, 83, 55, 0.06) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.cena {
+    width: 80px;
+    height: 20px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, rgba(134, 83, 55, 0.06) 25%, rgba(134, 83, 55, 0.12) 50%, rgba(134, 83, 55, 0.06) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+
+.dugme {
+    width: 80px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, rgba(134, 83, 55, 0.06) 25%, rgba(134, 83, 55, 0.12) 50%, rgba(134, 83, 55, 0.06) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
