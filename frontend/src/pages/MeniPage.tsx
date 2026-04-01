@@ -1,6 +1,11 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom';
-import './MeniPage.css';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { motion } from 'motion/react';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import styles from './MeniPage.module.css';
+import ProizvodKartica from '../components/ProizvodKartica';
+import MeniSkeleton from '../components/MeniSkeleton';
+import Toast from '../components/Toast';
 
 interface Proizvod {
   id: number;
@@ -10,268 +15,178 @@ interface Proizvod {
   tip: string;
 }
 
-interface StavkaKorpe {
-  proizvod: Proizvod;
-  kolicina: number;
+const SLIKE_PO_TIPU: Record<string, string> = {
+  'slatka': 'https://images.unsplash.com/photo-1519676867240-f03562e64548?w=600&auto=format&fit=crop&q=80',
+  'slana': 'https://images.unsplash.com/photo-1528736235302-52922df5c122?w=600&auto=format&fit=crop&q=80',
+  'default': 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&auto=format&fit=crop&q=80',
+};
+
+function getSlikuZaTip(tip: string) {
+  return SLIKE_PO_TIPU[tip.toLowerCase()] ?? SLIKE_PO_TIPU['default'];
 }
 
-const STORAGE_KEY = 'mojaKorpa';
+// Popust po loyalty nivou
+const LOYALTY_POPUST: Record<string, number> = {
+  'Nova zvezda': 0,
+  'Epizodista': 5,
+  'Glavna uloga': 10,
+  'Oscar za palačinke': 20,
+};
 
-function MeniPage() {
-  const navigate = useNavigate();
+function getPopust(loyaltyNivo?: string): number {
+  if (!loyaltyNivo) return 0;
+  return LOYALTY_POPUST[loyaltyNivo] ?? 0;
+}
+
+export default function MeniPage() {
+  const { korpa, dodaj, povecaj, smanji, otvoriDrawer, ukupnoStavki } = useCart();
+  const { korisnik } = useAuth();
+
   const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
-  const [error, setError] = useState<string>("");
-  const [porucivanjeUToku, setPorucivanjeUToku] = useState(false);
-  const [porudzbinaUspesna, setPorudzbinaUspesna] = useState(false);
-
-  const [korpa, setKorpa] = useState<StavkaKorpe[]>(() => {
-    try {
-      const savedCart = sessionStorage.getItem(STORAGE_KEY);
-      return savedCart ? JSON.parse(savedCart) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(korpa));
-    } catch (error) {
-      console.error("Error writing to session storage:", error);
-    }
-  }, [korpa]);
+  const [greska, setGreska] = useState('');
+  const [ucitava, setUcitava] = useState(true);
+  const [pretraga, setPretraga] = useState('');
+  const [aktivniTab, setAktivniTab] = useState('Sve');
+  const [toastPoruka, setToastPoruka] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('http://localhost:8080/api/proizvodi')
-      .then(res => {
-        if (!res.ok) throw new Error('Problem sa mrezom!');
-        return res.json();
-      })
-      .then(data => setProizvodi(data))
-      .catch(() => setError("Ne mogu da učitam meni."));
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(data => { setProizvodi(data); setUcitava(false); })
+      .catch(() => { setGreska('Ne mogu da učitam meni.'); setUcitava(false); });
   }, []);
 
-  // --- Akcije korpe ---
+  const kategorije = useMemo(() => {
+    const tipovi = [...new Set(proizvodi.map(p => p.tip))];
+    return ['Sve', ...tipovi];
+  }, [proizvodi]);
 
-  const dodajUKorpu = (noviProizvod: Proizvod) => {
-    setKorpa(staraKorpa => {
-      const postoji = staraKorpa.find(item => item.proizvod.id === noviProizvod.id);
-      if (postoji) {
-        return staraKorpa.map(item =>
-          item.proizvod.id === noviProizvod.id
-            ? { ...item, kolicina: item.kolicina + 1 }
-            : item
-        );
-      }
-      return [...staraKorpa, { proizvod: noviProizvod, kolicina: 1 }];
-    });
-  };
-
-  const povecajKolicinu = (id: number) => {
-    setKorpa(prev =>
-      prev.map(item =>
-        item.proizvod.id === id ? { ...item, kolicina: item.kolicina + 1 } : item
-      )
-    );
-  };
-
-  const smanjiKolicinu = (id: number) => {
-    setKorpa(prev =>
-      prev
-        .map(item =>
-          item.proizvod.id === id ? { ...item, kolicina: item.kolicina - 1 } : item
-        )
-        .filter(item => item.kolicina > 0)
-    );
-  };
-
-  const ukloniStavku = (id: number) => {
-    setKorpa(prev => prev.filter(item => item.proizvod.id !== id));
-  };
-
-  const isprazniKorpu = () => {
-    setKorpa([]);
-    sessionStorage.removeItem(STORAGE_KEY);
-  };
-
-  // --- Naručivanje ---
-
-  const handleNaruci = async () => {
-    const userJson = sessionStorage.getItem("korisnik");
-    const token = sessionStorage.getItem("token");
-
-    if (!userJson || !token) {
-      alert("Morate biti prijavljeni da biste naručili!");
-      navigate("/login");
-      return;
-    }
-
-    const user = JSON.parse(userJson);
-
-    const porudzbinaDto = {
-      korisnikId: user.id,
-      stavke: korpa.map(item => ({
-        proizvodId: item.proizvod.id,
-        kolicina: item.kolicina,
-      })),
-    };
-
-    setPorucivanjeUToku(true);
-
-    try {
-      const response = await fetch('http://localhost:8080/api/porudzbine', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(porudzbinaDto),
-      });
-
-      if (response.ok) {
-        setPorudzbinaUspesna(true);
-        isprazniKorpu();
-        setTimeout(() => setPorudzbinaUspesna(false), 4000);
-      } else {
-        const errData = await response.json().catch(() => null);
-        alert(errData?.message ?? "Došlo je do greške prilikom naručivanja.");
-      }
-    } catch {
-      alert("Server ne odgovara. Proverite konekciju.");
-    } finally {
-      setPorucivanjeUToku(false);
-    }
-  };
-
-  const ukupnaCena = korpa.reduce(
-    (total, item) => total + item.proizvod.cena * item.kolicina,
-    0
+  const filtrirani = useMemo(() =>
+    proizvodi.filter(p => {
+      const okTab = aktivniTab === 'Sve' || p.tip === aktivniTab;
+      const okPretraga = p.naziv.toLowerCase().includes(pretraga.toLowerCase());
+      return okTab && okPretraga;
+    }),
+    [proizvodi, aktivniTab, pretraga]
   );
 
-  const ukupnoStavki = korpa.reduce((total, item) => total + item.kolicina, 0);
+  const popust = getPopust(korisnik?.loyaltyNivo);
+
+  // Dodaj u korpu + toast notifikacija
+  const handleDodaj = useCallback((p: Proizvod) => {
+    dodaj(p);
+    setToastPoruka(`${p.naziv} dodata u korpu`);
+    setTimeout(() => setToastPoruka(null), 2500);
+  }, [dodaj]);
 
   return (
-    <div className="meni-container">
+    <div className={styles.stranica}>
 
-      {/* LEVA STRANA: MENI */}
-      <main className="meni-glavni-sadrzaj">
-        <h1>🍕 Naš Meni</h1>
-        {error && <p className="greska-poruka">{error}</p>}
-
-        <div className="lista-proizvoda">
-          {proizvodi.map(p => {
-            const uKorpi = korpa.find(item => item.proizvod.id === p.id);
-            return (
-              <div key={p.id} className="proizvod-kartica">
-                <div className="proizvod-tip-oznaka">{p.tip}</div>
-                <h4>{p.naziv}</h4>
-                <p className="proizvod-opis">{p.opis}</p>
-                <div className="proizvod-footer">
-                  <span className="proizvod-cena">{p.cena} RSD</span>
-                  {uKorpi ? (
-                    <div className="kolicina-kontrole">
-                      <button
-                        className="kolicina-btn"
-                        onClick={() => smanjiKolicinu(p.id)}
-                        aria-label="Smanji"
-                      >−</button>
-                      <span className="kolicina-broj">{uKorpi.kolicina}</span>
-                      <button
-                        className="kolicina-btn"
-                        onClick={() => povecajKolicinu(p.id)}
-                        aria-label="Povecaj"
-                      >+</button>
-                    </div>
-                  ) : (
-                    <button onClick={() => dodajUKorpu(p)} className="moje-dugme">
-                      Dodaj +
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </main>
-
-      {/* DESNA STRANA: KORPA */}
-      <aside className="korpa-sidebar">
-        <div className="korpa-header">
-          <h2>🛒 Tvoja Korpa</h2>
-          {ukupnoStavki > 0 && (
-            <span className="korpa-broj-stavki">{ukupnoStavki}</span>
+      {/* ── PAGE HEADER ── */}
+      <header className={styles.pageHeader}>
+        <div className={styles.pageHeaderSadrzaj}>
+          <span className={styles.pageHeaderOznaka}>— Naš meni —</span>
+          <h1 className={styles.pageHeaderNaslov}>Palačinke za svaki ukus</h1>
+          <p className={styles.pageHeaderOpis}>
+            Slatke, slane, sezonske — svaka palačinka rađena s pažnjom.
+          </p>
+          {korisnik && popust > 0 && (
+            <div className={styles.loyaltyBaner}>
+              🏆 {korisnik.loyaltyNivo} — tvoj popust: <strong>{popust}%</strong>
+            </div>
           )}
         </div>
+      </header>
 
-        {porudzbinaUspesna && (
-          <div className="uspesna-poruka">
-            ✅ Porudžbina je poslata! Prijatno! 🥞
-          </div>
-        )}
-
-        {korpa.length === 0 ? (
-          <div className="prazna-korpa">
-            <span className="prazna-korpa-ikona">🛒</span>
-            <p>Korpa je prazna.</p>
-            <p className="prazna-korpa-hint">Dodajte nešto sa menija!</p>
-          </div>
-        ) : (
-          <div className="korpa-sadrzaj">
-            {korpa.map(item => (
-              <div key={item.proizvod.id} className="stavka-korpe">
-                <div className="stavka-info">
-                  <div className="stavka-naziv">{item.proizvod.naziv}</div>
-                  <div className="stavka-kolicina-red">
-                    <button
-                      className="kolicina-btn mali"
-                      onClick={() => smanjiKolicinu(item.proizvod.id)}
-                      aria-label="Smanji"
-                    >−</button>
-                    <span className="stavka-kolicina">{item.kolicina}</span>
-                    <button
-                      className="kolicina-btn mali"
-                      onClick={() => povecajKolicinu(item.proizvod.id)}
-                      aria-label="Povecaj"
-                    >+</button>
-                    <span className="stavka-jedinicna-cena">
-                      × {item.proizvod.cena} RSD
-                    </span>
-                  </div>
-                </div>
-                <div className="stavka-desna-strana">
-                  <div className="stavka-ukupno">
-                    {item.kolicina * item.proizvod.cena} RSD
-                  </div>
-                  <button
-                    className="ukloni-btn"
-                    onClick={() => ukloniStavku(item.proizvod.id)}
-                    aria-label="Ukloni stavku"
-                    title="Ukloni"
-                  >✕</button>
-                </div>
-              </div>
-            ))}
-
-            <div className="korpa-ukupno">
-              Ukupno: <strong>{ukupnaCena} RSD</strong>
-            </div>
-
+      {/* ── KONTROLE ── */}
+      <div className={styles.kontrole}>
+        <div className={styles.tabovi}>
+          {kategorije.map(kat => (
             <button
-              className="dugme-naruci"
-              onClick={handleNaruci}
-              disabled={porucivanjeUToku}
+              key={kat}
+              className={`${styles.tab} ${aktivniTab === kat ? styles.tabAktivan : ''}`}
+              onClick={() => setAktivniTab(kat)}
             >
-              {porucivanjeUToku ? "Šaljem porudžbinu..." : "Naruči"}
+              {kat}
             </button>
+          ))}
+        </div>
 
-            <button className="dugme-isprazni" onClick={isprazniKorpu}>
-              Isprazni korpu
-            </button>
+        <div className={styles.searchWrap}>
+          <span className={styles.searchIkona}>⌕</span>
+          <input
+            type="text"
+            placeholder="Pretraži..."
+            value={pretraga}
+            onChange={e => setPretraga(e.target.value)}
+            className={styles.searchInput}
+          />
+          {pretraga && (
+            <button className={styles.searchBrisi} onClick={() => setPretraga('')}>×</button>
+          )}
+        </div>
+      </div>
+
+      {/* ── SADRŽAJ ── */}
+      <main className={styles.sadrzaj}>
+        {greska && <p className={styles.greska}>{greska}</p>}
+
+        {/* Skeleton dok se učitava */}
+        {ucitava && <MeniSkeleton />}
+
+        {/* Prazno stanje (posle učitavanja) */}
+        {!ucitava && filtrirani.length === 0 && !greska && (
+          <div className={styles.praznoStanje}>
+            <p className={styles.praznoTekst}>Nema rezultata</p>
+            {pretraga && (
+              <p className={styles.praznoHint}>
+                Nismo pronašli ništa za „<em>{pretraga}</em>"
+              </p>
+            )}
           </div>
         )}
-      </aside>
+
+        {!ucitava && (
+          <motion.div
+            className={styles.grid}
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.05 } }
+            }}
+          >
+            {filtrirani.map(p => (
+              <ProizvodKartica
+                key={p.id}
+                proizvod={p}
+                kolicina={korpa.find(i => i.proizvod.id === p.id)?.kolicina ?? 0}
+                slika={getSlikuZaTip(p.tip)}
+                popust={popust}
+                onDodaj={handleDodaj}
+                onPovecaj={povecaj}
+                onSmanji={smanji}
+              />
+            ))}
+          </motion.div>
+        )}
+      </main>
+
+      {/* ── KORPA BAR (sticky dno) ── */}
+      {ukupnoStavki > 0 && (
+        <div className={styles.korpaBar}>
+          <span className={styles.korpaBarTekst}>
+            {ukupnoStavki} {ukupnoStavki === 1 ? 'stavka' : 'stavki'} u korpi
+          </span>
+          <button className={styles.korpaBarBtn} onClick={otvoriDrawer}>
+            Pogledaj korpu →
+          </button>
+        </div>
+      )}
+
+      {/* ── TOAST ── */}
+      <Toast poruka={toastPoruka} />
+
     </div>
   );
 }
-
-export default MeniPage;

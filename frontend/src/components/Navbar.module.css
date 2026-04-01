@@ -1,0 +1,280 @@
+/* ── NAVBAR ── */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8%;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    background: transparent;
+}
+
+/* Scrolled stanje — postaje krem */
+.navbarScrolled {
+    background: var(--krem);
+    box-shadow: 0 2px 16px rgba(77, 58, 49, 0.1);
+}
+
+/* ── LOGO ── */
+.logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.logoImg {
+    height: 40px;
+    width: auto;
+    /* Na transparentnom — logo svetao, na kremu — normalan */
+    filter: brightness(1);
+    transition: filter 0.3s;
+}
+
+/* ── NAVIGACIJA (centar) ── */
+.center {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.navLink {
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.85);
+    transition: color 0.2s;
+    position: relative;
+    padding-bottom: 3px;
+}
+
+/* Underline animacija */
+.navLink::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background: currentColor;
+    transition: width 0.25s ease;
+}
+
+.navLink:hover::after,
+.navLinkAktivan::after {
+    width: 100%;
+}
+
+/* Na scrolled navbaru — tamni linkovi */
+.navbarScrolled .navLink {
+    color: var(--tekst);
+}
+
+.navbarScrolled .navLink:hover {
+    color: var(--braon);
+}
+
+/* ── DESNA STRANA ── */
+.desno {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-shrink: 0;
+}
+
+/* Kada je ulogovan */
+.korisnikInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+}
+
+.korisnikIme {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    transition: color 0.3s;
+}
+
+.navbarScrolled .korisnikIme {
+    color: var(--tekst);
+}
+
+.korisnikBodovi {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.04em;
+    transition: color 0.3s;
+}
+
+.navbarScrolled .korisnikBodovi {
+    color: var(--braon-svetli);
+}
+
+/* Dugmad */
+.dugmeOdjava {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.85);
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dugmeOdjava:hover {
+    border-color: rgba(255, 255, 255, 0.9);
+    color: #fff;
+}
+
+.navbarScrolled .dugmeOdjava {
+    border-color: var(--braon-svetli);
+    color: var(--braon);
+}
+
+.navbarScrolled .dugmeOdjava:hover {
+    background: var(--braon);
+    color: #fff;
+    border-color: var(--braon);
+}
+
+.dugmePrijava {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.85);
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.dugmePrijava:hover {
+    border-color: #fff;
+    color: #fff;
+}
+
+.navbarScrolled .dugmePrijava {
+    border-color: var(--braon-svetli);
+    color: var(--braon);
+}
+
+.navbarScrolled .dugmePrijava:hover {
+    background: var(--braon);
+    color: #fff;
+    border-color: var(--braon);
+}
+
+.dugmeRegistracija {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    color: #fff;
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.dugmeRegistracija:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: #fff;
+}
+
+.navbarScrolled .dugmeRegistracija {
+    background: var(--braon);
+    border-color: var(--braon);
+    color: #fff;
+}
+
+.navbarScrolled .dugmeRegistracija:hover {
+    background: var(--braon-tamni);
+    border-color: var(--braon-tamni);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 5%;
+    }
+
+    .center {
+        gap: var(--space-sm);
+    }
+
+    .korisnikBodovi {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .center {
+        display: none;
+    }
+}
+
+/* ── KORPA IKONA ── */
+.korpaIkona {
+    position: relative;
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.korpaIkona:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.navbarScrolled .korpaIkona:hover {
+    background: rgba(77, 58, 49, 0.08);
+}
+
+.korpaBadge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--akcent);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
