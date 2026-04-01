@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+
+.stranica {
+    min-height: 100vh;
+    background: var(--krem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 120px var(--space-sm) var(--space-lg);
+    font-family: var(--font-body);
+}
+
+.kartica {
+    background: #fff;
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 4px 24px rgba(77, 58, 49, 0.1);
+    border: 1px solid rgba(187, 145, 98, 0.15);
+}
+
+/* ── HEADER ── */
+.header {
+    margin-bottom: var(--space-md);
+}
+
+.nazad {
+    font-size: 0.8rem;
+    color: var(--tekst-sivi);
+    text-decoration: none;
+    transition: color 0.2s;
+    display: inline-block;
+    margin-bottom: var(--space-sm);
+}
+
+.nazad:hover {
+    color: var(--braon);
+}
+
+.naslov {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    font-style: italic;
+    color: var(--tekst);
+    margin: 0 0 6px;
+}
+
+.podnaslov {
+    font-size: 0.9rem;
+    color: var(--tekst-sivi);
+    font-weight: 300;
+}
+
+/* ── SERVER GREŠKA ── */
+.serverGreska {
+    background: rgba(245, 128, 137, 0.1);
+    border: 1px solid #f58089;
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    color: #c0393f;
+    font-size: 0.88rem;
+    margin-bottom: var(--space-sm);
+}
+
+/* ── FORMA ── */
+.forma {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.polje {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.labela {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tekst);
+}
+
+.input {
+    padding: 12px var(--space-sm);
+    border: 1.5px solid rgba(187, 145, 98, 0.3);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--tekst);
+    background: var(--krem);
+    transition: border-color 0.2s, background 0.2s;
+    outline: none;
+}
+
+.input::placeholder {
+    color: var(--tekst-sivi);
+    opacity: 0.6;
+}
+
+.input:focus {
+    border-color: var(--braon-svetli);
+    background: #fff;
+}
+
+.inputGreska {
+    border-color: #f58089;
+}
+
+.inputGreska:focus {
+    border-color: #f58089;
+}
+
+.greska {
+    font-size: 0.78rem;
+    color: #c0393f;
+    font-weight: 400;
+}
+
+/* ── DUGME ── */
+.dugme {
+    margin-top: var(--space-xs);
+    padding: 14px;
+    background: var(--braon);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.dugme:hover:not(:disabled) {
+    background: var(--braon-tamni);
+}
+
+.dugme:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ── LOGIN LINK ── */
+.loginLink {
+    text-align: center;
+    margin-top: var(--space-sm);
+    font-size: 0.88rem;
+    color: var(--tekst-sivi);
+}
+
+.loginLink a {
+    color: var(--braon);
+    font-weight: 700;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.loginLink a:hover {
+    color: var(--braon-tamni);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+    .kartica {
+        padding: var(--space-md);
+    }
+}
