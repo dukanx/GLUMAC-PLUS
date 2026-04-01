@@ -1,84 +1,117 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './LoginPage.css';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import styles from './LoginPage.module.css';
+import { useAuth } from '../context/AuthContext';
+
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [greska, setGreska] = useState("");
-
-
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Čita ?registered=true iz URL-a (dolazi sa RegisterPage)
+  const justRegistered = searchParams.get('registered') === 'true';
+
+  const [email, setEmail] = useState('');
+  const [lozinka, setLozinka] = useState('');
+  const [greska, setGreska] = useState('');
+  const [ucitava, setUcitava] = useState(false);
+  const { login } = useAuth();
 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setGreska("");
+    setGreska('');
+    setUcitava(true);
 
     try {
-
       const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-
-        body: JSON.stringify({
-          email: email,
-          lozinka: password
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, lozinka }),
       });
-
 
       if (response.ok) {
         const data = await response.json();
-
-        sessionStorage.setItem("korisnik", JSON.stringify(data.korisnik));
-        sessionStorage.setItem("token", data.token);
-        window.dispatchEvent(new Event('korisnikUpdate'));
-        navigate("/meni");
+        login(data.korisnik, data.token);
+        navigate('/meni');
       } else {
-        setGreska("Pogrešan email ili lozinka!");
+        const data = await response.json().catch(() => null);
+        setGreska(data?.message ?? 'Pogrešan email ili lozinka.');
       }
-
-    } catch (err) {
-      console.error(err);
-      setGreska("Ne mogu da se povezem sa serverom.");
+    } catch {
+      setGreska('Server ne odgovara. Proverite konekciju.');
+    } finally {
+      setUcitava(false);
     }
-  }
+  };
 
   return (
-    <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit}>
-        <h2 className="animated-prijava" style={{ textAlign: 'center', marginBottom: '20px', color: '#333', }}>Prijava</h2>
+    <div className={styles.stranica}>
+      <div className={styles.kartica}>
 
-        {/* Prikaz greske ako postoji */}
-        {greska && <p style={{ color: 'red', textAlign: 'center' }}>{greska}</p>}
-
-        <div className="form-group">
-          <label>Email adresa:</label>
-          <input
-            type="email"
-            placeholder="example@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+        <div className={styles.header}>
+          <Link to="/" className={styles.nazad}>← Početna</Link>
+          <h1 className={styles.naslov}>Dobrodošli</h1>
+          <p className={styles.podnaslov}>Prijavite se na vaš nalog</p>
         </div>
 
-        <div className="form-group">
-          <label>Lozinka:</label>
-          <input
-            type="password"
-            placeholder="Vasa lozinka"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+        {/* Poruka posle uspešne registracije */}
+        {justRegistered && (
+          <div className={styles.uspesnaPoruka}>
+            ✓ Nalog je kreiran! Prijavite se.
+          </div>
+        )}
 
-        <button type="submit" className="login-btn">Prijavi se</button>
-      </form>
+        {greska && (
+          <div className={styles.serverGreska}>{greska}</div>
+        )}
+
+        <form onSubmit={handleSubmit} className={styles.forma} noValidate>
+
+          <div className={styles.polje}>
+            <label htmlFor="email" className={styles.labela}>Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="marko@email.com"
+              className={styles.input}
+              autoComplete="email"
+              required
+            />
+          </div>
+
+          <div className={styles.polje}>
+            <label htmlFor="lozinka" className={styles.labela}>Lozinka</label>
+            <input
+              id="lozinka"
+              type="password"
+              value={lozinka}
+              onChange={e => setLozinka(e.target.value)}
+              placeholder="Vaša lozinka"
+              className={styles.input}
+              autoComplete="current-password"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className={styles.dugme}
+            disabled={ucitava}
+          >
+            {ucitava ? 'Prijavljujem...' : 'Prijavi se'}
+          </button>
+
+        </form>
+
+        <p className={styles.registerLink}>
+          Nemaš nalog?{' '}
+          <Link to="/register">Registruj se</Link>
+        </p>
+
+      </div>
     </div>
-  )
+  );
 }
