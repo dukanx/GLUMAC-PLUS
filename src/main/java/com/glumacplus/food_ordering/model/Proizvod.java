@@ -1,6 +1,8 @@
 package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "proizvod")
@@ -22,6 +24,14 @@ public class Proizvod {
     private double proteini;
     private double masti;
     private double ugljeniHidrati;
+
+    @ManyToMany
+    @JoinTable(
+        name = "proizvod_alergen",
+        joinColumns = @JoinColumn(name = "proizvod_id"),
+        inverseJoinColumns = @JoinColumn(name = "alergen_id")
+    )
+    private Set<Alergen> alergeni = new HashSet<>();
 
     public Proizvod() {}
 
@@ -63,5 +73,8 @@ public class Proizvod {
 
     public double getUgljeniHidrati() { return ugljeniHidrati; }
     public void setUgljeniHidrati(double ugljeniHidrati) { this.ugljeniHidrati = ugljeniHidrati; }
+
+    public Set<Alergen> getAlergeni() { return alergeni; }
+    public void setAlergeni(Set<Alergen> alergeni) { this.alergeni = alergeni; }
 }
 
