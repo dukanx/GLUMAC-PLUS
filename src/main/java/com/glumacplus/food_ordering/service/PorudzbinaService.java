@@ -63,6 +63,8 @@ public class PorudzbinaService {
 
         Porudzbina por = new Porudzbina();
         por.setKorisnikId(trenutniKorisnik.getId());
+        por.setNapomena(normalizeNapomena(dto.getNapomena()));
+        por.setTipPorudzbine(dto.getTipPorudzbine() != null ? dto.getTipPorudzbine() : TipPorudzbine.ZA_PONETI);
 
         por.setDatum(LocalDateTime.now());
         por.setStatus(StatusPorudzbine.U_PRIPREMI);
@@ -161,6 +163,29 @@ public class PorudzbinaService {
         porudzbinaRepo.save(p);
     }
 
+    public PorudzbinaViewDto setEstimatedTime(Long id, Integer procenjenoVreme) {
+        if (procenjenoVreme == null || procenjenoVreme <= 0 || procenjenoVreme > 120) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Procenjeno vreme mora biti između 1 i 120 minuta"
+            );
+        }
+
+        Porudzbina p = porudzbinaRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Porudzbina sa ID-em " + id + " ne postoji"));
+
+        if (p.getStatus() != StatusPorudzbine.U_PRIPREMI && p.getStatus() != StatusPorudzbine.SPREMNA) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Procenjeno vreme može da se postavi samo za porudžbine u statusu U_PRIPREMI ili SPREMNA"
+            );
+        }
+
+        p.setProcenjenoVreme(procenjenoVreme);
+        p = porudzbinaRepo.save(p);
+        return PorudzbinaMapper.toViewDto(p);
+    }
+
     public List<PorudzbinaViewDto> getMyOrders(int pageNo, int pageSize) {
 
         Korisnik korisnik = getCurrentUserEntity();
@@ -196,5 +221,13 @@ public class PorudzbinaService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return korisnikRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Niste ulogovani"));
+    }
+
+    private String normalizeNapomena(String napomena) {
+        if (napomena == null) {
+            return null;
+        }
+        String trimmed = napomena.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }
