@@ -60,6 +60,12 @@ public class PorudzbinaController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/{id}/procenjeno-vreme")
+    @PreAuthorize("hasAuthority('ROLE_ZAPOSLENI') or hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<PorudzbinaViewDto> setEstimatedTime(@PathVariable Long id, @RequestParam Integer procenjenoVreme) {
+        return ResponseEntity.ok(service.setEstimatedTime(id, procenjenoVreme));
+    }
+
     @GetMapping("/moje")
     @PreAuthorize("hasRole('KORISNIK')")
     public ResponseEntity<List<PorudzbinaViewDto>> getMyOrders(

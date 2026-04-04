@@ -1,6 +1,7 @@
 package com.glumacplus.food_ordering.dto;
 
 import com.glumacplus.food_ordering.model.StatusPorudzbine;
+import com.glumacplus.food_ordering.model.TipPorudzbine;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +14,9 @@ public class PorudzbinaViewDto {
     private Long porudzbinaId;
     private StatusPorudzbine status;
     private double ukupanIznos;
+    private String napomena;
+    private TipPorudzbine tipPorudzbine;
+    private Integer procenjenoVreme;
 
     public double getUkupanIznos() {
         return ukupanIznos;
@@ -52,5 +56,29 @@ public class PorudzbinaViewDto {
 
     public void setStatus(StatusPorudzbine status) {
         this.status = status;
+    }
+
+    public String getNapomena() {
+        return napomena;
+    }
+
+    public void setNapomena(String napomena) {
+        this.napomena = napomena;
+    }
+
+    public TipPorudzbine getTipPorudzbine() {
+        return tipPorudzbine;
+    }
+
+    public void setTipPorudzbine(TipPorudzbine tipPorudzbine) {
+        this.tipPorudzbine = tipPorudzbine;
+    }
+
+    public Integer getProcenjenoVreme() {
+        return procenjenoVreme;
+    }
+
+    public void setProcenjenoVreme(Integer procenjenoVreme) {
+        this.procenjenoVreme = procenjenoVreme;
     }
 }
