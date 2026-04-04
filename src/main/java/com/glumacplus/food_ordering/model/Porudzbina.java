@@ -28,6 +28,16 @@ public class Porudzbina {
     @Column(name = "originalna_cena")
     private double originalnaCena;
 
+    @Column(columnDefinition = "TEXT")
+    private String napomena;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tip_porudzbine", nullable = false)
+    private TipPorudzbine tipPorudzbine;
+
+    @Column(name = "procenjeno_vreme")
+    private Integer procenjenoVreme;
+
     @OneToMany(mappedBy = "porudzbina", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StavkaPorudzbine> stavke = new ArrayList<>();
 
@@ -63,11 +73,13 @@ public class Porudzbina {
         this.ukupanIznos = ukupanIznos;
         this.datum = LocalDateTime.now();
         this.status = StatusPorudzbine.U_PRIPREMI;
+        this.tipPorudzbine = TipPorudzbine.ZA_PONETI;
     }
     public Porudzbina() {
         this.datum = LocalDateTime.now();
         this.status = StatusPorudzbine.U_PRIPREMI;
         this.ukupanIznos = 0.0;
+        this.tipPorudzbine = TipPorudzbine.ZA_PONETI;
     }
 
     public Long getId() {
@@ -108,5 +120,29 @@ public class Porudzbina {
 
     public void setOriginalnaCena(double originalnaCena) {
         this.originalnaCena = originalnaCena;
+    }
+
+    public String getNapomena() {
+        return napomena;
+    }
+
+    public void setNapomena(String napomena) {
+        this.napomena = napomena;
+    }
+
+    public TipPorudzbine getTipPorudzbine() {
+        return tipPorudzbine;
+    }
+
+    public void setTipPorudzbine(TipPorudzbine tipPorudzbine) {
+        this.tipPorudzbine = tipPorudzbine;
+    }
+
+    public Integer getProcenjenoVreme() {
+        return procenjenoVreme;
+    }
+
+    public void setProcenjenoVreme(Integer procenjenoVreme) {
+        this.procenjenoVreme = procenjenoVreme;
     }
 }
