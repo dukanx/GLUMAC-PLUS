@@ -30,12 +30,14 @@ public class PorudzbinaService {
     private final ProizvodRepository proizvodRepo;
     private final KorisnikRepository korisnikRepo;
     private final LoyaltyProgramRepository loyaltyRepo;
+    private final NotifikacijaService notifikacijaService;
 
-    public PorudzbinaService(PorudzbinaRepository porudzbinaRepo, ProizvodRepository proizvodRepo, KorisnikRepository korisnikRepo, LoyaltyProgramRepository loyaltyRepo){
+    public PorudzbinaService(PorudzbinaRepository porudzbinaRepo, ProizvodRepository proizvodRepo, KorisnikRepository korisnikRepo, LoyaltyProgramRepository loyaltyRepo, NotifikacijaService notifikacijaService){
         this.porudzbinaRepo = porudzbinaRepo;
         this.proizvodRepo = proizvodRepo;
         this.korisnikRepo = korisnikRepo;
         this.loyaltyRepo = loyaltyRepo;
+        this.notifikacijaService = notifikacijaService;
     }
 
     public List<PorudzbinaViewDto> getAll(){
@@ -134,6 +136,11 @@ public class PorudzbinaService {
             return;
         }
 
+        validateStatusTransition(p.getStatus(), noviStatus);
+
+        boolean loyaltyLevelUp = false;
+        String noviNivoNaziv = null;
+
         if (p.getStatus() != StatusPorudzbine.REALIZOVANA && noviStatus == StatusPorudzbine.REALIZOVANA) {
 
             Korisnik k = korisnikRepo.findById(p.getKorisnikId())
@@ -148,12 +155,15 @@ public class PorudzbinaService {
                     .filter(nivo -> k.getBrojBodova() >= nivo.getPragBodova())
                     .max(Comparator.comparing(LoyaltyProgram::getPragBodova));
 
-            sadasnji.ifPresent(nivo -> {
-                        if (k.getLoyaltyProgram() == null || !k.getLoyaltyProgram().getId().equals(nivo.getId())) {
-                            k.setLoyaltyProgram(nivo);
-                            System.out.println("Čestitamo! Napredovali ste u nivo: " + nivo.getNivo());
-                        }
-            });
+            LoyaltyProgram prethodniNivo = k.getLoyaltyProgram();
+            if (sadasnji.isPresent()) {
+                LoyaltyProgram nivo = sadasnji.get();
+                if (prethodniNivo == null || !prethodniNivo.getId().equals(nivo.getId())) {
+                    k.setLoyaltyProgram(nivo);
+                    loyaltyLevelUp = true;
+                    noviNivoNaziv = nivo.getNivo();
+                }
+            }
 
 
             korisnikRepo.save(k);
@@ -161,6 +171,30 @@ public class PorudzbinaService {
 
         p.setStatus(noviStatus);
         porudzbinaRepo.save(p);
+
+        if (noviStatus == StatusPorudzbine.SPREMNA && p.getProcenjenoVreme() != null) {
+            sendAcceptedWithEstimatedTimeNotification(p.getKorisnikId(), p.getId(), p.getProcenjenoVreme());
+        } else if (noviStatus == StatusPorudzbine.OTKAZANA) {
+            notifikacijaService.createForUser(
+                    p.getKorisnikId(),
+                    NotifikacijaTip.PORUDZBINA_OTKAZANA,
+                    String.format("Vaša porudžbina #%d je otkazana.", p.getId())
+            );
+        } else if (noviStatus == StatusPorudzbine.REALIZOVANA) {
+            notifikacijaService.createForUser(
+                    p.getKorisnikId(),
+                    NotifikacijaTip.PORUDZBINA_ZAVRSENA,
+                    String.format("Vaša porudžbina #%d je gotova. Možete je preuzeti.", p.getId())
+            );
+        }
+
+        if (loyaltyLevelUp && noviNivoNaziv != null) {
+            notifikacijaService.createForUser(
+                    p.getKorisnikId(),
+                    NotifikacijaTip.LOYALTY_LEVEL_UP,
+                    String.format("Čestitamo! Prešli ste u loyalty nivo: %s.", noviNivoNaziv)
+            );
+        }
     }
 
     public PorudzbinaViewDto setEstimatedTime(Long id, Integer procenjenoVreme) {
@@ -181,8 +215,16 @@ public class PorudzbinaService {
             );
         }
 
+        Integer prethodnoProcenjenoVreme = p.getProcenjenoVreme();
         p.setProcenjenoVreme(procenjenoVreme);
         p = porudzbinaRepo.save(p);
+
+        if (p.getStatus() == StatusPorudzbine.SPREMNA && prethodnoProcenjenoVreme == null) {
+            sendAcceptedWithEstimatedTimeNotification(p.getKorisnikId(), p.getId(), procenjenoVreme);
+        } else if (p.getStatus() == StatusPorudzbine.SPREMNA && !prethodnoProcenjenoVreme.equals(procenjenoVreme)) {
+            sendEstimatedTimeChangedNotification(p.getKorisnikId(), p.getId(), prethodnoProcenjenoVreme, procenjenoVreme);
+        }
+
         return PorudzbinaMapper.toViewDto(p);
     }
 
@@ -215,6 +257,11 @@ public class PorudzbinaService {
 
         porudzbina.setStatus(StatusPorudzbine.OTKAZANA);
         porudzbinaRepo.save(porudzbina);
+        notifikacijaService.createForUser(
+                porudzbina.getKorisnikId(),
+                NotifikacijaTip.PORUDZBINA_OTKAZANA,
+                String.format("Vaša porudžbina #%d je otkazana.", porudzbina.getId())
+        );
     }
 
     private Korisnik getCurrentUserEntity() {
@@ -229,5 +276,49 @@ public class PorudzbinaService {
         }
         String trimmed = napomena.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void sendAcceptedWithEstimatedTimeNotification(Long korisnikId, Long porudzbinaId, Integer procenjenoVreme) {
+        notifikacijaService.createForUser(
+                korisnikId,
+                NotifikacijaTip.PORUDZBINA_PRIHVACENA,
+                String.format(
+                        "Vaša porudžbina #%d je prihvaćena i procenjeno vreme čekanja je %d minuta.",
+                        porudzbinaId,
+                        procenjenoVreme
+                )
+        );
+    }
+
+    private void sendEstimatedTimeChangedNotification(Long korisnikId, Long porudzbinaId, Integer staroVreme, Integer novoVreme) {
+        notifikacijaService.createForUser(
+                korisnikId,
+                NotifikacijaTip.PORUDZBINA_VREME_PROMENJENO,
+                String.format(
+                        "Procenjeno vreme za porudžbinu #%d je promenjeno sa %d na %d minuta.",
+                        porudzbinaId,
+                        staroVreme,
+                        novoVreme
+                )
+        );
+    }
+
+    private void validateStatusTransition(StatusPorudzbine stariStatus, StatusPorudzbine noviStatus) {
+        switch (stariStatus) {
+            case U_PRIPREMI -> {
+                if (noviStatus != StatusPorudzbine.SPREMNA && noviStatus != StatusPorudzbine.OTKAZANA) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Iz statusa U_PRIPREMI možete preći samo u SPREMNA ili OTKAZANA");
+                }
+            }
+            case SPREMNA -> {
+                if (noviStatus != StatusPorudzbine.REALIZOVANA && noviStatus != StatusPorudzbine.OTKAZANA) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Iz statusa SPREMNA možete preći samo u REALIZOVANA ili OTKAZANA");
+                }
+            }
+            case REALIZOVANA, OTKAZANA -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Promena statusa nije dozvoljena za završene porudžbine"
+            );
+        }
     }
 }
