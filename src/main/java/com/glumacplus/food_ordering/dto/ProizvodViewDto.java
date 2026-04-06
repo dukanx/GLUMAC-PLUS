@@ -1,10 +1,12 @@
 package com.glumacplus.food_ordering.dto;
 
+import java.math.BigDecimal;
+
 public class ProizvodViewDto {
     private Long id;
     private String naziv;
     private String tip;
-    private double cena;
+    private BigDecimal cena;
     private String jedinicaMere;
     private double kalorije, proteini, masti, ugljeniHidrati;
 
@@ -15,8 +17,8 @@ public class ProizvodViewDto {
     public void setNaziv(String naziv) { this.naziv = naziv; }
     public String getTip() { return tip; }
     public void setTip(String tip) { this.tip = tip; }
-    public double getCena() { return cena; }
-    public void setCena(double cena) { this.cena = cena; }
+    public BigDecimal getCena() { return cena; }
+    public void setCena(BigDecimal cena) { this.cena = cena; }
     public String getJedinicaMere() { return jedinicaMere; }
     public void setJedinicaMere(String jedinicaMere) { this.jedinicaMere = jedinicaMere; }
     public double getKalorije() { return kalorije; }

@@ -1,11 +1,13 @@
 package com.glumacplus.food_ordering.dto;
 
+import java.math.BigDecimal;
+
 public class StavkaPorudzbineViewDto {
 
     private String nazivProizvoda;
     private double kolicina;
-    private double cena;
-    private double iznosStavke;
+    private BigDecimal cena;
+    private BigDecimal iznosStavke;
 
 
 
@@ -25,19 +27,19 @@ public class StavkaPorudzbineViewDto {
         this.kolicina = kolicina;
     }
 
-    public double getCena() {
+    public BigDecimal getCena() {
         return cena;
     }
 
-    public void setCena(double cena) {
+    public void setCena(BigDecimal cena) {
         this.cena = cena;
     }
 
-    public double getIznosStavke() {
+    public BigDecimal getIznosStavke() {
         return iznosStavke;
     }
 
-    public void setIznosStavke(double iznosStavke) {
+    public void setIznosStavke(BigDecimal iznosStavke) {
         this.iznosStavke = iznosStavke;
     }
 }

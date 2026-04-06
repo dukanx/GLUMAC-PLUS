@@ -56,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/error", "/error/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/korisnici/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/korisnici").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/proizvodi").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/proizvodi/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/loyalty_program/**").permitAll()

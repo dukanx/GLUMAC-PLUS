@@ -3,6 +3,7 @@ package com.glumacplus.food_ordering.dto;
 import com.glumacplus.food_ordering.model.StatusPorudzbine;
 import com.glumacplus.food_ordering.model.TipPorudzbine;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,16 +14,16 @@ public class PorudzbinaViewDto {
     private List<StavkaPorudzbineViewDto> stavke=new ArrayList<>();
     private Long porudzbinaId;
     private StatusPorudzbine status;
-    private double ukupanIznos;
+    private BigDecimal ukupanIznos;
     private String napomena;
     private TipPorudzbine tipPorudzbine;
     private Integer procenjenoVreme;
 
-    public double getUkupanIznos() {
+    public BigDecimal getUkupanIznos() {
         return ukupanIznos;
     }
 
-    public void setUkupanIznos(double ukupanIznos) {
+    public void setUkupanIznos(BigDecimal ukupanIznos) {
         this.ukupanIznos = ukupanIznos;
     }
 

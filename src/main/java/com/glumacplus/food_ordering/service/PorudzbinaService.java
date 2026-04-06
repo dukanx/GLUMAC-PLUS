@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -64,14 +66,14 @@ public class PorudzbinaService {
         Korisnik trenutniKorisnik = getCurrentUserEntity();
 
         Porudzbina por = new Porudzbina();
-        por.setKorisnikId(trenutniKorisnik.getId());
+        por.setKorisnik(trenutniKorisnik);
         por.setNapomena(normalizeNapomena(dto.getNapomena()));
         por.setTipPorudzbine(dto.getTipPorudzbine() != null ? dto.getTipPorudzbine() : TipPorudzbine.ZA_PONETI);
 
         por.setDatum(LocalDateTime.now());
         por.setStatus(StatusPorudzbine.U_PRIPREMI);
 
-        double ukIznos=0;
+        BigDecimal ukIznos = BigDecimal.ZERO;
 
         for (StavkaPorudzbineDto stavkaDto: dto.getStavke()) {
 
@@ -88,7 +90,7 @@ public class PorudzbinaService {
 
 
             por.dodajStavku(prava);
-            ukIznos += prava.getIznosStavke();
+            ukIznos = ukIznos.add(prava.getIznosStavke());
         }
 
 
@@ -100,7 +102,10 @@ public class PorudzbinaService {
             popust = trenutniKorisnik.getLoyaltyProgram().getPopust();
         }
 
-        double cenaSaPopustom = ukIznos * (100 - popust) / 100;
+        BigDecimal popustFaktor = BigDecimal.valueOf(100.0 - popust)
+                .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+        BigDecimal cenaSaPopustom = ukIznos.multiply(popustFaktor)
+                .setScale(2, RoundingMode.HALF_UP);
 
         por.setUkupanIznos(cenaSaPopustom);
         por = porudzbinaRepo.save(por);
@@ -146,7 +151,9 @@ public class PorudzbinaService {
             Korisnik k = korisnikRepo.findById(p.getKorisnikId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Korisnik nije pronađen!"));
 
-            int noviBodovi = (int) (p.getUkupanIznos() / 100);
+            int noviBodovi = p.getUkupanIznos()
+                    .divide(BigDecimal.valueOf(100), 0, RoundingMode.DOWN)
+                    .intValue();
             k.setBrojBodova(k.getBrojBodova() + noviBodovi);
 
             List<LoyaltyProgram> sviNivoi = loyaltyRepo.findAll();
@@ -234,7 +241,7 @@ public class PorudzbinaService {
 
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "id"));
 
-        Page<Porudzbina> page = porudzbinaRepo.findByKorisnikId(korisnik.getId(), pageable);
+        Page<Porudzbina> page = porudzbinaRepo.findByKorisnik_Id(korisnik.getId(), pageable);
 
         return page.getContent().stream()
                 .map(PorudzbinaMapper::toViewDto)

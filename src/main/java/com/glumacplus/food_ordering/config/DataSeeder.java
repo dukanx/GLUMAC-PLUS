@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
+import java.math.BigDecimal;
 
 @Component
 @Profile("dev")
@@ -46,11 +47,11 @@ public class DataSeeder implements CommandLineRunner {
         createKorisnikIfNotFound("korisnik@gmail.com", "korisnik123", "Mile Kitic", Uloga.KORISNIK, 50);
 
 
-        createProizvodIfNotFound("Kinder Plazma Palačinka", 350.0, "HRANA");
-        createProizvodIfNotFound("Pohovana  Palačinka", 480.0, "HRANA");
-        createProizvodIfNotFound("Giros Pileći", 420.0, "HRANA");
-        createProizvodIfNotFound("Coca Cola 0.5", 120.0, "PICE");
-        createProizvodIfNotFound("Pistać Palačinka", 450.0, "HRANA");
+        createProizvodIfNotFound("Kinder Plazma Palačinka", BigDecimal.valueOf(350.0), "HRANA");
+        createProizvodIfNotFound("Pohovana  Palačinka", BigDecimal.valueOf(480.0), "HRANA");
+        createProizvodIfNotFound("Giros Pileći", BigDecimal.valueOf(420.0), "HRANA");
+        createProizvodIfNotFound("Coca Cola 0.5", BigDecimal.valueOf(120.0), "PICE");
+        createProizvodIfNotFound("Pistać Palačinka", BigDecimal.valueOf(450.0), "HRANA");
 
     }
 
@@ -82,7 +83,7 @@ public class DataSeeder implements CommandLineRunner {
        }
 
     }
-    private void createProizvodIfNotFound(String naziv, Double cena, String tip) {
+    private void createProizvodIfNotFound(String naziv, BigDecimal cena, String tip) {
 
        if( !proizvodRepository.existsByNazivAndTip(naziv,tip)){
            Proizvod p = new Proizvod();
