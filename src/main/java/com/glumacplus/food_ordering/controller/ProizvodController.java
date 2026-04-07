@@ -1,5 +1,6 @@
 package com.glumacplus.food_ordering.controller;
 
+import com.glumacplus.food_ordering.dto.ProizvodAlergeniUpdateDto;
 import com.glumacplus.food_ordering.dto.ProizvodDto;
 import com.glumacplus.food_ordering.dto.ProizvodViewDto;
 import com.glumacplus.food_ordering.service.ProizvodService;
@@ -44,6 +45,15 @@ public class ProizvodController {
     @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
     public ResponseEntity<ProizvodViewDto> update(@PathVariable Long id, @RequestBody @Valid ProizvodDto dto) {
         return ResponseEntity.ok(service.update(id, dto));
+    }
+
+    @PutMapping("/{id}/alergeni")
+    @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
+    public ResponseEntity<ProizvodViewDto> setAlergeni(
+            @PathVariable Long id,
+            @RequestBody @Valid ProizvodAlergeniUpdateDto dto
+    ) {
+        return ResponseEntity.ok(service.setAlergeni(id, dto.getAlergeniIds()));
     }
 
     @DeleteMapping("/{id}")
