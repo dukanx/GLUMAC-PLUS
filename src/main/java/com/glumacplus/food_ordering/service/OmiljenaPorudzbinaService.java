@@ -42,7 +42,7 @@ public class OmiljenaPorudzbinaService {
 
     public List<OmiljenaPorudzbinaViewDto> getMyFavorites() {
         Korisnik korisnik = getCurrentUserEntity();
-        return omiljenaPorudzbinaRepo.findByKorisnikIdOrderByIdDesc(korisnik.getId()).stream()
+        return omiljenaPorudzbinaRepo.findByKorisnik_IdOrderByIdDesc(korisnik.getId()).stream()
                 .map(OmiljenaPorudzbinaMapper::toViewDto)
                 .collect(Collectors.toList());
     }
@@ -62,7 +62,7 @@ public class OmiljenaPorudzbinaService {
         }
 
         OmiljenaPorudzbina omiljenaPorudzbina = new OmiljenaPorudzbina();
-        omiljenaPorudzbina.setKorisnikId(korisnik.getId());
+        omiljenaPorudzbina.setKorisnik(korisnik);
         omiljenaPorudzbina.setNaziv(normalizeNaziv(naziv, porudzbinaId));
         omiljenaPorudzbina.setDatumKreiranja(LocalDateTime.now(appClock));
 
@@ -79,7 +79,7 @@ public class OmiljenaPorudzbinaService {
 
     public PorudzbinaViewDto repeatMyFavorite(Long omiljenaPorudzbinaId, TipPorudzbine tipPorudzbine, String napomena) {
         Korisnik korisnik = getCurrentUserEntity();
-        OmiljenaPorudzbina omiljenaPorudzbina = omiljenaPorudzbinaRepo.findByIdAndKorisnikId(omiljenaPorudzbinaId, korisnik.getId())
+        OmiljenaPorudzbina omiljenaPorudzbina = omiljenaPorudzbinaRepo.findByIdAndKorisnik_Id(omiljenaPorudzbinaId, korisnik.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Omiljena porudžbina nije pronađena"));
 
         if (omiljenaPorudzbina.getStavke() == null || omiljenaPorudzbina.getStavke().isEmpty()) {
@@ -105,7 +105,7 @@ public class OmiljenaPorudzbinaService {
 
     public void deleteMyFavorite(Long omiljenaPorudzbinaId) {
         Korisnik korisnik = getCurrentUserEntity();
-        OmiljenaPorudzbina omiljenaPorudzbina = omiljenaPorudzbinaRepo.findByIdAndKorisnikId(omiljenaPorudzbinaId, korisnik.getId())
+        OmiljenaPorudzbina omiljenaPorudzbina = omiljenaPorudzbinaRepo.findByIdAndKorisnik_Id(omiljenaPorudzbinaId, korisnik.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Omiljena porudžbina nije pronađena"));
         omiljenaPorudzbinaRepo.delete(omiljenaPorudzbina);
     }

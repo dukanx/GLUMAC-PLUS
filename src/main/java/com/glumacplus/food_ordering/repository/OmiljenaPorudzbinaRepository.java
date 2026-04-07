@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface OmiljenaPorudzbinaRepository extends JpaRepository<OmiljenaPorudzbina, Long> {
 
-    List<OmiljenaPorudzbina> findByKorisnikIdOrderByIdDesc(Long korisnikId);
+    List<OmiljenaPorudzbina> findByKorisnik_IdOrderByIdDesc(Long korisnikId);
 
-    Optional<OmiljenaPorudzbina> findByIdAndKorisnikId(Long id, Long korisnikId);
+    Optional<OmiljenaPorudzbina> findByIdAndKorisnik_Id(Long id, Long korisnikId);
 }

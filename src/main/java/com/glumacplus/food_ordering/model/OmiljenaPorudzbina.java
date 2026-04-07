@@ -14,8 +14,9 @@ public class OmiljenaPorudzbina {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "korisnik_id", nullable = false)
-    private Long korisnikId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "korisnik_id", nullable = false)
+    private Korisnik korisnik;
 
     @Column(nullable = false)
     private String naziv;
@@ -41,12 +42,12 @@ public class OmiljenaPorudzbina {
         this.id = id;
     }
 
-    public Long getKorisnikId() {
-        return korisnikId;
+    public Korisnik getKorisnik() {
+        return korisnik;
     }
 
-    public void setKorisnikId(Long korisnikId) {
-        this.korisnikId = korisnikId;
+    public void setKorisnik(Korisnik korisnik) {
+        this.korisnik = korisnik;
     }
 
     public String getNaziv() {
@@ -71,5 +72,10 @@ public class OmiljenaPorudzbina {
 
     public void setStavke(List<OmiljenaPorudzbinaStavka> stavke) {
         this.stavke = stavke;
+    }
+
+    @Transient
+    public Long getKorisnikId() {
+        return korisnik != null ? korisnik.getId() : null;
     }
 }
