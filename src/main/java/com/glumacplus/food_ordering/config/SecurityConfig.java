@@ -59,6 +59,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/korisnici").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/proizvodi").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/proizvodi/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/alergeni").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/alergeni/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/radno-vreme").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/radno-vreme/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/loyalty_program/**").permitAll()
                         .anyRequest().authenticated())
                 // Kazemo Springu da NE cuva sesiju (jer koristimo tokene, svaki request je

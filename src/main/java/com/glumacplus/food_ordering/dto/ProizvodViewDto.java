@@ -1,6 +1,8 @@
 package com.glumacplus.food_ordering.dto;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProizvodViewDto {
     private Long id;
@@ -9,6 +11,7 @@ public class ProizvodViewDto {
     private BigDecimal cena;
     private String jedinicaMere;
     private double kalorije, proteini, masti, ugljeniHidrati;
+    private List<String> alergeniNazivi = new ArrayList<>();
 
 
     public Long getId() { return id; }
@@ -29,4 +32,6 @@ public class ProizvodViewDto {
     public void setMasti(double masti) { this.masti = masti; }
     public double getUgljeniHidrati() { return ugljeniHidrati; }
     public void setUgljeniHidrati(double ugljeniHidrati) { this.ugljeniHidrati = ugljeniHidrati; }
+    public List<String> getAlergeniNazivi() { return alergeniNazivi; }
+    public void setAlergeniNazivi(List<String> alergeniNazivi) { this.alergeniNazivi = alergeniNazivi; }
 }
