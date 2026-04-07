@@ -1,5 +1,8 @@
 package com.glumacplus.food_ordering.service;
 
+import com.glumacplus.food_ordering.dto.AlergenDto;
+import com.glumacplus.food_ordering.dto.AlergenMapper;
+import com.glumacplus.food_ordering.dto.AlergenViewDto;
 import com.glumacplus.food_ordering.model.Alergen;
 import com.glumacplus.food_ordering.repository.AlergenRepository;
 import org.springframework.http.HttpStatus;
@@ -8,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -19,35 +23,42 @@ public class AlergenService {
         this.repository = repository;
     }
 
-    public List<Alergen> getAll() {
-        return repository.findAll();
+    public List<AlergenViewDto> getAll() {
+        return repository.findAll().stream()
+                .map(AlergenMapper::toViewDto)
+                .collect(Collectors.toList());
     }
 
-    public Alergen getById(Long id) {
-        return repository.findById(id)
+    public AlergenViewDto getById(Long id) {
+        Alergen alergen = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Alergen nije pronađen"));
+        return AlergenMapper.toViewDto(alergen);
     }
 
-    public Alergen getByNaziv(String naziv) {
-        return repository.findByNaziv(naziv)
+    public AlergenViewDto getByNaziv(String naziv) {
+        Alergen alergen = repository.findByNaziv(naziv)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Alergen sa nazivom " + naziv + " nije pronađen"));
+        return AlergenMapper.toViewDto(alergen);
     }
 
-    public Alergen create(Alergen alergen) {
-        if (repository.existsByNaziv(alergen.getNaziv())) {
+    public AlergenViewDto create(AlergenDto alergenDto) {
+        if (repository.existsByNaziv(alergenDto.getNaziv())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Alergen sa tim nazivom već postoji");
         }
-        return repository.save(alergen);
+        Alergen alergen = AlergenMapper.toEntity(alergenDto);
+        alergen = repository.save(alergen);
+        return AlergenMapper.toViewDto(alergen);
     }
 
-    public Alergen update(Long id, Alergen alergenData) {
+    public AlergenViewDto update(Long id, AlergenDto alergenData) {
         Alergen existing = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Alergen nije pronađen"));
 
         existing.setNaziv(alergenData.getNaziv());
         existing.setOpis(alergenData.getOpis());
 
-        return repository.save(existing);
+        existing = repository.save(existing);
+        return AlergenMapper.toViewDto(existing);
     }
 
     public void delete(Long id) {

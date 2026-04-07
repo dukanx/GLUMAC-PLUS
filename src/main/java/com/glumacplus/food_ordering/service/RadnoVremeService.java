@@ -1,5 +1,8 @@
 package com.glumacplus.food_ordering.service;
 
+import com.glumacplus.food_ordering.dto.RadnoVremeDto;
+import com.glumacplus.food_ordering.dto.RadnoVremeMapper;
+import com.glumacplus.food_ordering.dto.RadnoVremeViewDto;
 import com.glumacplus.food_ordering.model.DanUNedelji;
 import com.glumacplus.food_ordering.model.RadnoVreme;
 import com.glumacplus.food_ordering.repository.RadnoVremeRepository;
@@ -9,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -20,38 +24,49 @@ public class RadnoVremeService {
         this.repository = repository;
     }
 
-    public List<RadnoVreme> getAll() {
-        return repository.findAll();
+    public List<RadnoVremeViewDto> getAll() {
+        return repository.findAll().stream()
+                .map(RadnoVremeMapper::toViewDto)
+                .collect(Collectors.toList());
     }
 
-    public List<RadnoVreme> getAktivna() {
-        return repository.findByAktivno(true);
+    public List<RadnoVremeViewDto> getAktivna() {
+        return repository.findByAktivno(true).stream()
+                .map(RadnoVremeMapper::toViewDto)
+                .collect(Collectors.toList());
     }
 
-    public RadnoVreme getById(Long id) {
-        return repository.findById(id)
+    public RadnoVremeViewDto getById(Long id) {
+        RadnoVreme radnoVreme = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Radno vreme nije pronađeno"));
+        return RadnoVremeMapper.toViewDto(radnoVreme);
     }
 
-    public RadnoVreme getByDan(DanUNedelji dan) {
-        return repository.findByDan(dan)
+    public RadnoVremeViewDto getByDan(DanUNedelji dan) {
+        RadnoVreme radnoVreme = repository.findByDan(dan)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Radno vreme za dan " + dan + " nije pronađeno"));
+        return RadnoVremeMapper.toViewDto(radnoVreme);
     }
 
-    public RadnoVreme create(RadnoVreme radnoVreme) {
-        return repository.save(radnoVreme);
+    public RadnoVremeViewDto create(RadnoVremeDto radnoVremeDto) {
+        RadnoVreme radnoVreme = RadnoVremeMapper.toEntity(radnoVremeDto);
+        radnoVreme = repository.save(radnoVreme);
+        return RadnoVremeMapper.toViewDto(radnoVreme);
     }
 
-    public RadnoVreme update(Long id, RadnoVreme radnoVremeData) {
+    public RadnoVremeViewDto update(Long id, RadnoVremeDto radnoVremeData) {
         RadnoVreme existing = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Radno vreme nije pronađeno"));
 
         existing.setDan(radnoVremeData.getDan());
         existing.setOdVremena(radnoVremeData.getOdVremena());
         existing.setDoVremena(radnoVremeData.getDoVremena());
-        existing.setAktivno(radnoVremeData.getAktivno());
+        if (radnoVremeData.getAktivno() != null) {
+            existing.setAktivno(radnoVremeData.getAktivno());
+        }
 
-        return repository.save(existing);
+        existing = repository.save(existing);
+        return RadnoVremeMapper.toViewDto(existing);
     }
 
     public void delete(Long id) {

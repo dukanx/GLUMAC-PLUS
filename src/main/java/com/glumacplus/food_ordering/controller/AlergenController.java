@@ -1,7 +1,9 @@
 package com.glumacplus.food_ordering.controller;
 
-import com.glumacplus.food_ordering.model.Alergen;
+import com.glumacplus.food_ordering.dto.AlergenDto;
+import com.glumacplus.food_ordering.dto.AlergenViewDto;
 import com.glumacplus.food_ordering.service.AlergenService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,29 +23,29 @@ public class AlergenController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Alergen>> getAll() {
+    public ResponseEntity<List<AlergenViewDto>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Alergen> getById(@PathVariable Long id) {
+    public ResponseEntity<AlergenViewDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
     @GetMapping("/naziv/{naziv}")
-    public ResponseEntity<Alergen> getByNaziv(@PathVariable String naziv) {
+    public ResponseEntity<AlergenViewDto> getByNaziv(@PathVariable String naziv) {
         return ResponseEntity.ok(service.getByNaziv(naziv));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
-    public ResponseEntity<Alergen> create(@RequestBody Alergen alergen) {
+    public ResponseEntity<AlergenViewDto> create(@RequestBody @Valid AlergenDto alergen) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(alergen));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
-    public ResponseEntity<Alergen> update(@PathVariable Long id, @RequestBody Alergen alergen) {
+    public ResponseEntity<AlergenViewDto> update(@PathVariable Long id, @RequestBody @Valid AlergenDto alergen) {
         return ResponseEntity.ok(service.update(id, alergen));
     }
 

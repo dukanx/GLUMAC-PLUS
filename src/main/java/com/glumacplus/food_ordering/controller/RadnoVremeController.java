@@ -1,8 +1,10 @@
 package com.glumacplus.food_ordering.controller;
 
+import com.glumacplus.food_ordering.dto.RadnoVremeDto;
+import com.glumacplus.food_ordering.dto.RadnoVremeViewDto;
 import com.glumacplus.food_ordering.model.DanUNedelji;
-import com.glumacplus.food_ordering.model.RadnoVreme;
 import com.glumacplus.food_ordering.service.RadnoVremeService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +24,7 @@ public class RadnoVremeController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RadnoVreme>> getAll(@RequestParam(name = "aktivno", required = false) Boolean aktivno) {
+    public ResponseEntity<List<RadnoVremeViewDto>> getAll(@RequestParam(name = "aktivno", required = false) Boolean aktivno) {
         if (aktivno != null && aktivno) {
             return ResponseEntity.ok(service.getAktivna());
         }
@@ -30,24 +32,24 @@ public class RadnoVremeController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RadnoVreme> getById(@PathVariable Long id) {
+    public ResponseEntity<RadnoVremeViewDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
     @GetMapping("/dan/{dan}")
-    public ResponseEntity<RadnoVreme> getByDan(@PathVariable DanUNedelji dan) {
+    public ResponseEntity<RadnoVremeViewDto> getByDan(@PathVariable DanUNedelji dan) {
         return ResponseEntity.ok(service.getByDan(dan));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
-    public ResponseEntity<RadnoVreme> create(@RequestBody RadnoVreme radnoVreme) {
+    public ResponseEntity<RadnoVremeViewDto> create(@RequestBody @Valid RadnoVremeDto radnoVreme) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(radnoVreme));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
-    public ResponseEntity<RadnoVreme> update(@PathVariable Long id, @RequestBody RadnoVreme radnoVreme) {
+    public ResponseEntity<RadnoVremeViewDto> update(@PathVariable Long id, @RequestBody @Valid RadnoVremeDto radnoVreme) {
         return ResponseEntity.ok(service.update(id, radnoVreme));
     }
 
