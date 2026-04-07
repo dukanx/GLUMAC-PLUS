@@ -65,12 +65,10 @@ public class Porudzbina {
 
     public Porudzbina(BigDecimal ukupanIznos) {
         setUkupanIznos(ukupanIznos);
-        this.datum = LocalDateTime.now();
         this.status = StatusPorudzbine.U_PRIPREMI;
         this.tipPorudzbine = TipPorudzbine.ZA_PONETI;
     }
     public Porudzbina() {
-        this.datum = LocalDateTime.now();
         this.status = StatusPorudzbine.U_PRIPREMI;
         this.ukupanIznos = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         this.originalnaCena = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);

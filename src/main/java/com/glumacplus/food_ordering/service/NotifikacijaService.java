@@ -18,16 +18,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+
 @Service
 @Transactional
 public class NotifikacijaService {
 
     private final NotifikacijaRepository notifikacijaRepo;
     private final KorisnikRepository korisnikRepo;
+    private final Clock appClock;
 
-    public NotifikacijaService(NotifikacijaRepository notifikacijaRepo, KorisnikRepository korisnikRepo) {
+    public NotifikacijaService(NotifikacijaRepository notifikacijaRepo, KorisnikRepository korisnikRepo, Clock appClock) {
         this.notifikacijaRepo = notifikacijaRepo;
         this.korisnikRepo = korisnikRepo;
+        this.appClock = appClock;
     }
 
     public Page<NotifikacijaViewDto> getMyNotifications(Boolean procitana, int pageNo, int pageSize) {
@@ -65,6 +70,7 @@ public class NotifikacijaService {
         notifikacija.setKorisnik(korisnik);
         notifikacija.setTip(tip);
         notifikacija.setPoruka(normalizedPoruka);
+        notifikacija.setDatum(LocalDateTime.now(appClock));
         notifikacija = notifikacijaRepo.save(notifikacija);
         return NotifikacijaMapper.toViewDto(notifikacija);
     }
@@ -81,6 +87,7 @@ public class NotifikacijaService {
         notifikacija.setKorisnik(korisnik);
         notifikacija.setTip(tip);
         notifikacija.setPoruka(normalizedPoruka);
+        notifikacija.setDatum(LocalDateTime.now(appClock));
         notifikacijaRepo.save(notifikacija);
     }
 

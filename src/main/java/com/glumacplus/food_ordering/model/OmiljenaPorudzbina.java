@@ -26,9 +26,7 @@ public class OmiljenaPorudzbina {
     @OneToMany(mappedBy = "omiljenaPorudzbina", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OmiljenaPorudzbinaStavka> stavke = new ArrayList<>();
 
-    public OmiljenaPorudzbina() {
-        this.datumKreiranja = LocalDateTime.now();
-    }
+    public OmiljenaPorudzbina() {}
 
     public void dodajStavku(OmiljenaPorudzbinaStavka stavka) {
         stavke.add(stavka);

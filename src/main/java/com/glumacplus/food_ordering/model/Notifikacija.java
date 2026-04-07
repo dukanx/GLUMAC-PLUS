@@ -1,7 +1,6 @@
 package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,7 +31,6 @@ public class Notifikacija {
     public Notifikacija() {
         this.tip = NotifikacijaTip.RUCNO;
         this.procitana = false;
-        this.datum = LocalDateTime.now();
     }
 
     @PrePersist
@@ -42,9 +40,6 @@ public class Notifikacija {
         }
         if (this.procitana == null) {
             this.procitana = false;
-        }
-        if (this.datum == null) {
-            this.datum = LocalDateTime.now();
         }
     }
 

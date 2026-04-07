@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -37,14 +38,16 @@ public class PorudzbinaService {
     private final LoyaltyProgramRepository loyaltyRepo;
     private final NotifikacijaService notifikacijaService;
     private final RadnoVremeRepository radnoVremeRepo;
+    private final Clock appClock;
 
-    public PorudzbinaService(PorudzbinaRepository porudzbinaRepo, ProizvodRepository proizvodRepo, KorisnikRepository korisnikRepo, LoyaltyProgramRepository loyaltyRepo, NotifikacijaService notifikacijaService, RadnoVremeRepository radnoVremeRepo){
+    public PorudzbinaService(PorudzbinaRepository porudzbinaRepo, ProizvodRepository proizvodRepo, KorisnikRepository korisnikRepo, LoyaltyProgramRepository loyaltyRepo, NotifikacijaService notifikacijaService, RadnoVremeRepository radnoVremeRepo, Clock appClock){
         this.porudzbinaRepo = porudzbinaRepo;
         this.proizvodRepo = proizvodRepo;
         this.korisnikRepo = korisnikRepo;
         this.loyaltyRepo = loyaltyRepo;
         this.notifikacijaService = notifikacijaService;
         this.radnoVremeRepo = radnoVremeRepo;
+        this.appClock = appClock;
     }
 
     public List<PorudzbinaViewDto> getAll(){
@@ -76,7 +79,7 @@ public class PorudzbinaService {
         por.setNapomena(normalizeNapomena(dto.getNapomena()));
         por.setTipPorudzbine(dto.getTipPorudzbine() != null ? dto.getTipPorudzbine() : TipPorudzbine.ZA_PONETI);
 
-        por.setDatum(LocalDateTime.now());
+        por.setDatum(LocalDateTime.now(appClock));
         por.setStatus(StatusPorudzbine.U_PRIPREMI);
 
         BigDecimal ukIznos = BigDecimal.ZERO;
@@ -296,7 +299,7 @@ public class PorudzbinaService {
             return;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(appClock);
         DanUNedelji dan = mapDayOfWeek(now.getDayOfWeek());
         LocalTime trenutnoVreme = now.toLocalTime();
 

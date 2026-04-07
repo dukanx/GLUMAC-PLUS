@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,17 +24,20 @@ public class OmiljenaPorudzbinaService {
     private final PorudzbinaRepository porudzbinaRepo;
     private final PorudzbinaService porudzbinaService;
     private final KorisnikRepository korisnikRepo;
+    private final Clock appClock;
 
     public OmiljenaPorudzbinaService(
             OmiljenaPorudzbinaRepository omiljenaPorudzbinaRepo,
             PorudzbinaRepository porudzbinaRepo,
             PorudzbinaService porudzbinaService,
-            KorisnikRepository korisnikRepo
+            KorisnikRepository korisnikRepo,
+            Clock appClock
     ) {
         this.omiljenaPorudzbinaRepo = omiljenaPorudzbinaRepo;
         this.porudzbinaRepo = porudzbinaRepo;
         this.porudzbinaService = porudzbinaService;
         this.korisnikRepo = korisnikRepo;
+        this.appClock = appClock;
     }
 
     public List<OmiljenaPorudzbinaViewDto> getMyFavorites() {
@@ -59,6 +64,7 @@ public class OmiljenaPorudzbinaService {
         OmiljenaPorudzbina omiljenaPorudzbina = new OmiljenaPorudzbina();
         omiljenaPorudzbina.setKorisnikId(korisnik.getId());
         omiljenaPorudzbina.setNaziv(normalizeNaziv(naziv, porudzbinaId));
+        omiljenaPorudzbina.setDatumKreiranja(LocalDateTime.now(appClock));
 
         for (StavkaPorudzbine stavkaPorudzbine : porudzbina.getStavke()) {
             OmiljenaPorudzbinaStavka stavka = new OmiljenaPorudzbinaStavka();
