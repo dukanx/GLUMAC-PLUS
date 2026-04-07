@@ -6,6 +6,7 @@ import com.glumacplus.food_ordering.repository.KorisnikRepository;
 import com.glumacplus.food_ordering.repository.LoyaltyProgramRepository;
 import com.glumacplus.food_ordering.repository.PorudzbinaRepository;
 import com.glumacplus.food_ordering.repository.ProizvodRepository;
+import com.glumacplus.food_ordering.repository.RadnoVremeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -33,13 +36,15 @@ public class PorudzbinaService {
     private final KorisnikRepository korisnikRepo;
     private final LoyaltyProgramRepository loyaltyRepo;
     private final NotifikacijaService notifikacijaService;
+    private final RadnoVremeRepository radnoVremeRepo;
 
-    public PorudzbinaService(PorudzbinaRepository porudzbinaRepo, ProizvodRepository proizvodRepo, KorisnikRepository korisnikRepo, LoyaltyProgramRepository loyaltyRepo, NotifikacijaService notifikacijaService){
+    public PorudzbinaService(PorudzbinaRepository porudzbinaRepo, ProizvodRepository proizvodRepo, KorisnikRepository korisnikRepo, LoyaltyProgramRepository loyaltyRepo, NotifikacijaService notifikacijaService, RadnoVremeRepository radnoVremeRepo){
         this.porudzbinaRepo = porudzbinaRepo;
         this.proizvodRepo = proizvodRepo;
         this.korisnikRepo = korisnikRepo;
         this.loyaltyRepo = loyaltyRepo;
         this.notifikacijaService = notifikacijaService;
+        this.radnoVremeRepo = radnoVremeRepo;
     }
 
     public List<PorudzbinaViewDto> getAll(){
@@ -64,6 +69,7 @@ public class PorudzbinaService {
     public PorudzbinaViewDto create(PorudzbinaDto dto) {
 
         Korisnik trenutniKorisnik = getCurrentUserEntity();
+        ensureRestaurantIsOpenNow();
 
         Porudzbina por = new Porudzbina();
         por.setKorisnik(trenutniKorisnik);
@@ -283,6 +289,46 @@ public class PorudzbinaService {
         }
         String trimmed = napomena.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void ensureRestaurantIsOpenNow() {
+        if (radnoVremeRepo.findByAktivno(true).isEmpty()) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        DanUNedelji dan = mapDayOfWeek(now.getDayOfWeek());
+        LocalTime trenutnoVreme = now.toLocalTime();
+
+        List<RadnoVreme> intervali = radnoVremeRepo.findByDanAndAktivno(dan, true);
+        boolean otvoreno = intervali.stream().anyMatch(interval -> isWithinInterval(trenutnoVreme, interval));
+
+        if (!otvoreno) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trenutno nije moguće poručivanje van radnog vremena");
+        }
+    }
+
+    private DanUNedelji mapDayOfWeek(DayOfWeek dayOfWeek) {
+        return switch (dayOfWeek) {
+            case MONDAY -> DanUNedelji.PONEDELJAK;
+            case TUESDAY -> DanUNedelji.UTORAK;
+            case WEDNESDAY -> DanUNedelji.SREDA;
+            case THURSDAY -> DanUNedelji.CETVRTAK;
+            case FRIDAY -> DanUNedelji.PETAK;
+            case SATURDAY -> DanUNedelji.SUBOTA;
+            case SUNDAY -> DanUNedelji.NEDELJA;
+        };
+    }
+
+    private boolean isWithinInterval(LocalTime trenutnoVreme, RadnoVreme interval) {
+        LocalTime od = interval.getOdVremena();
+        LocalTime doVremena = interval.getDoVremena();
+
+        if (!od.isAfter(doVremena)) {
+            return !trenutnoVreme.isBefore(od) && !trenutnoVreme.isAfter(doVremena);
+        }
+
+        return !trenutnoVreme.isBefore(od) || !trenutnoVreme.isAfter(doVremena);
     }
 
     private void sendAcceptedWithEstimatedTimeNotification(Long korisnikId, Long porudzbinaId, Integer procenjenoVreme) {

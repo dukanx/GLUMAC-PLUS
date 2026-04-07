@@ -95,6 +95,24 @@ public class KorisnikService {
         return KorisnikMapper.toViewDto(korisnik);
     }
 
+    public KorisnikViewDto updateUserRole(Long korisnikId, Uloga novaUloga) {
+        if (novaUloga == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nova uloga je obavezna");
+        }
+
+        Korisnik admin = getCurrentUserEntity();
+        Korisnik korisnik = korisnikRepo.findById(korisnikId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Korisnik nije pronađen!"));
+
+        if (admin.getId().equals(korisnik.getId()) && novaUloga != Uloga.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ne možete promeniti sopstvenu ulogu sa ADMIN na drugu ulogu");
+        }
+
+        korisnik.setUloga(novaUloga);
+        korisnik = korisnikRepo.save(korisnik);
+        return KorisnikMapper.toViewDto(korisnik);
+    }
+
     private Korisnik getCurrentUserEntity() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return korisnikRepo.findByEmail(email)
