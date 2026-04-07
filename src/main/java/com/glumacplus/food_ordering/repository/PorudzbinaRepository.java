@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface PorudzbinaRepository extends JpaRepository<Porudzbina, Long> {
 
-    Page<Porudzbina> findByKorisnikId(Long korisnikId, Pageable pageable);
+    Page<Porudzbina> findByKorisnik_Id(Long korisnikId, Pageable pageable);
 
 
     Page<Porudzbina> findByStatus(StatusPorudzbine status, Pageable pageable);

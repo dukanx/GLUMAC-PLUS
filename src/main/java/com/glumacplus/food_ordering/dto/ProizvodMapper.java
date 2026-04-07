@@ -1,6 +1,7 @@
 package com.glumacplus.food_ordering.dto;
 
 import com.glumacplus.food_ordering.model.Proizvod;
+import java.util.stream.Collectors;
 
 public class ProizvodMapper {
 
@@ -15,6 +16,12 @@ public class ProizvodMapper {
         dto.setProteini(p.getProteini());
         dto.setMasti(p.getMasti());
         dto.setUgljeniHidrati(p.getUgljeniHidrati());
+        dto.setAlergeniNazivi(
+                p.getAlergeni().stream()
+                        .map(alergen -> alergen.getNaziv())
+                        .sorted()
+                        .collect(Collectors.toList())
+        );
         return dto;
     }
 

@@ -1,6 +1,7 @@
 package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
+        import java.time.LocalDateTime;
 
 
 @Entity
@@ -30,6 +31,9 @@ public class Korisnik {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Uloga uloga;
+
+    @Column(name = "zadnja_upotreba_popusta")
+    private LocalDateTime zadnjaUpotrebaPopusta;
 
     public Korisnik() {}
 
@@ -61,5 +65,8 @@ public class Korisnik {
 
     public Uloga getUloga() { return uloga; }
     public void setUloga(Uloga uloga) { this.uloga = uloga; }
+
+    public LocalDateTime getZadnjaUpotrebaPopusta() { return zadnjaUpotrebaPopusta; }
+    public void setZadnjaUpotrebaPopusta(LocalDateTime zadnjaUpotrebaPopusta) { this.zadnjaUpotrebaPopusta = zadnjaUpotrebaPopusta; }
 }
 

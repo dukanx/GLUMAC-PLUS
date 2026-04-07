@@ -2,6 +2,8 @@
 package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,32 +20,34 @@ public class Porudzbina {
     @Column(nullable = false)
     private LocalDateTime datum;
 
-    @Column(name = "ukupan_iznos")
-    private double ukupanIznos;
+    @Column(name = "ukupan_iznos", precision = 12, scale = 2)
+    private BigDecimal ukupanIznos;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusPorudzbine status;
 
-    @Column(name = "originalna_cena")
-    private double originalnaCena;
+    @Column(name = "originalna_cena", precision = 12, scale = 2)
+    private BigDecimal originalnaCena;
+
+    @Column(columnDefinition = "TEXT")
+    private String napomena;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tip_porudzbine", nullable = false)
+    private TipPorudzbine tipPorudzbine;
+
+    @Column(name = "procenjeno_vreme")
+    private Integer procenjenoVreme;
 
     @OneToMany(mappedBy = "porudzbina", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StavkaPorudzbine> stavke = new ArrayList<>();
 
 
 
-    @Column(name = "korisnik_id")
-    private Long korisnikId;
-
-
-    public Long getKorisnikId() {
-        return korisnikId;
-    }
-
-    public void setKorisnikId(Long korisnikId) {
-        this.korisnikId = korisnikId;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "korisnik_id")
+    private Korisnik korisnik;
 
     public List<StavkaPorudzbine> getStavke() {
         return stavke;
@@ -59,15 +63,16 @@ public class Porudzbina {
         stavka.setPorudzbina(this);
     }
 
-    public Porudzbina(Double ukupanIznos) {
-        this.ukupanIznos = ukupanIznos;
-        this.datum = LocalDateTime.now();
+    public Porudzbina(BigDecimal ukupanIznos) {
+        setUkupanIznos(ukupanIznos);
         this.status = StatusPorudzbine.U_PRIPREMI;
+        this.tipPorudzbine = TipPorudzbine.ZA_PONETI;
     }
     public Porudzbina() {
-        this.datum = LocalDateTime.now();
         this.status = StatusPorudzbine.U_PRIPREMI;
-        this.ukupanIznos = 0.0;
+        this.ukupanIznos = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        this.originalnaCena = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        this.tipPorudzbine = TipPorudzbine.ZA_PONETI;
     }
 
     public Long getId() {
@@ -86,12 +91,12 @@ public class Porudzbina {
         this.datum = datum;
     }
 
-    public double getUkupanIznos() {
+    public BigDecimal getUkupanIznos() {
         return ukupanIznos;
     }
 
-    public void setUkupanIznos(double ukupanIznos) {
-        this.ukupanIznos = ukupanIznos;
+    public void setUkupanIznos(BigDecimal ukupanIznos) {
+        this.ukupanIznos = ukupanIznos == null ? null : ukupanIznos.setScale(2, RoundingMode.HALF_UP);
     }
 
     public StatusPorudzbine getStatus() {
@@ -102,11 +107,48 @@ public class Porudzbina {
         this.status = status;
     }
 
-    public double getOriginalnaCena() {
+    public BigDecimal getOriginalnaCena() {
         return originalnaCena;
     }
 
-    public void setOriginalnaCena(double originalnaCena) {
-        this.originalnaCena = originalnaCena;
+    public void setOriginalnaCena(BigDecimal originalnaCena) {
+        this.originalnaCena = originalnaCena == null ? null : originalnaCena.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public String getNapomena() {
+        return napomena;
+    }
+
+    public void setNapomena(String napomena) {
+        this.napomena = napomena;
+    }
+
+    public TipPorudzbine getTipPorudzbine() {
+        return tipPorudzbine;
+    }
+
+    public void setTipPorudzbine(TipPorudzbine tipPorudzbine) {
+        this.tipPorudzbine = tipPorudzbine;
+    }
+
+    public Integer getProcenjenoVreme() {
+        return procenjenoVreme;
+    }
+
+    public void setProcenjenoVreme(Integer procenjenoVreme) {
+        this.procenjenoVreme = procenjenoVreme;
+    }
+
+    public Korisnik getKorisnik() {
+        return korisnik;
+    }
+
+    public void setKorisnik(Korisnik korisnik) {
+        this.korisnik = korisnik;
+    }
+
+    @Transient
+    public Long getKorisnikId() {
+        return korisnik != null ? korisnik.getId() : null;
     }
 }

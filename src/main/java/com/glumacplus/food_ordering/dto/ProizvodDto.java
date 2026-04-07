@@ -1,5 +1,6 @@
 package com.glumacplus.food_ordering.dto;
 
+import java.math.BigDecimal;
 import jakarta.validation.constraints.*;
 
 public class ProizvodDto {
@@ -9,8 +10,9 @@ public class ProizvodDto {
     @NotBlank(message = "Tip je obavezan")
     private String tip;
 
-    @Positive(message = "Cena mora biti pozitivna")
-    private double cena;
+    @NotNull(message = "Cena je obavezna")
+    @DecimalMin(value = "0.01", message = "Cena mora biti pozitivna")
+    private BigDecimal cena;
 
     @NotBlank(message = "Jedinica mere je obavezna")
     private String jedinicaMere;
@@ -25,8 +27,8 @@ public class ProizvodDto {
     public void setNaziv(String naziv) { this.naziv = naziv; }
     public String getTip() { return tip; }
     public void setTip(String tip) { this.tip = tip; }
-    public double getCena() { return cena; }
-    public void setCena(double cena) { this.cena = cena; }
+    public BigDecimal getCena() { return cena; }
+    public void setCena(BigDecimal cena) { this.cena = cena; }
     public String getJedinicaMere() { return jedinicaMere; }
     public void setJedinicaMere(String jedinicaMere) { this.jedinicaMere = jedinicaMere; }
     public double getKalorije() { return kalorije; }

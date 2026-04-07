@@ -35,12 +35,10 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final List<String> allowedOriginPatterns;
 
-
     public SecurityConfig(
             CustomUserDetailsService userDetailsService,
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            @Value("${app.cors.allowed-origin-patterns}") String allowedOriginPatternsProperty
-    ) {
+            @Value("${app.cors.allowed-origin-patterns}") String allowedOriginPatternsProperty) {
         this.userDetailsService = userDetailsService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.allowedOriginPatterns = Arrays.stream(allowedOriginPatternsProperty.split(","))
@@ -54,18 +52,21 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error", "/error/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/korisnici/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/korisnici").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/proizvodi").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/proizvodi/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/alergeni").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/alergeni/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/radno-vreme").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/radno-vreme/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/loyalty_program/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                // Kazemo Springu da NE cuva sesiju (jer koristimo tokene, svaki request je poseban)
+                        .anyRequest().authenticated())
+                // Kazemo Springu da NE cuva sesiju (jer koristimo tokene, svaki request je
+                // poseban)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 // Ubacujemo nas filter pre standardnog filtera
@@ -76,8 +77,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
@@ -96,7 +96,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(allowedOriginPatterns);
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 

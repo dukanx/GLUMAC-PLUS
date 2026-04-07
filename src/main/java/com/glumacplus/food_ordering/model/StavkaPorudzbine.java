@@ -3,6 +3,8 @@ package com.glumacplus.food_ordering.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Entity
 @Table(name = "stavka_porudzbine")
@@ -18,11 +20,13 @@ public class StavkaPorudzbine {
 
 
     @Positive
-    private double cena;
+    @Column(precision = 12, scale = 2)
+    private BigDecimal cena;
 
 
     @Positive
-    private double iznosStavke;
+    @Column(precision = 12, scale = 2)
+    private BigDecimal iznosStavke;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "porudzbina_id", nullable = false)
@@ -36,10 +40,9 @@ public class StavkaPorudzbine {
 
     public StavkaPorudzbine() {}
 
-    public StavkaPorudzbine(double kolicina, double cena, Porudzbina porudzbina, Proizvod proizvod) {
+    public StavkaPorudzbine(double kolicina, BigDecimal cena, Porudzbina porudzbina, Proizvod proizvod) {
         this.kolicina = kolicina;
-        this.cena = cena;
-        this.iznosStavke = kolicina * cena;
+        setCena(cena);
         this.porudzbina = porudzbina;
         this.proizvod = proizvod;
     }
@@ -51,17 +54,19 @@ public class StavkaPorudzbine {
     public double getKolicina() { return kolicina; }
     public void setKolicina(double kolicina) {
         this.kolicina = kolicina;
-        this.iznosStavke = this.kolicina * this.cena;
+        recalculateIznosStavke();
     }
 
-    public double getCena() { return cena; }
-    public void setCena(double cena) {
-        this.cena = cena;
-        this.iznosStavke = this.kolicina * this.cena;
+    public BigDecimal getCena() { return cena; }
+    public void setCena(BigDecimal cena) {
+        this.cena = cena == null ? null : cena.setScale(2, RoundingMode.HALF_UP);
+        recalculateIznosStavke();
     }
 
-    public double getIznosStavke() { return iznosStavke; }
-    public void setIznosStavke(double iznosStavke) { this.iznosStavke = iznosStavke; }
+    public BigDecimal getIznosStavke() { return iznosStavke; }
+    public void setIznosStavke(BigDecimal iznosStavke) {
+        this.iznosStavke = iznosStavke == null ? null : iznosStavke.setScale(2, RoundingMode.HALF_UP);
+    }
 
     public Porudzbina getPorudzbina() { return porudzbina; }
     public void setPorudzbina(Porudzbina porudzbina) { this.porudzbina = porudzbina; }
@@ -69,5 +74,14 @@ public class StavkaPorudzbine {
     public Proizvod getProizvod() { return proizvod; }
     public void setProizvod(Proizvod proizvod) { this.proizvod = proizvod; }
 
-}
+    private void recalculateIznosStavke() {
+        if (this.cena == null) {
+            this.iznosStavke = null;
+            return;
+        }
+        this.iznosStavke = BigDecimal.valueOf(this.kolicina)
+                .multiply(this.cena)
+                .setScale(2, RoundingMode.HALF_UP);
+    }
 
+}

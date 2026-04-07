@@ -1,15 +1,18 @@
 package com.glumacplus.food_ordering.dto;
 
-import java.math.BigDecimal;
+public class OmiljenaPorudzbinaStavkaViewDto {
 
-public class StavkaPorudzbineViewDto {
-
+    private Long proizvodId;
     private String nazivProizvoda;
     private double kolicina;
-    private BigDecimal cena;
-    private BigDecimal iznosStavke;
 
+    public Long getProizvodId() {
+        return proizvodId;
+    }
 
+    public void setProizvodId(Long proizvodId) {
+        this.proizvodId = proizvodId;
+    }
 
     public String getNazivProizvoda() {
         return nazivProizvoda;
@@ -25,21 +28,5 @@ public class StavkaPorudzbineViewDto {
 
     public void setKolicina(double kolicina) {
         this.kolicina = kolicina;
-    }
-
-    public BigDecimal getCena() {
-        return cena;
-    }
-
-    public void setCena(BigDecimal cena) {
-        this.cena = cena;
-    }
-
-    public BigDecimal getIznosStavke() {
-        return iznosStavke;
-    }
-
-    public void setIznosStavke(BigDecimal iznosStavke) {
-        this.iznosStavke = iznosStavke;
     }
 }
