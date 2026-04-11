@@ -28,6 +28,7 @@ function getKorakIndex(status: Status): number {
 export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }: Props) {
     const { token } = useAuth();
     const [status, setStatus] = useState<Status>('U_PRIPREMI');
+    const [procenjenoVreme, setProcenjenoVreme] = useState<number | null>(null);
     const [greska, setGreska] = useState(false);
 
     const zavrseno = status === 'REALIZOVANA' || status === 'OTKAZANA';
@@ -42,6 +43,7 @@ export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }
                 if (res.ok) {
                     const data = await res.json();
                     setStatus(data.status);
+                    setProcenjenoVreme(data.procenjenoVreme ?? null);
                 }
             } catch {
                 setGreska(true);
@@ -154,7 +156,11 @@ export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }
                                         className={styles.porukaText}
                                     >
                                         {status === 'U_PRIPREMI' && 'Vaša porudžbina je primljena! Čekamo potvrdu kuhinje...'}
-                                        {status === 'SPREMNA' && 'Palačinke se prave! Uskoro su gotove.'}
+                                        {status === 'SPREMNA' && (
+                                            procenjenoVreme
+                                                ? `Vaša porudžbina je prihvaćena i procenjeno vreme čekanja je ${procenjenoVreme} minuta.`
+                                                : 'Palačinke se prave! Uskoro su gotove.'
+                                        )}
                                         {status === 'REALIZOVANA' && 'Gotovo! Dođite po svoju porudžbinu na kasu.'}
                                     </motion.p>
                                 </AnimatePresence>

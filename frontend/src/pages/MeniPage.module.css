@@ -60,6 +60,13 @@
   margin: 0;
 }
 
+.radnoVremeInfo {
+  margin: 14px 0 0;
+  color: #e3ccaa;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 .loyaltyBaner {
   margin-top: 16px;
   display: inline-flex;

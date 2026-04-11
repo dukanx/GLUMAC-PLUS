@@ -3,9 +3,10 @@ import { createContext, useContext, useState, useEffect } from 'react';
 interface Proizvod {
     id: number;
     naziv: string;
-    opis: string;
+    opis?: string;
     cena: number;
     tip: string;
+    alergeniNazivi?: string[];
 }
 
 interface StavkaKorpe {

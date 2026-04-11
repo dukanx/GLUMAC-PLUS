@@ -18,6 +18,7 @@ interface Porudzbina {
     datum: string;
     status: Status;
     ukupanIznos: number;
+    procenjenoVreme?: number | null;
     korisnikIme?: string;
     stavke: StavkaPorudzbine[];
 }
@@ -93,6 +94,58 @@ export default function AdminPage() {
             }
         } catch {
             console.error('Greška pri promeni statusa');
+        } finally {
+            setAzurira(null);
+        }
+    };
+
+    const prihvatiSaVremenom = async (id: number) => {
+        if (!token) return;
+
+        const unos = window.prompt('Unesi procenjeno vreme čekanja (1-120 minuta):', '20');
+        if (unos === null) {
+            return;
+        }
+
+        const procenjenoVreme = Number(unos);
+        if (!Number.isInteger(procenjenoVreme) || procenjenoVreme < 1 || procenjenoVreme > 120) {
+            window.alert('Procenjeno vreme mora biti ceo broj između 1 i 120.');
+            return;
+        }
+
+        setAzurira(id);
+        try {
+            const statusRes = await fetch(
+                `http://localhost:8080/api/porudzbine/${id}/status?status=SPREMNA`,
+                {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }
+            );
+            if (!statusRes.ok) {
+                throw new Error('Neuspešna promena statusa');
+            }
+
+            const vremeRes = await fetch(
+                `http://localhost:8080/api/porudzbine/${id}/procenjeno-vreme?procenjenoVreme=${procenjenoVreme}`,
+                {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }
+            );
+            if (!vremeRes.ok) {
+                throw new Error('Neuspešno postavljanje procenjenog vremena');
+            }
+
+            setPorudzbine(prev =>
+                prev.map(p => p.porudzbinaId === id
+                    ? { ...p, status: 'SPREMNA', procenjenoVreme }
+                    : p
+                )
+            );
+        } catch {
+            console.error('Greška pri prihvatanju porudžbine');
+            fetchPorudzbine();
         } finally {
             setAzurira(null);
         }
@@ -202,7 +255,7 @@ export default function AdminPage() {
                                                 <>
                                                     <motion.button
                                                         className={`${styles.akcijaBtn} ${styles.akcijaPrihvati}`}
-                                                        onClick={() => promeniStatus(p.porudzbinaId, 'SPREMNA')}
+                                                        onClick={() => prihvatiSaVremenom(p.porudzbinaId)}
                                                         disabled={azurira === p.porudzbinaId}
                                                         whileTap={{ scale: 0.95 }}
                                                     >

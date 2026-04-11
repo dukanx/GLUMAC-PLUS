@@ -6,9 +6,10 @@ import React from 'react';
 interface Proizvod {
     id: number;
     naziv: string;
-    opis: string;
+    opis?: string;
     cena: number;
     tip: string;
+    alergeniNazivi?: string[];
 }
 
 interface Props {
@@ -49,7 +50,12 @@ function ProizvodKartica({
             {/* Tekst */}
             <div className={styles.tekst}>
                 <h3 className={styles.naziv}>{proizvod.naziv}</h3>
-                <p className={styles.opis}>{proizvod.opis}</p>
+                {proizvod.opis ? <p className={styles.opis}>{proizvod.opis}</p> : null}
+                {proizvod.alergeniNazivi && proizvod.alergeniNazivi.length > 0 ? (
+                    <p className={styles.alergeni}>
+                        Alergeni: {proizvod.alergeniNazivi.join(', ')}
+                    </p>
+                ) : null}
 
                 <div className={styles.footer}>
                     <div className={styles.cenaWrap}>

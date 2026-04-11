@@ -10,9 +10,16 @@ import Toast from '../components/Toast';
 interface Proizvod {
   id: number;
   naziv: string;
-  opis: string;
+  opis?: string;
   cena: number;
   tip: string;
+  alergeniNazivi?: string[];
+}
+
+interface RadnoVremeInterval {
+  dan: 'PONEDELJAK' | 'UTORAK' | 'SREDA' | 'CETVRTAK' | 'PETAK' | 'SUBOTA' | 'NEDELJA';
+  odVremena: string;
+  doVremena: string;
 }
 
 const SLIKE_PO_TIPU: Record<string, string> = {
@@ -48,12 +55,46 @@ export default function MeniPage() {
   const [pretraga, setPretraga] = useState('');
   const [aktivniTab, setAktivniTab] = useState('Sve');
   const [toastPoruka, setToastPoruka] = useState<string | null>(null);
+  const [radnoVremeInfo, setRadnoVremeInfo] = useState<string>('');
 
   useEffect(() => {
     fetch('http://localhost:8080/api/proizvodi')
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(data => { setProizvodi(data); setUcitava(false); })
       .catch(() => { setGreska('Ne mogu da učitam meni.'); setUcitava(false); });
+  }, []);
+
+  useEffect(() => {
+    const daniMap: Record<number, RadnoVremeInterval['dan']> = {
+      0: 'NEDELJA',
+      1: 'PONEDELJAK',
+      2: 'UTORAK',
+      3: 'SREDA',
+      4: 'CETVRTAK',
+      5: 'PETAK',
+      6: 'SUBOTA',
+    };
+
+    fetch('http://localhost:8080/api/radno-vreme?aktivno=true')
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then((data: RadnoVremeInterval[]) => {
+        const danas = daniMap[new Date().getDay()];
+        const intervaliDanas = data.filter(i => i.dan === danas);
+
+        if (intervaliDanas.length === 0) {
+          setRadnoVremeInfo('Danas lokal ne radi.');
+          return;
+        }
+
+        const tekstIntervala = intervaliDanas
+          .map(i => `${i.odVremena?.slice(0, 5)} - ${i.doVremena?.slice(0, 5)}`)
+          .join(', ');
+
+        setRadnoVremeInfo(`Radno vreme danas: ${tekstIntervala}`);
+      })
+      .catch(() => {
+        setRadnoVremeInfo('');
+      });
   }, []);
 
   const kategorije = useMemo(() => {
@@ -90,6 +131,9 @@ export default function MeniPage() {
           <p className={styles.pageHeaderOpis}>
             Slatke, slane, sezonske — svaka palačinka rađena s pažnjom.
           </p>
+          {radnoVremeInfo && (
+            <p className={styles.radnoVremeInfo}>{radnoVremeInfo}</p>
+          )}
           {korisnik && popust > 0 && (
             <div className={styles.loyaltyBaner}>
               🏆 {korisnik.loyaltyNivo} — tvoj popust: <strong>{popust}%</strong>
