@@ -19,8 +19,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-
-
   const handleLogout = () => {
     logout();
     window.location.href = '/';
@@ -32,6 +30,7 @@ export default function Navbar() {
   return (
     <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ''}`}>
 
+
       {/* LOGO */}
       <Link to="/" className={styles.logo}>
         <img src={logo} alt="Glumac Plus" className={styles.logoImg} />
@@ -42,11 +41,12 @@ export default function Navbar() {
         <NavLink to="/meni" className={navLinkKlasa}>
           Meni
         </NavLink>
+        <NavLink to="/loyalty" className={navLinkKlasa}>
+          Loyalty
+        </NavLink>
         {korisnik && (
           <>
-            <NavLink to="/loyalty" className={navLinkKlasa}>
-              Loyalty
-            </NavLink>
+
             <NavLink to="/istorija" className={navLinkKlasa}>
               Porudžbine
             </NavLink>
@@ -69,16 +69,7 @@ export default function Navbar() {
                 {korisnik.brojBodova} bodova
               </span>
             </div>
-            <button
-              className={styles.korpaIkona}
-              onClick={() => navigate('/meni')}
-              aria-label="Korpa"
-            >
-              🛒
-              {ukupnoStavki > 0 && (
-                <span className={styles.korpaBadge}>{ukupnoStavki}</span>
-              )}
-            </button>
+           
             <button onClick={handleLogout} className={styles.dugmeOdjava}>
               Odjavi se
             </button>

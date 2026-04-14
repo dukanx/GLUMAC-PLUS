@@ -113,9 +113,8 @@ export default function App() {
         <Route path="/meni" element={<MeniPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/loyalty" element={
-          <PrivateRoute><LoyaltyPage /></PrivateRoute>
-        } />
+        <Route path="/loyalty" element={<LoyaltyPage />} />
+
         <Route path="/istorija" element={
           <PrivateRoute><IstorijaPage /></PrivateRoute>
         } />

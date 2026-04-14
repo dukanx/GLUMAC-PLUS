@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400;700&display=swap');
 
 :root {
   --krem: #f2e8d9;
@@ -12,9 +12,9 @@
   --stolica: #636a72;
   --akcent: #f58089;
 
-  --font-display: 'Playfair Display', serif;
-  --font-body: 'Lato', sans-serif;
-
+  --font-display: 'Lora', serif;
+  --font-body: 'Lato', sans-serif; 
+  
   --space-xs: 8px;
   --space-sm: 16px;
   --space-md: 32px;

@@ -2,7 +2,10 @@
 
 .stranica {
     min-height: 100vh;
-    background: var(--krem);
+    background: var(--braon-tamni);
+    background-image: 
+        radial-gradient(ellipse at 80% 20%, rgba(187, 145, 98, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 10% 90%, rgba(134, 83, 55, 0.2) 0%, transparent 55%);
     display: flex;
     align-items: center;
     justify-content: center;

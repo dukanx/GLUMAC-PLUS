@@ -1,7 +1,6 @@
 /* ── PAGE ── */
 .stranica {
   min-height: 100vh;
-  padding-top: 72px;
   background: var(--krem);
   font-family: var(--font-body);
   display: flex;
@@ -11,7 +10,7 @@
 /* ── PAGE HEADER ── */
 .pageHeader {
   background: var(--braon-tamni);
-  padding: 72px 8% 56px;
+  padding: 144px 8% 56px; /* 72px (navbar) + 72px originalni padding */
   position: relative;
   overflow: hidden;
 }

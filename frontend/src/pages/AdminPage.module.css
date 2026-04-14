@@ -1,8 +1,21 @@
 .stranica {
     min-height: 100vh;
     background: var(--krem);
-    padding: 96px 8% var(--space-lg);
+    padding: 104px 8% var(--space-lg);
     font-family: var(--font-body);
+    position: relative;
+}
+
+.stranica::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 180px;
+    background: var(--braon-tamni);
+    background-image: 
+        radial-gradient(ellipse at 80% 20%, rgba(187, 145, 98, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 10% 90%, rgba(134, 83, 55, 0.2) 0%, transparent 55%);
+    z-index: 0;
 }
 
 /* ── HEADER ── */
@@ -13,6 +26,8 @@
     margin-bottom: var(--space-md);
     flex-wrap: wrap;
     gap: var(--space-sm);
+    position: relative;
+    z-index: 1;
 }
 
 .naslov {
@@ -20,13 +35,14 @@
     font-size: clamp(1.8rem, 3vw, 2.5rem);
     font-style: italic;
     font-weight: 700;
-    color: var(--tekst);
+    color: var(--krem);
     margin: 0 0 4px;
 }
 
 .podnaslov {
     font-size: 0.82rem;
-    color: var(--tekst-sivi);
+    color: var(--krem-tamni);
+    opacity: 0.8;
     margin: 0;
 }
 
