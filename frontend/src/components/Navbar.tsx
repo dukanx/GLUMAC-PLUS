@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import logo from '../assets/logo.png';
+import logoTamni from '../assets/logoDark.png';
 import styles from './Navbar.module.css';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -33,7 +34,7 @@ export default function Navbar() {
 
       {/* LOGO */}
       <Link to="/" className={styles.logo}>
-        <img src={logo} alt="Glumac Plus" className={styles.logoImg} />
+        <img src={scrolled ? logoTamni : logo} alt="Glumac Plus" className={styles.logoImg} />
       </Link>
 
       {/* CENTAR — navigacija */}

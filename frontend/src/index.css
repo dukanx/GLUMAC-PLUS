@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400;700&display=swap');
 
 :root {
+  /* ── Originalna paleta ────────────────────────────── */
   --krem: #f2e8d9;
   --krem-tamni: #ebceae;
   --braon-svetli: #bb9162;
@@ -13,8 +14,8 @@
   --akcent: #f58089;
 
   --font-display: 'Lora', serif;
-  --font-body: 'Lato', sans-serif; 
-  
+  --font-body: 'Lato', sans-serif;
+
   --space-xs: 8px;
   --space-sm: 16px;
   --space-md: 32px;
@@ -24,6 +25,21 @@
   --radius-sm: 4px;
   --radius-md: 12px;
   --radius-lg: 24px;
+
+  /* ── Editorial paleta (Calm Editorial dizajn) ────── */
+  --paper:   hsl(36 30% 94%);
+  --paper-2: hsl(32 22% 90%);
+  --paper-3: hsl(28 18% 86%);
+  --ink:     hsl(22 30% 14%);
+  --ink-70:  hsl(22 30% 14% / .70);
+  --ink-55:  hsl(22 30% 14% / .55);
+  --ink-40:  hsl(22 30% 14% / .40);
+  --ink-20:  hsl(22 30% 14% / .20);
+  --ink-12:  hsl(22 30% 14% / .12);
+  --rust:    hsl(14 65% 44%);
+
+  --serif: 'Fraunces', Georgia, serif;
+  --sans:  'Inter', system-ui, sans-serif;
 }
 
 *,

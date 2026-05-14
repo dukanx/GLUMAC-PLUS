@@ -1,0 +1,535 @@
+/* ── Stranica ─────────────────────────────────────────────── */
+
+.stranica {
+    min-height: 100vh;
+    padding-top: 72px; /* visina navbara */
+
+    /* Paper pozadina + grain tekstura (sitne tačkice) */
+    background-color: var(--paper);
+    background-image: radial-gradient(
+        circle,
+        hsl(22 30% 14% / 0.06) 0.5px,
+        transparent 0.5px
+    );
+    background-size: 3px 3px;
+}
+
+/* ── Utility ──────────────────────────────────────────────── */
+
+.rustItalic {
+    font-style: italic;
+    color: var(--rust);
+}
+
+.desno {
+    text-align: right;
+}
+
+/* Eyebrow label — mali uppercase Inter */
+.eyebrow {
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-40);
+}
+
+/* Editorial section label — "— § 01 — Nivoi" */
+.sekcijskiLabel {
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-40);
+    margin-bottom: 20px;
+}
+
+/* ── Hero sekcija ─────────────────────────────────────────── */
+
+.hero {
+    padding: 80px 8% 100px;
+}
+
+.heroGrid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 72px;
+    align-items: start;
+}
+
+/* Kada gost — nema kartice desno */
+.heroGridGost {
+    grid-template-columns: 1fr;
+    max-width: 700px;
+}
+
+/* Leva kolona */
+.heroLevo {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+/* Dramatičan editorial naslov */
+.heroNaslov {
+    font-family: var(--serif);
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 500;
+    line-height: 0.9;
+    color: var(--ink);
+    letter-spacing: -0.04em;
+}
+
+.heroLede {
+    font-family: var(--sans);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--ink-70);
+    max-width: 460px;
+}
+
+.heroCta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Dugmad */
+.inkDugme {
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 0;
+    padding: 13px 26px;
+    cursor: pointer;
+    transition: background 0.3s ease-out;
+}
+
+.inkDugme:hover {
+    background: var(--rust);
+}
+
+.ghostLink {
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    color: var(--ink-55);
+    text-decoration: none;
+    transition: color 0.25s ease-out;
+}
+
+.ghostLink:hover {
+    color: var(--ink);
+}
+
+/* Desna kartica */
+.heroKartica {
+    position: relative;
+    overflow: hidden;
+    background: var(--paper-2);
+    border: 1px solid var(--ink-12);
+    padding: 28px;
+}
+
+/* Dekorativni broj bodova — veliki, providni, u pozadini */
+.dekorativan {
+    position: absolute;
+    right: -8px;
+    bottom: -24px;
+    font-family: var(--serif);
+    font-size: 9rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    opacity: 0.06;
+    pointer-events: none;
+    user-select: none;
+}
+
+.kartGlava {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    position: relative; /* iznad dekorativnog broja */
+}
+
+.kartPopust {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--rust);
+    font-size: 0.9rem;
+}
+
+.kartNivoNaziv {
+    font-family: var(--serif);
+    font-size: 2.2rem;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+/* Progress bar */
+.progresBlok {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+.progresBrojevi {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--ink-55);
+}
+
+.progresTraka {
+    height: 4px;
+    background: var(--ink-12);
+    overflow: hidden;
+}
+
+.progresFill {
+    height: 100%;
+    background: var(--rust);
+}
+
+.progresCaption {
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    color: var(--ink-40);
+}
+
+/* Divider u kartici */
+.kartDivider {
+    border: none;
+    border-top: 1px solid var(--ink-12);
+    margin: 20px 0;
+    position: relative;
+}
+
+/* Stats */
+.statsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    position: relative;
+}
+
+.statBlok {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.statBroj {
+    font-family: var(--serif);
+    font-size: 1.7rem;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.statLabel {
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-40);
+}
+
+/* ── Tabela nivoa ─────────────────────────────────────────── */
+
+.nivoiSekcija {
+    padding: 88px 8%;
+    border-top: 1px solid var(--ink-12);
+}
+
+.nivoiWrap {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.nivoiNaslov {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 48px;
+}
+
+/* Grid kolone: [§ br] [naziv] [opis] [prag] [popust] */
+.nivoRedGlava,
+.nivoRed {
+    display: grid;
+    grid-template-columns: 52px 2.4fr 3fr 1.2fr 1fr;
+    align-items: center;
+    gap: 16px;
+}
+
+.nivoRedGlava {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--ink-20);
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-40);
+}
+
+.nivoRed {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--ink-12);
+    cursor: default;
+    transition: background 0.3s ease-out, padding-left 0.3s ease-out, padding-right 0.3s ease-out;
+}
+
+.nivoRed:hover {
+    background: var(--paper-2);
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+/* Nedostignut nivo — fade, nije `.nivoRedNedostignut` klasa jer opacity kontroliše motion */
+.nivoRedNedostignut {
+    /* motion.div animira opacity direktno */
+}
+
+/* Aktivan nivo */
+.nivoRedAktivan {
+    background: var(--paper-3);
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.nivoRedAktivan:hover {
+    background: var(--paper-3);
+}
+
+/* § 01 label */
+.nivoRedBroj {
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--ink-40);
+    letter-spacing: 0.1em;
+}
+
+.nivoRedNazivWrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.nivoRedNaziv {
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+}
+
+/* "Trenutno" tag */
+.trenutnoTag {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--rust);
+    color: var(--paper);
+    padding: 3px 8px;
+}
+
+.nivoRedOpis {
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    color: var(--ink-55);
+    line-height: 1.55;
+}
+
+.nivoRedPrag {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--ink-70);
+}
+
+/* Popust — Fraunces italic, rust */
+.nivoRedPopust {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.9rem;
+    font-weight: 400;
+    color: var(--rust);
+    text-align: right;
+    letter-spacing: -0.02em;
+}
+
+/* ── Kako radi ────────────────────────────────────────────── */
+
+.kakoRadiSekcija {
+    background: var(--paper-2);
+    border-top: 1px solid var(--ink-12);
+    padding: 88px 8%;
+}
+
+.kakoRadiWrap {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.kakoRadiGlava {
+    margin-bottom: 56px;
+}
+
+.kakoRadiNaslov {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+}
+
+.koraci {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+}
+
+.korak {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.korakBorderTop {
+    height: 1px;
+    background: var(--ink-20);
+    margin-bottom: 6px;
+}
+
+.korakBroj {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--rust);
+}
+
+.korakNaslov {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+}
+
+.korakTekst {
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--ink-55);
+    max-width: 32ch;
+}
+
+/* ── End CTA ──────────────────────────────────────────────── */
+
+.endCta {
+    padding: 100px 8%;
+    text-align: center;
+    border-top: 1px solid var(--ink-12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 36px;
+}
+
+.endCtaNaslov {
+    font-family: var(--serif);
+    font-size: clamp(2.6rem, 5.5vw, 5rem);
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+
+@media (max-width: 960px) {
+    .heroGrid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .koraci {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    /* Na tabletu skrivamo opis i prag */
+    .nivoRedGlava,
+    .nivoRed {
+        grid-template-columns: 52px 2fr 1fr;
+    }
+
+    .nivoRedOpis,
+    .nivoRedPrag {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .hero {
+        padding: 56px 5% 72px;
+    }
+
+    .nivoiSekcija,
+    .kakoRadiSekcija,
+    .endCta {
+        padding: 64px 5%;
+    }
+
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .dekorativan {
+        font-size: 6rem;
+    }
+
+    /* Na mobilnom samo naziv i popust */
+    .nivoRedGlava,
+    .nivoRed {
+        grid-template-columns: 1fr auto;
+    }
+
+    .nivoRedBroj,
+    .nivoRedOpis,
+    .nivoRedPrag {
+        display: none;
+    }
+
+    .nivoRedPopust {
+        font-size: 1.5rem;
+    }
+}
