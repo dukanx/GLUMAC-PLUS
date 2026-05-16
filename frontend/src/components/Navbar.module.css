@@ -1,4 +1,5 @@
-/* ── NAVBAR ── */
+/* ── NAVBAR ─────────────────────────────────────────────── */
+
 .navbar {
     position: fixed;
     top: 0;
@@ -8,309 +9,349 @@
     height: 72px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 0 8%;
+    background: transparent;
+    transition: background 0.4s ease-out, backdrop-filter 0.4s ease-out;
+}
 
-    /* Uvek tamna, blago transparentna pozadina */
-    background: hsl(22 30% 14% / 0.88);
+.navbarScrolled {
+    background: hsl(28 18% 86% / 0.92);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    transition: background 0.35s ease-out;
 }
 
-/* Scrolled stanje — toplija, malo tamnija od pozadine stranice */
-.navbarScrolled {
-    background: hsl(28 18% 86% / 0.88);
-}
-
-/* Mutni prelaz na dnu umesto linije */
+/* Mutni prelaz na dnu */
 .navbarScrolled::after {
     content: '';
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -20px;
+    left: 0; right: 0; bottom: -20px;
     height: 20px;
     background: linear-gradient(to bottom, var(--paper-3), transparent);
     pointer-events: none;
 }
 
 /* ── LOGO ── */
+
 .logo {
     display: flex;
     align-items: center;
     text-decoration: none;
     flex-shrink: 0;
+    z-index: 1;
 }
 
 .logoImg {
-    height: 40px;
+    height: 38px;
     width: auto;
 }
 
-/* ── NAVIGACIJA (centar) ── */
+/* ── CENTAR — apsolutno centriran ── */
+
 .center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: 20px;
 }
 
 .navLink {
     font-family: var(--sans);
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     text-decoration: none;
-
-    /* Na tamnoj pozadini — svetli tekst */
-    color: hsl(36 30% 94% / 0.7);
-    transition: color 0.25s ease-out;
+    color: hsl(36 30% 94% / 0.75);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     position: relative;
     padding-bottom: 3px;
+    transition: color 0.25s;
 }
 
-/* Underline animacija */
 .navLink::after {
     content: '';
     position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 1px;
+    bottom: 0; left: 0;
+    width: 0; height: 1px;
     background: currentColor;
     transition: width 0.3s ease-out;
 }
-
 .navLink:hover::after,
-.navLinkAktivan::after {
-    width: 100%;
-}
+.navLinkAktivan::after { width: 100%; }
 
-.navLink:hover {
-    color: hsl(36 30% 94% / 1);
-}
+.navLink:hover { color: hsl(36 30% 94% / 1); }
+.navLinkAktivan { color: var(--paper); }
 
-.navLinkAktivan {
-    color: var(--paper);
-}
+/* Scrolled */
+.navbarScrolled .navLink { color: var(--ink-55); }
+.navbarScrolled .navLink:hover { color: var(--ink); }
+.navbarScrolled .navLinkAktivan { color: var(--rust); }
 
-/* Na scrolled navbaru — tamni linkovi */
-.navbarScrolled .navLink {
-    color: var(--ink-55);
-}
+/* Tamni — sve stranice osim home pre scrolla */
+.navbarTamni .navLink { color: var(--ink-55); }
+.navbarTamni .navLink:hover { color: var(--ink); }
+.navbarTamni .navLinkAktivan { color: var(--rust); }
 
-.navbarScrolled .navLink:hover {
-    color: var(--ink);
-}
-
-.navbarScrolled .navLinkAktivan {
-    color: var(--rust);
-}
-
-/* ── DESNA STRANA ── */
-.desno {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
+/* Separator */
+.navDivider {
+    width: 1px;
+    height: 14px;
+    background: hsl(36 30% 94% / 0.2);
     flex-shrink: 0;
 }
+.navbarScrolled .navDivider,
+.navbarTamni .navDivider { background: var(--ink-20); }
 
-/* Kada je ulogovan */
-.korisnikInfo {
+/* ── DESNO (desktop) ── */
+
+.desno {
+    margin-left: auto;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 1px;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    z-index: 1;
 }
 
 .korisnikIme {
     font-family: var(--sans);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: hsl(36 30% 94% / 0.9);
-    transition: color 0.35s ease-out;
+    letter-spacing: 0.06em;
+    color: hsl(36 30% 94% / 0.75);
+    transition: color 0.35s;
 }
+.navbarScrolled .korisnikIme,
+.navbarTamni .korisnikIme { color: var(--ink-70); }
 
-.navbarScrolled .korisnikIme {
-    color: var(--ink);
-}
-
-.korisnikBodovi {
-    font-family: var(--sans);
-    font-size: 0.68rem;
-    font-weight: 400;
-    letter-spacing: 0.08em;
-    color: hsl(36 30% 94% / 0.45);
-    transition: color 0.35s ease-out;
-}
-
-.navbarScrolled .korisnikBodovi {
-    color: var(--ink-40);
-}
-
-/* ── Dugmad ── */
-
-/* Odjava — outline paper na tamnom, outline ink na svetlom */
-.dugmeOdjava {
-    font-family: var(--sans);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    background: transparent;
-    border: 1px solid hsl(36 30% 94% / 0.35);
-    color: hsl(36 30% 94% / 0.8);
-    padding: 7px 16px;
-    border-radius: 0;
-    cursor: pointer;
-    transition: border-color 0.25s ease-out, color 0.25s ease-out, background 0.25s ease-out;
-}
-
-.dugmeOdjava:hover {
-    border-color: var(--paper);
-    color: var(--paper);
-}
-
-.navbarScrolled .dugmeOdjava {
-    border-color: var(--ink-20);
-    color: var(--ink-70);
-}
-
-.navbarScrolled .dugmeOdjava:hover {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--paper);
-}
-
-/* Prijava — outline */
-.dugmePrijava {
-    font-family: var(--sans);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    background: transparent;
-    border: 1px solid hsl(36 30% 94% / 0.35);
-    color: hsl(36 30% 94% / 0.8);
-    padding: 7px 16px;
-    border-radius: 0;
-    cursor: pointer;
-    transition: border-color 0.25s ease-out, color 0.25s ease-out;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.dugmePrijava:hover {
-    border-color: var(--paper);
-    color: var(--paper);
-}
-
-.navbarScrolled .dugmePrijava {
-    border-color: var(--ink-20);
-    color: var(--ink-70);
-}
-
-.navbarScrolled .dugmePrijava:hover {
-    border-color: var(--ink);
-    color: var(--ink);
-}
-
-/* Registracija — solid */
-.dugmeRegistracija {
-    font-family: var(--sans);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    background: hsl(36 30% 94% / 0.12);
-    border: 1px solid hsl(36 30% 94% / 0.4);
-    color: var(--paper);
-    padding: 7px 16px;
-    border-radius: 0;
-    cursor: pointer;
-    transition: background 0.25s ease-out, border-color 0.25s ease-out;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.dugmeRegistracija:hover {
-    background: hsl(36 30% 94% / 0.22);
-    border-color: hsl(36 30% 94% / 0.7);
-}
-
-.navbarScrolled .dugmeRegistracija {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--paper);
-}
-
-.navbarScrolled .dugmeRegistracija:hover {
-    background: var(--rust);
-    border-color: var(--rust);
-}
-
-/* ── RESPONSIVE ── */
-@media (max-width: 768px) {
-    .navbar {
-        padding: 0 5%;
-    }
-
-    .center {
-        gap: var(--space-sm);
-    }
-
-    .korisnikBodovi {
-        display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .center {
-        display: none;
-    }
-}
-
-/* ── KORPA IKONA ── */
-.korpaIkona {
-    position: relative;
+.ikonicaDugme {
+    display: flex;
+    align-items: center;
     background: transparent;
     border: none;
-    font-size: 1.2rem;
     cursor: pointer;
-    padding: 6px;
-    border-radius: 0;
+    padding: 5px;
+    color: hsl(36 30% 94% / 0.55);
+    text-decoration: none;
+    transition: color 0.25s;
+}
+.ikonicaDugme:hover { color: var(--paper); }
+.navbarScrolled .ikonicaDugme,
+.navbarTamni .ikonicaDugme { color: var(--ink-40); }
+.navbarScrolled .ikonicaDugme:hover,
+.navbarTamni .ikonicaDugme:hover { color: var(--rust); }
+
+.dugmeOdjava {
     display: flex;
     align-items: center;
-    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: hsl(36 30% 94% / 0.45);
+    transition: color 0.25s;
+}
+.dugmeOdjava:hover { color: var(--rust); }
+.navbarScrolled .dugmeOdjava,
+.navbarTamni .dugmeOdjava { color: var(--ink-40); }
+.navbarScrolled .dugmeOdjava:hover,
+.navbarTamni .dugmeOdjava:hover { color: var(--rust); }
+
+.dugmePrijava {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid hsl(36 30% 94% / 0.3);
+    color: hsl(36 30% 94% / 0.8);
+    padding: 7px 16px;
+    text-decoration: none;
+    transition: border-color 0.25s, color 0.25s;
+}
+.dugmePrijava:hover { border-color: var(--paper); color: var(--paper); }
+.navbarScrolled .dugmePrijava,
+.navbarTamni .dugmePrijava { border-color: var(--ink-20); color: var(--ink-70); }
+.navbarScrolled .dugmePrijava:hover,
+.navbarTamni .dugmePrijava:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ── MOBILNI DESNI UGAO (ime + srce) ── */
+
+.mobileDesno {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    z-index: 1;
+}
+
+.mobileIme {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     color: hsl(36 30% 94% / 0.75);
-    transition: color 0.25s ease-out;
+    transition: color 0.35s;
 }
+.navbarScrolled .mobileIme,
+.navbarTamni .mobileIme { color: var(--ink-70); }
 
-.korpaIkona:hover {
-    color: var(--paper);
-}
-
-.navbarScrolled .korpaIkona {
-    color: var(--ink-55);
-}
-
-.navbarScrolled .korpaIkona:hover {
-    color: var(--ink);
-}
-
-.korpaBadge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: var(--rust);
-    color: var(--paper);
-    font-size: 0.6rem;
-    font-weight: 700;
-    width: 16px;
-    height: 16px;
-    border-radius: 0;
+.mobileSrce {
     display: flex;
     align-items: center;
+    color: hsl(36 30% 94% / 0.55);
+    text-decoration: none;
+    transition: color 0.25s;
+}
+.mobileSrce:hover { color: var(--paper); }
+.navbarScrolled .mobileSrce,
+.navbarTamni .mobileSrce { color: var(--ink-40); }
+.navbarScrolled .mobileSrce:hover,
+.navbarTamni .mobileSrce:hover { color: var(--rust); }
+
+/* ── HAMBURGER — 3 bars → X ── */
+
+.hamburger {
+    display: none;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 4px;
+    margin-left: 10px;
+    z-index: 1;
+    color: hsl(36 30% 94% / 0.85);
+    transition: color 0.25s;
+}
+.hamburger:hover { color: var(--paper); }
+.navbarScrolled .hamburger,
+.navbarTamni .hamburger { color: var(--ink-70); }
+.navbarScrolled .hamburger:hover,
+.navbarTamni .hamburger:hover { color: var(--ink); }
+
+.bar {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: currentColor;
+    transform-origin: center;
+    transition:
+        transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        opacity   0.25s ease,
+        width     0.35s ease;
+}
+
+/* Animacija u X */
+.hamburgerOtvoren .bar:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.hamburgerOtvoren .bar:nth-child(2) { opacity: 0; width: 0; }
+.hamburgerOtvoren .bar:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+/* ── MOBILNI DROP MENI ── */
+
+@keyframes dropdownIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.mobileMenu {
+    position: fixed;
+    top: 72px;
+    left: -1px;
+    right: -1px;
+    z-index: 99;
+    background: hsl(22 30% 14% / 0.55);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border-bottom: none;
+    padding: 8px 8% 72px;
+    display: flex;
+    flex-direction: column;
+    animation: dropdownIn 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 20px), transparent 100%);
+    mask-image: linear-gradient(to bottom, black calc(100% - 20px), transparent 100%);
+}
+
+/* Svetlo staklo — za ostale stranice */
+.mobileMenuSvetli {
+    background: hsl(36 30% 94% / 0.72);
+    border-bottom-color: var(--ink-12);
+}
+
+.mobilniLink {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(36 30% 94% / 0.82);
+    text-decoration: none;
+    padding: 15px 0;
+    transition: color 0.2s, padding-left 0.2s;
+}
+/* Tanka linija samo između uzastopnih linkova */
+.mobilniLink + .mobilniLink {
+    border-top: 1px solid hsl(36 30% 94% / 0.08);
+}
+.mobilniLink:hover { color: var(--paper); padding-left: 6px; }
+
+/* Svetli meni — tamni tekst */
+.mobileMenuSvetli .mobilniLink { color: var(--ink-70); }
+.mobileMenuSvetli .mobilniLink + .mobilniLink { border-top-color: var(--ink-12); }
+.mobileMenuSvetli .mobilniLink:hover { color: var(--ink); }
+
+/* Jedna deblja linija iznad odjavi se */
+.mobilniDivider {
+    height: 0;
+    border-top: 1.5px solid hsl(36 30% 94% / 0.25);
+    margin: 4px 0;
+}
+.mobileMenuSvetli .mobilniDivider { border-top-color: var(--ink-20); }
+
+.mobilniOdjava {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(36 30% 94% / 0.4);
+    background: transparent;
+    border: none;
+    padding: 15px 0;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.mobilniOdjava:hover { color: var(--rust); }
+.mobileMenuSvetli .mobilniOdjava { color: var(--ink-40); }
+.mobileMenuSvetli .mobilniOdjava:hover { color: var(--rust); }
+
+/* ── RESPONSIVE ── */
+
+@media (max-width: 768px) {
+    .navbar { padding: 0 5%; }
+    .center { display: none; }
+    .desno  { display: none; }
+    .mobileDesno { display: flex; }
+    .hamburger { display: flex; }
+    .mobileMenu { padding: 8px 5% 72px; }
+}
+
+@media (min-width: 769px) {
+    .mobileMenu { display: none; }
 }

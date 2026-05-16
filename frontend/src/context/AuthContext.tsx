@@ -5,6 +5,7 @@ interface Korisnik {
     id: number;
     ime: string;
     email: string;
+    uloga?: string;
     brojBodova: number;
     loyaltyNivo?: string;
 }
