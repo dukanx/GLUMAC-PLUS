@@ -30,34 +30,28 @@ export default function RegisterPage() {
     const [serverGreska, setServerGreska] = useState('');
     const [ucitava, setUcitava] = useState(false);
 
-    // Menja jedno polje u formi
     const handlePromena = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setForma(prev => ({ ...prev, [name]: value }));
-        // Briše grešku za to polje čim korisnik počne da kuca
         setGreske(prev => ({ ...prev, [name]: undefined }));
     };
 
-    // Klijentska validacija pre slanja
     const validiraj = (): boolean => {
         const nove: FieldErrors = {};
 
         if (!forma.ime.trim()) {
             nove.ime = 'Ime je obavezno';
         }
-
         if (!forma.email.trim()) {
             nove.email = 'Email je obavezan';
         } else if (!/\S+@\S+\.\S+/.test(forma.email)) {
             nove.email = 'Email nije ispravan';
         }
-
         if (!forma.lozinka) {
             nove.lozinka = 'Lozinka je obavezna';
         } else if (forma.lozinka.length < 8) {
-            nove.lozinka = 'Lozinka mora imati najmanje 8 karaktera';
+            nove.lozinka = 'Minimum 8 karaktera';
         }
-
         if (!forma.potvrda) {
             nove.potvrda = 'Potvrdite lozinku';
         } else if (forma.lozinka !== forma.potvrda) {
@@ -65,12 +59,11 @@ export default function RegisterPage() {
         }
 
         setGreske(nove);
-        return Object.keys(nove).length === 0; // true = nema grešaka
+        return Object.keys(nove).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!validiraj()) return;
 
         setUcitava(true);
@@ -88,12 +81,9 @@ export default function RegisterPage() {
             });
 
             if (response.ok) {
-                // Uspešna registracija → na login sa porukom
                 navigate('/login?registered=true');
             } else {
                 const data = await response.json().catch(() => null);
-
-                // Backend validacione greške (mapa po poljima)
                 if (data?.errors) {
                     setGreske(data.errors);
                 } else {
@@ -109,20 +99,15 @@ export default function RegisterPage() {
 
     return (
         <div className={styles.stranica}>
-            <div className={styles.kartica}>
+            <div className={styles.sadrzaj}>
 
-                <div className={styles.header}>
-                    <Link to="/" className={styles.nazad}>← Početna</Link>
-                    <h1 className={styles.naslov}>Kreiraj nalog</h1>
-                    <p className={styles.podnaslov}>
-                        Pridruži se i počni da skupljaš bodove
-                    </p>
-                </div>
+                <span className={styles.marka}>Glumac Plus</span>
+                <div className={styles.linija} />
+                <h1 className={styles.naslov}>Kreiraj nalog</h1>
+                <p className={styles.podnaslov}>Pridruži se i počni da skupljaš bodove</p>
 
                 {serverGreska && (
-                    <div className={styles.serverGreska}>
-                        {serverGreska}
-                    </div>
+                    <div className={styles.serverGreska}>{serverGreska}</div>
                 )}
 
                 <form onSubmit={handleSubmit} className={styles.forma} noValidate>
@@ -187,11 +172,7 @@ export default function RegisterPage() {
                         {greske.potvrda && <span className={styles.greska}>{greske.potvrda}</span>}
                     </div>
 
-                    <button
-                        type="submit"
-                        className={styles.dugme}
-                        disabled={ucitava}
-                    >
+                    <button type="submit" className={styles.dugme} disabled={ucitava}>
                         {ucitava ? 'Kreiram nalog...' : 'Kreiraj nalog'}
                     </button>
 

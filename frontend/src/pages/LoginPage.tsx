@@ -3,12 +3,9 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './LoginPage.module.css';
 import { useAuth } from '../context/AuthContext';
 
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
-  // Čita ?registered=true iz URL-a (dolazi sa RegisterPage)
   const justRegistered = searchParams.get('registered') === 'true';
 
   const [email, setEmail] = useState('');
@@ -16,7 +13,6 @@ export default function LoginPage() {
   const [greska, setGreska] = useState('');
   const [ucitava, setUcitava] = useState(false);
   const { login } = useAuth();
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,24 +43,19 @@ export default function LoginPage() {
 
   return (
     <div className={styles.stranica}>
-      <div className={styles.kartica}>
+      <div className={styles.sadrzaj}>
 
-        <div className={styles.header}>
-          <Link to="/" className={styles.nazad}>← Početna</Link>
-          <h1 className={styles.naslov}>Dobrodošli</h1>
-          <p className={styles.podnaslov}>Prijavite se na vaš nalog</p>
-        </div>
+        <span className={styles.marka}>Glumac Plus</span>
+        <div className={styles.linija} />
+        <h1 className={styles.naslov}>Dobrodošli</h1>
+        <p className={styles.podnaslov}>Prijavite se na vaš nalog</p>
 
-        {/* Poruka posle uspešne registracije */}
         {justRegistered && (
           <div className={styles.uspesnaPoruka}>
-            ✓ Nalog je kreiran! Prijavite se.
+            Nalog je kreiran — prijavite se.
           </div>
         )}
-
-        {greska && (
-          <div className={styles.serverGreska}>{greska}</div>
-        )}
+        {greska && <div className={styles.serverGreska}>{greska}</div>}
 
         <form onSubmit={handleSubmit} className={styles.forma} noValidate>
 
@@ -89,24 +80,20 @@ export default function LoginPage() {
               type="password"
               value={lozinka}
               onChange={e => setLozinka(e.target.value)}
-              placeholder="Vaša lozinka"
+              placeholder="••••••••"
               className={styles.input}
               autoComplete="current-password"
               required
             />
           </div>
 
-          <button
-            type="submit"
-            className={styles.dugme}
-            disabled={ucitava}
-          >
+          <button type="submit" className={styles.dugme} disabled={ucitava}>
             {ucitava ? 'Prijavljujem...' : 'Prijavi se'}
           </button>
 
         </form>
 
-        <p className={styles.registerLink}>
+        <p className={styles.registracijaLink}>
           Nemaš nalog?{' '}
           <Link to="/register">Registruj se</Link>
         </p>
