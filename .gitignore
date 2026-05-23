@@ -36,3 +36,7 @@ build/
 .env
 .env.*
 !.env.example
+.drawio.png
+TODO.md
+Loyalty Redesign.html
+frontend/proba/INTEGRACIJA.md

@@ -1,19 +1,20 @@
 package com.glumacplus.food_ordering.config;
 
+import com.glumacplus.food_ordering.model.DanUNedelji;
 import com.glumacplus.food_ordering.model.Korisnik;
 import com.glumacplus.food_ordering.model.LoyaltyProgram;
-import com.glumacplus.food_ordering.model.Proizvod;
+import com.glumacplus.food_ordering.model.RadnoVreme;
 import com.glumacplus.food_ordering.model.Uloga;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
 import com.glumacplus.food_ordering.repository.LoyaltyProgramRepository;
-import com.glumacplus.food_ordering.repository.ProizvodRepository;
+import com.glumacplus.food_ordering.repository.RadnoVremeRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
-import java.math.BigDecimal;
+import java.time.LocalTime;
 
 @Component
 @Profile("dev")
@@ -22,13 +23,13 @@ public class DataSeeder implements CommandLineRunner {
     private final KorisnikRepository korisnikRepository;
     private final PasswordEncoder passwordEncoder;
     private final LoyaltyProgramRepository loyaltyProgramRepository;
-    private final ProizvodRepository proizvodRepository;
+    private final RadnoVremeRepository radnoVremeRepository;
 
-    public DataSeeder(KorisnikRepository korisnikRepository, PasswordEncoder passwordEncoder, LoyaltyProgramRepository loyaltyProgramRepository, ProizvodRepository proizvodRepository) {
+    public DataSeeder(KorisnikRepository korisnikRepository, PasswordEncoder passwordEncoder, LoyaltyProgramRepository loyaltyProgramRepository, RadnoVremeRepository radnoVremeRepository) {
         this.korisnikRepository = korisnikRepository;
         this.passwordEncoder = passwordEncoder;
         this.loyaltyProgramRepository = loyaltyProgramRepository;
-        this.proizvodRepository = proizvodRepository;
+        this.radnoVremeRepository = radnoVremeRepository;
     }
 
     @Override
@@ -46,12 +47,15 @@ public class DataSeeder implements CommandLineRunner {
 
         createKorisnikIfNotFound("korisnik@gmail.com", "korisnik123", "Mile Kitic", Uloga.KORISNIK, 50);
 
+        // Proizvodi se seeduju kroz Flyway migraciju V8__seed_meni.sql (pun meni, dev + prod).
 
-        createProizvodIfNotFound("Kinder Plazma Palačinka", BigDecimal.valueOf(350.0), "HRANA");
-        createProizvodIfNotFound("Pohovana  Palačinka", BigDecimal.valueOf(480.0), "HRANA");
-        createProizvodIfNotFound("Giros Pileći", BigDecimal.valueOf(420.0), "HRANA");
-        createProizvodIfNotFound("Coca Cola 0.5", BigDecimal.valueOf(120.0), "PICE");
-        createProizvodIfNotFound("Pistać Palačinka", BigDecimal.valueOf(450.0), "HRANA");
+        createRadnoVremeIfNotFound(DanUNedelji.PONEDELJAK, LocalTime.of(8, 0), LocalTime.of(23, 30));
+        createRadnoVremeIfNotFound(DanUNedelji.UTORAK, LocalTime.of(8, 0), LocalTime.of(23, 30));
+        createRadnoVremeIfNotFound(DanUNedelji.SREDA, LocalTime.of(8, 0), LocalTime.of(23, 30));
+        createRadnoVremeIfNotFound(DanUNedelji.CETVRTAK, LocalTime.of(8, 0), LocalTime.of(23, 30));
+        createRadnoVremeIfNotFound(DanUNedelji.PETAK, LocalTime.of(8, 0), LocalTime.of(23, 30));
+        createRadnoVremeIfNotFound(DanUNedelji.SUBOTA, LocalTime.of(13, 0), LocalTime.of(23, 59));
+        createRadnoVremeIfNotFound(DanUNedelji.NEDELJA, LocalTime.of(13, 0), LocalTime.of(23, 0));
 
     }
 
@@ -83,16 +87,12 @@ public class DataSeeder implements CommandLineRunner {
        }
 
     }
-    private void createProizvodIfNotFound(String naziv, BigDecimal cena, String tip) {
 
-       if( !proizvodRepository.existsByNazivAndTip(naziv,tip)){
-           Proizvod p = new Proizvod();
-           p.setNaziv(naziv);
-           p.setCena(cena);
-           p.setTip(tip);
-           proizvodRepository.save(p);
-           System.out.println("Kreiran proizvod: " + naziv);
-       }
-
+    private void createRadnoVremeIfNotFound(DanUNedelji dan, LocalTime odVremena, LocalTime doVremena) {
+        if (radnoVremeRepository.findByDan(dan).isEmpty()) {
+            RadnoVreme radnoVreme = new RadnoVreme(dan, odVremena, doVremena, true);
+            radnoVremeRepository.save(radnoVreme);
+            System.out.println("Kreirano radno vreme za dan: " + dan);
+        }
     }
 }
