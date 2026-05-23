@@ -1,7 +1,7 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
-    UtensilsCrossed, Star, ClipboardList, Heart,
+    UtensilsCrossed, Star, ClipboardList, Bookmark,
     LogIn, LogOut, LayoutDashboard,
 } from 'lucide-react';
 import gpWhiteLogo from '../assets/GPwhiteNOBG.png';
@@ -63,7 +63,7 @@ export default function Navbar() {
                 {/* Centar — navigacija (desktop) */}
                 <div className={styles.center}>
                     {jeZaposleni ? (
-                        <NavLink to="/admin" className={navKlasa}>
+                        <NavLink to="/panel" className={navKlasa}>
                             <LayoutDashboard size={13} strokeWidth={1.5} /> Panel
                         </NavLink>
                     ) : korisnik ? (
@@ -98,7 +98,7 @@ export default function Navbar() {
                     {korisnik ? (
                         <>
                             <Link to="/omiljene" className={styles.ikonicaDugme} title="Omiljene">
-                                <Heart size={16} strokeWidth={1.5} />
+                                <Bookmark size={16} strokeWidth={1.5} />
                             </Link>
                             <span className={styles.korisnikIme}>{korisnik.ime}</span>
                             <button onClick={handleLogout} className={styles.dugmeOdjava} title="Odjavi se">
@@ -112,19 +112,19 @@ export default function Navbar() {
                     )}
                 </div>
 
-                {/* Mobilni desni ugao — ime + omiljene (samo mobile) */}
+                {/* Mobilni desni ugao — ime i omiljene */}
                 <div className={styles.mobileDesno}>
                     {korisnik && (
                         <>
                             <span className={styles.mobileIme}>{korisnik.ime}</span>
                             <Link to="/omiljene" className={styles.mobileSrce} onClick={zatvori} title="Omiljene">
-                                <Heart size={17} strokeWidth={1.5} />
+                                <Bookmark size={17} strokeWidth={1.5} />
                             </Link>
                         </>
                     )}
                 </div>
 
-                {/* Hamburger — 3 linije → X animacija */}
+                {/* Hamburger */}
                 <button
                     className={`${styles.hamburger} ${menuOtvoren ? styles.hamburgerOtvoren : ''}`}
                     onClick={() => setMenuOtvoren(v => !v)}
@@ -151,12 +151,12 @@ export default function Navbar() {
                                 <ClipboardList size={15} strokeWidth={1.5} /> Porudžbine
                             </NavLink>
                             <NavLink to="/omiljene" className={styles.mobilniLink} onClick={zatvori}>
-                                <Heart size={15} strokeWidth={1.5} /> Omiljene
+                                <Bookmark size={15} strokeWidth={1.5} /> Omiljene
                             </NavLink>
                         </>
                     )}
                     {jeZaposleni && (
-                        <NavLink to="/admin" className={styles.mobilniLink} onClick={zatvori}>
+                        <NavLink to="/panel" className={styles.mobilniLink} onClick={zatvori}>
                             <LayoutDashboard size={15} strokeWidth={1.5} /> Panel
                         </NavLink>
                     )}
