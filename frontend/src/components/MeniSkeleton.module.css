@@ -1,85 +1,69 @@
-/* ── SHIMMER ANIMACIJA ── */
 @keyframes shimmer {
-    0% {
-        background-position: -400px 0;
-    }
-
-    100% {
-        background-position: 400px 0;
-    }
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
 }
 
-.shimmerStyle {
-    background: linear-gradient(90deg,
-            rgba(134, 83, 55, 0.06) 25%,
-            rgba(134, 83, 55, 0.12) 50%,
-            rgba(134, 83, 55, 0.06) 75%);
-    background-size: 800px 100%;
-    animation: shimmer 1.4s infinite linear;
-    border-radius: 6px;
-}
-
-/* ── GRID ── */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 20px;
-}
-
-/* ── KARTICA ── */
-.kartica {
-    background: #fff;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    border: 1px solid rgba(134, 83, 55, 0.1);
+.lista {
     display: flex;
     flex-direction: column;
 }
 
-.slika {
-    height: 165px;
-    background: linear-gradient(90deg, rgba(134, 83, 55, 0.06) 25%, rgba(134, 83, 55, 0.12) 50%, rgba(134, 83, 55, 0.06) 75%);
-    background-size: 800px 100%;
-    animation: shimmer 1.4s infinite linear;
+.red {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--ink-12);
 }
 
-.telo {
-    padding: 14px;
+.red:first-child {
+    border-top: 1px solid var(--ink-12);
+}
+
+.levo {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    flex: 1;
 }
 
-.linija {
-    height: 13px;
-    border-radius: 6px;
-    background: linear-gradient(90deg, rgba(134, 83, 55, 0.06) 25%, rgba(134, 83, 55, 0.12) 50%, rgba(134, 83, 55, 0.06) 75%);
+.desno {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.linijaNaziv,
+.linijaOpis,
+.cena,
+.dugme {
+    background: linear-gradient(90deg,
+        var(--ink-12) 25%,
+        var(--ink-20) 50%,
+        var(--ink-12) 75%);
     background-size: 800px 100%;
     animation: shimmer 1.4s infinite linear;
 }
 
-.footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 4px;
+.linijaNaziv {
+    height: 18px;
+    width: 55%;
+}
+
+.linijaOpis {
+    height: 13px;
+    width: 75%;
 }
 
 .cena {
-    width: 80px;
-    height: 20px;
-    border-radius: 6px;
-    background: linear-gradient(90deg, rgba(134, 83, 55, 0.06) 25%, rgba(134, 83, 55, 0.12) 50%, rgba(134, 83, 55, 0.06) 75%);
-    background-size: 800px 100%;
-    animation: shimmer 1.4s infinite linear;
+    height: 16px;
+    width: 70px;
 }
 
 .dugme {
+    height: 32px;
     width: 80px;
-    height: 34px;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(90deg, rgba(134, 83, 55, 0.06) 25%, rgba(134, 83, 55, 0.12) 50%, rgba(134, 83, 55, 0.06) 75%);
-    background-size: 800px 100%;
-    animation: shimmer 1.4s infinite linear;
 }

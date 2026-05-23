@@ -1,236 +1,307 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'motion/react';
+import { MapPin, Phone, Clock, Star, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import styles from './MeniPage.module.css';
 import ProizvodKartica from '../components/ProizvodKartica';
 import MeniSkeleton from '../components/MeniSkeleton';
+import MiniKorpa from '../components/MiniKorpa';
 import Toast from '../components/Toast';
 
 interface Proizvod {
-  id: number;
-  naziv: string;
-  opis?: string;
-  cena: number;
-  tip: string;
-  alergeniNazivi?: string[];
+    id: number;
+    naziv: string;
+    opis?: string;
+    cena: number;
+    tip: string;
+    alergeniNazivi?: string[];
 }
 
 interface RadnoVremeInterval {
-  dan: 'PONEDELJAK' | 'UTORAK' | 'SREDA' | 'CETVRTAK' | 'PETAK' | 'SUBOTA' | 'NEDELJA';
-  odVremena: string;
-  doVremena: string;
+    dan: 'PONEDELJAK' | 'UTORAK' | 'SREDA' | 'CETVRTAK' | 'PETAK' | 'SUBOTA' | 'NEDELJA';
+    odVremena: string;
+    doVremena: string;
 }
 
-const SLIKE_PO_TIPU: Record<string, string> = {
-  'slatka': 'https://images.unsplash.com/photo-1519676867240-f03562e64548?w=600&auto=format&fit=crop&q=80',
-  'slana': 'https://images.unsplash.com/photo-1528736235302-52922df5c122?w=600&auto=format&fit=crop&q=80',
-  'default': 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&auto=format&fit=crop&q=80',
+// ── Konstante ──────────────────────────────────────────────────────────────
+const TELEFON = '+381 65 817 8476';
+const ADRESA = 'Dositejeva 1a, Dorćol, Beograd';
+const MAPS_URL = 'https://www.google.com/maps/place/glumac+plus/data=!4m2!3m1!1s0x475a7bc2e551cbab:0xb7899385a5114972?sa=X&ved=1t:242&ictx=111';
+
+const DAN_SKRACENICA: Record<string, string> = {
+    PONEDELJAK: 'Pon', UTORAK: 'Uto', SREDA: 'Sri',
+    CETVRTAK: 'Čet', PETAK: 'Pet', SUBOTA: 'Sub', NEDELJA: 'Ned',
 };
 
-function getSlikuZaTip(tip: string) {
-  return SLIKE_PO_TIPU[tip.toLowerCase()] ?? SLIKE_PO_TIPU['default'];
-}
+const REDOSLED_DANA: RadnoVremeInterval['dan'][] = [
+    'PONEDELJAK', 'UTORAK', 'SREDA', 'CETVRTAK', 'PETAK', 'SUBOTA', 'NEDELJA',
+];
 
-// Popust po loyalty nivou
-const LOYALTY_POPUST: Record<string, number> = {
-  'Nova zvezda': 0,
-  'Epizodista': 5,
-  'Glavna uloga': 10,
-  'Oscar za palačinke': 20,
+const DANASNJI_DAN_NAZIV: Record<number, RadnoVremeInterval['dan']> = {
+    0: 'NEDELJA', 1: 'PONEDELJAK', 2: 'UTORAK', 3: 'SREDA',
+    4: 'CETVRTAK', 5: 'PETAK', 6: 'SUBOTA',
 };
 
-function getPopust(loyaltyNivo?: string): number {
-  if (!loyaltyNivo) return 0;
-  return LOYALTY_POPUST[loyaltyNivo] ?? 0;
+// Normalizacija teksta za pretragu (uklanjanje dijakritičkih znakova, mala slova)
+function normalizuj(tekst: string): string {
+    return tekst
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/đ/g, 'dj');
 }
 
+// ── Komponenta ─────────────────────────────────────────────────────────────
 export default function MeniPage() {
-  const { korpa, dodaj, povecaj, smanji, otvoriDrawer, ukupnoStavki } = useCart();
-  const { korisnik } = useAuth();
+    const { korpa, dodaj, povecaj, smanji } = useCart();
+    const { korisnik, popust } = useAuth();
 
-  const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
-  const [greska, setGreska] = useState('');
-  const [ucitava, setUcitava] = useState(true);
-  const [pretraga, setPretraga] = useState('');
-  const [aktivniTab, setAktivniTab] = useState('Sve');
-  const [toastPoruka, setToastPoruka] = useState<string | null>(null);
-  const [radnoVremeInfo, setRadnoVremeInfo] = useState<string>('');
+    const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
+    const [greska, setGreska] = useState('');
+    const [ucitava, setUcitava] = useState(true);
+    const [pretraga, setPretraga] = useState('');
+    const [aktivniTab, setAktivniTab] = useState('Sve');
+    const [toastPoruka, setToastPoruka] = useState<string | null>(null);
+    const [radnoVremeData, setRadnoVremeData] = useState<RadnoVremeInterval[]>([]);
+    const [radnoVremeLoading, setRadnoVremeLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('http://localhost:8080/api/proizvodi')
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(data => { setProizvodi(data); setUcitava(false); })
-      .catch(() => { setGreska('Ne mogu da učitam meni.'); setUcitava(false); });
-  }, []);
+    const danasnji = DANASNJI_DAN_NAZIV[new Date().getDay()];
 
-  useEffect(() => {
-    const daniMap: Record<number, RadnoVremeInterval['dan']> = {
-      0: 'NEDELJA',
-      1: 'PONEDELJAK',
-      2: 'UTORAK',
-      3: 'SREDA',
-      4: 'CETVRTAK',
-      5: 'PETAK',
-      6: 'SUBOTA',
-    };
+    useEffect(() => {
+        fetch('http://localhost:8080/api/proizvodi')
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(data => { setProizvodi(data); setUcitava(false); })
+            .catch(() => { setGreska('Ne mogu da učitam meni.'); setUcitava(false); });
+    }, []);
 
-    fetch('http://localhost:8080/api/radno-vreme?aktivno=true')
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((data: RadnoVremeInterval[]) => {
-        const danas = daniMap[new Date().getDay()];
-        const intervaliDanas = data.filter(i => i.dan === danas);
+    useEffect(() => {
+        fetch('http://localhost:8080/api/radno-vreme?aktivno=true')
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then((data: RadnoVremeInterval[]) => { setRadnoVremeData(data); setRadnoVremeLoading(false); })
+            .catch(() => { setRadnoVremeData([]); setRadnoVremeLoading(false); });
+    }, []);
 
-        if (intervaliDanas.length === 0) {
-          setRadnoVremeInfo('Danas lokal ne radi.');
-          return;
+    const rasporedSedmice = useMemo(() =>
+        REDOSLED_DANA.map(dan => {
+            const intervali = radnoVremeData.filter(i => i.dan === dan);
+            return {
+                dan,
+                skracenica: DAN_SKRACENICA[dan],
+                vreme: intervali.length
+                    ? intervali.map(i => `${i.odVremena.slice(0, 5)}–${i.doVremena.slice(0, 5)}`).join(', ')
+                    : null,
+            };
+        }),
+        [radnoVremeData]
+    );
+
+    const kategorije = useMemo(() => {
+        const tipovi = [...new Set(proizvodi.map(p => p.tip))];
+        return ['Sve', ...tipovi];
+    }, [proizvodi]);
+
+    const filtrirani = useMemo(() =>
+        proizvodi.filter(p => {
+            const okTab = aktivniTab === 'Sve' || p.tip === aktivniTab;
+            const okPretraga = normalizuj(p.naziv).includes(normalizuj(pretraga));
+            return okTab && okPretraga;
+        }),
+        [proizvodi, aktivniTab, pretraga]
+    );
+
+    const grupisani = useMemo(() => {
+        if (aktivniTab !== 'Sve') {
+            return [{ tip: aktivniTab, stavke: filtrirani }];
         }
+        return kategorije
+            .filter(k => k !== 'Sve')
+            .map(tip => ({ tip, stavke: filtrirani.filter(p => p.tip === tip) }))
+            .filter(g => g.stavke.length > 0);
+    }, [aktivniTab, filtrirani, kategorije]);
 
-        const tekstIntervala = intervaliDanas
-          .map(i => `${i.odVremena?.slice(0, 5)} - ${i.doVremena?.slice(0, 5)}`)
-          .join(', ');
+    const handleDodaj = useCallback((p: Proizvod) => {
+        dodaj(p);
+        setToastPoruka(`${p.naziv} dodata u korpu`);
+        setTimeout(() => setToastPoruka(null), 2500);
+    }, [dodaj]);
 
-        setRadnoVremeInfo(`Radno vreme danas: ${tekstIntervala}`);
-      })
-      .catch(() => {
-        setRadnoVremeInfo('');
-      });
-  }, []);
+    const danasInfo = rasporedSedmice.find((r) => r.dan === danasnji);
 
-  const kategorije = useMemo(() => {
-    const tipovi = [...new Set(proizvodi.map(p => p.tip))];
-    return ['Sve', ...tipovi];
-  }, [proizvodi]);
+    return (
+        <div className={styles.stranica}>
 
-  const filtrirani = useMemo(() =>
-    proizvodi.filter(p => {
-      const okTab = aktivniTab === 'Sve' || p.tip === aktivniTab;
-      const okPretraga = p.naziv.toLowerCase().includes(pretraga.toLowerCase());
-      return okTab && okPretraga;
-    }),
-    [proizvodi, aktivniTab, pretraga]
-  );
+            {/* ── HEADER ── */}
+            <header className={styles.pageHeader}>
+                <div className={styles.pageHeaderSadrzaj}>
+                    <span className={styles.oznaka}>Poručivanje</span>
+                    <div className={styles.linija} />
+                    <h1 className={styles.naslov}>Meni</h1>
+                    <div className={styles.infoTagovi}>
+                        <div className={styles.infoTag}>
+                            <Star size={11} strokeWidth={1.5} />
+                            Skupljaj loyalty bodove uz svaku porudžbinu
+                        </div>
+                        <div className={styles.infoTag}>
+                            <ShoppingBag size={11} strokeWidth={1.5} />
+                            Bez dostave — porudžbinu preuzimaš lično
+                        </div>
+                    </div>
+                    {korisnik && popust > 0 && (
+                        <div className={styles.loyaltyBaner}>
+                            <Star size={12} strokeWidth={1.5} />
+                            {korisnik.loyaltyNivo} — popust: <strong>{popust}%</strong>
+                        </div>
+                    )}
+                </div>
+            </header>
 
-  const popust = getPopust(korisnik?.loyaltyNivo);
+            {/* ── INFO SEKCIJA (lokacija, telefon, radno vreme) ── */}
+            <section className={styles.infoSekcija}>
+                <a
+                    href={MAPS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.infoLink}
+                >
+                    <MapPin size={12} strokeWidth={1.5} className={styles.infoIkona} />
+                    <span>{ADRESA}</span>
+                </a>
 
-  // Dodaj u korpu + toast notifikacija
-  const handleDodaj = useCallback((p: Proizvod) => {
-    dodaj(p);
-    setToastPoruka(`${p.naziv} dodata u korpu`);
-    setTimeout(() => setToastPoruka(null), 2500);
-  }, [dodaj]);
+                <a href={`tel:${TELEFON.replace(/\s/g, '')}`} className={styles.infoLink}>
+                    <Phone size={12} strokeWidth={1.5} className={styles.infoIkona} />
+                    <span>{TELEFON}</span>
+                </a>
 
-  return (
-    <div className={styles.stranica}>
+                <div className={styles.rasporedBlok}>
+                    <div className={styles.rasporedGlava}>
+                        <Clock size={12} strokeWidth={1.5} className={styles.infoIkona} />
+                        <span>Radno vreme</span>
+                    </div>
+                    {radnoVremeLoading ? (
+                        <p className={styles.rasporedFallback}>Učitavam...</p>
+                    ) : radnoVremeData.length === 0 ? (
+                        <p className={styles.rasporedFallback}>Radno vreme privremeno nedostupno.</p>
+                    ) : (
+                        <>
+                            {/* Pun raspored — desktop/tablet */}
+                            <div className={styles.rasporedGrid}>
+                                {rasporedSedmice.map(({ dan, skracenica, vreme }) => (
+                                    <div
+                                        key={dan}
+                                        className={`${styles.rasporedDan} ${dan === danasnji ? styles.danasnji : ''}`}
+                                    >
+                                        <span className={styles.rasporedSkracenica}>{skracenica}</span>
+                                        <span className={styles.rasporedVreme}>{vreme ?? 'zatv.'}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Samo današnji dan — mobilni */}
+                            {danasInfo && (
+                                <div className={styles.rasporedDanas}>
+                                    <span className={styles.rasporedDanasDan}>Danas · {danasInfo.skracenica}</span>
+                                    <span className={styles.rasporedDanasVreme}>
+                                        {danasInfo.vreme ?? 'zatvoreno'}
+                                    </span>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </section>
 
-      {/* ── PAGE HEADER ── */}
-      <header className={styles.pageHeader}>
-        <div className={styles.pageHeaderSadrzaj}>
-          <span className={styles.pageHeaderOznaka}>— Naš meni —</span>
-          <h1 className={styles.pageHeaderNaslov}>Palačinke za svaki ukus</h1>
-          <p className={styles.pageHeaderOpis}>
-            Slatke, slane, sezonske — svaka palačinka rađena s pažnjom.
-          </p>
-          {radnoVremeInfo && (
-            <p className={styles.radnoVremeInfo}>{radnoVremeInfo}</p>
-          )}
-          {korisnik && popust > 0 && (
-            <div className={styles.loyaltyBaner}>
-              🏆 {korisnik.loyaltyNivo} — tvoj popust: <strong>{popust}%</strong>
+            {/* ── KONTROLE (tabovi, sticky) ── */}
+            <div className={styles.kontrole}>
+                <div className={styles.tabovi}>
+                    {kategorije.map(kat => (
+                        <button
+                            key={kat}
+                            className={`${styles.tab} ${aktivniTab === kat ? styles.tabAktivan : ''}`}
+                            onClick={() => setAktivniTab(kat)}
+                        >
+                            {kat}
+                        </button>
+                    ))}
+                </div>
             </div>
-          )}
+
+            {/* ── SADRŽAJ (dva stuba na desktopu) ── */}
+            <main className={styles.sadrzaj}>
+                <div className={styles.sadrzajInner}>
+
+                    {/* Levo — lista proizvoda */}
+                    <div className={styles.produkti}>
+                        <div className={styles.searchWrap}>
+                            <span className={styles.searchIkona}>⌕</span>
+                            <input
+                                type="text"
+                                placeholder="Pretraži..."
+                                value={pretraga}
+                                onChange={e => setPretraga(e.target.value)}
+                                className={styles.searchInput}
+                            />
+                            {pretraga && (
+                                <button className={styles.searchBrisi} onClick={() => setPretraga('')}>×</button>
+                            )}
+                        </div>
+
+                        {greska && <p className={styles.greska}>{greska}</p>}
+
+                        {ucitava && <MeniSkeleton />}
+
+                        {!ucitava && filtrirani.length === 0 && !greska && (
+                            <div className={styles.praznoStanje}>
+                                <p className={styles.praznoTekst}>Nema rezultata</p>
+                                {pretraga && (
+                                    <p className={styles.praznoHint}>
+                                        Nismo pronašli ništa za „<em>{pretraga}</em>“
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {!ucitava && grupisani.map(({ tip, stavke }) => (
+                            <div key={tip} className={styles.sekcija}>
+                                {aktivniTab === 'Sve' && (
+                                    <div className={styles.sekcijaGlava}>
+                                        <span className={styles.sekcijaNaslov}>{tip}</span>
+                                    </div>
+                                )}
+                                <motion.div
+                                    className={styles.lista}
+                                    initial="hidden"
+                                    animate="visible"
+                                    variants={{
+                                        hidden: {},
+                                        visible: { transition: { staggerChildren: 0.04 } },
+                                    }}
+                                >
+                                    {stavke.map(p => (
+                                        <ProizvodKartica
+                                            key={p.id}
+                                            proizvod={p}
+                                            kolicina={korpa.find(i => i.proizvod.id === p.id)?.kolicina ?? 0}
+                                            popust={popust}
+                                            onDodaj={handleDodaj}
+                                            onPovecaj={povecaj}
+                                            onSmanji={smanji}
+                                        />
+                                    ))}
+                                </motion.div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desno — mini korpa (samo desktop) */}
+                    <aside className={styles.korpaKolona}>
+                        <MiniKorpa />
+                    </aside>
+
+                </div>
+            </main>
+
+            <Toast poruka={toastPoruka} />
+
         </div>
-      </header>
-
-      {/* ── KONTROLE ── */}
-      <div className={styles.kontrole}>
-        <div className={styles.tabovi}>
-          {kategorije.map(kat => (
-            <button
-              key={kat}
-              className={`${styles.tab} ${aktivniTab === kat ? styles.tabAktivan : ''}`}
-              onClick={() => setAktivniTab(kat)}
-            >
-              {kat}
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.searchWrap}>
-          <span className={styles.searchIkona}>⌕</span>
-          <input
-            type="text"
-            placeholder="Pretraži..."
-            value={pretraga}
-            onChange={e => setPretraga(e.target.value)}
-            className={styles.searchInput}
-          />
-          {pretraga && (
-            <button className={styles.searchBrisi} onClick={() => setPretraga('')}>×</button>
-          )}
-        </div>
-      </div>
-
-      {/* ── SADRŽAJ ── */}
-      <main className={styles.sadrzaj}>
-        {greska && <p className={styles.greska}>{greska}</p>}
-
-        {/* Skeleton dok se učitava */}
-        {ucitava && <MeniSkeleton />}
-
-        {/* Prazno stanje (posle učitavanja) */}
-        {!ucitava && filtrirani.length === 0 && !greska && (
-          <div className={styles.praznoStanje}>
-            <p className={styles.praznoTekst}>Nema rezultata</p>
-            {pretraga && (
-              <p className={styles.praznoHint}>
-                Nismo pronašli ništa za „<em>{pretraga}</em>"
-              </p>
-            )}
-          </div>
-        )}
-
-        {!ucitava && (
-          <motion.div
-            className={styles.grid}
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.05 } }
-            }}
-          >
-            {filtrirani.map(p => (
-              <ProizvodKartica
-                key={p.id}
-                proizvod={p}
-                kolicina={korpa.find(i => i.proizvod.id === p.id)?.kolicina ?? 0}
-                slika={getSlikuZaTip(p.tip)}
-                popust={popust}
-                onDodaj={handleDodaj}
-                onPovecaj={povecaj}
-                onSmanji={smanji}
-              />
-            ))}
-          </motion.div>
-        )}
-      </main>
-
-      {/* ── KORPA BAR (sticky dno) ── */}
-      {ukupnoStavki > 0 && (
-        <div className={styles.korpaBar}>
-          <span className={styles.korpaBarTekst}>
-            {ukupnoStavki} {ukupnoStavki === 1 ? 'stavka' : 'stavki'} u korpi
-          </span>
-          <button className={styles.korpaBarBtn} onClick={otvoriDrawer}>
-            Pogledaj korpu →
-          </button>
-        </div>
-      )}
-
-      {/* ── TOAST ── */}
-      <Toast poruka={toastPoruka} />
-
-    </div>
-  );
+    );
 }
