@@ -1,13 +1,18 @@
 package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashSet;
 import java.util.Set;
 
+//@BatchSize dodat da kada lista stavki učitava povezane proizvode (ManyToOne EAGER),
+// proizvodi se ne povlače jedan po jedan kroz dodatne upite,
+// već Hibernate grupiše više ID-jeva i učitava ih odjednom pomoću IN upita.
 @Entity
 @Table(name = "proizvod")
+@BatchSize(size = 100)
 public class Proizvod {
 
     @Id

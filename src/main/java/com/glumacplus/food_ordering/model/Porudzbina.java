@@ -2,6 +2,7 @@
 package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -40,7 +41,10 @@ public class Porudzbina {
     @Column(name = "procenjeno_vreme")
     private Integer procenjenoVreme;
 
+    //@BatchSize smo i ovde dodali da kada se učitava više porudžbina, njihove stavke se povlače u grupama pomoću `IN` upita,
+    // umesto da se za svaku porudžbinu šalje poseban upit. Prednost je što radi dobro i sa paginacijom, za razliku od `JOIN FETCH` pristupa.
     @OneToMany(mappedBy = "porudzbina", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 100)
     private List<StavkaPorudzbine> stavke = new ArrayList<>();
 
 
