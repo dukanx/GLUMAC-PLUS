@@ -1,26 +1,24 @@
 .toast {
     position: fixed;
-    bottom: 90px;
-    /* iznad korpa bara */
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--braon-tamni, #4d3a31);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: var(--radius-md, 10px);
-    font-family: var(--font-body);
-    font-size: 0.9rem;
-    font-weight: 500;
+    bottom: 100px;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: fit-content;
+    max-width: calc(100vw - 40px);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 22px;
+    font-family: var(--sans);
+    font-size: 0.88rem;
     display: flex;
     align-items: center;
     gap: 10px;
     z-index: 500;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    white-space: nowrap;
     pointer-events: none;
 }
 
 .ikona {
-    font-size: 1rem;
-    color: #7ec98a;
+    color: hsl(150 35% 65%);
+    flex-shrink: 0;
 }

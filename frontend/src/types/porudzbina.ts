@@ -8,7 +8,7 @@ export const TIP_LABELE: Record<TipPorudzbine, string> = {
     U_LOKALU:  'U lokalu',
 };
 
-// Bezbedno mapira string (npr. iz backend odgovora) u srpsku labelu.
+// Mapiranje naziva labele tipova
 export function tipLabela(tip?: string): string {
     if (!tip) return '';
     return TIP_LABELE[tip as TipPorudzbine] ?? tip;

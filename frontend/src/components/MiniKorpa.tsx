@@ -20,7 +20,7 @@ export default function MiniKorpa() {
     const [uspesno, setUspesno] = useState(false);
     const [greska, setGreska] = useState('');
 
-    // Zaokružujemo FINALNU cenu (isto pravilo kao na meniju i backendu), pa popust izvodimo.
+    // Zaokruživanje finalne cene, isto kao na meniju
     const zaPlacanje = popust > 0 ? Math.round(ukupnaCena * (1 - popust / 100)) : ukupnaCena;
     const popustIznos = ukupnaCena - zaPlacanje;
 

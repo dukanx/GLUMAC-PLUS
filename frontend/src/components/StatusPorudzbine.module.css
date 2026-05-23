@@ -2,25 +2,25 @@
 .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(31, 30, 23, 0.6);
+    background: hsl(22 30% 14% / 0.5);
     z-index: 300;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--space-sm);
+    padding: 20px;
 }
 
 /* ── MODAL ── */
 .modal {
-    background: #fff;
-    border-radius: var(--radius-md);
-    padding: var(--space-lg);
+    background: var(--paper);
+    border: 1px solid var(--ink-20);
+    padding: 32px;
     width: 100%;
     max-width: 480px;
-    box-shadow: 0 20px 60px rgba(77, 58, 49, 0.25);
+    box-shadow: 0 8px 40px hsl(22 30% 14% / 0.12);
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: 28px;
 }
 
 /* ── HEADER ── */
@@ -31,38 +31,40 @@
 }
 
 .naslov {
-    font-family: var(--font-display);
+    font-family: var(--serif);
     font-size: 1.5rem;
     font-style: italic;
-    font-weight: 700;
-    color: var(--braon-tamni);
+    font-weight: 400;
+    color: var(--ink);
     margin: 0 0 4px;
 }
 
 .podnaslov {
-    font-size: 0.82rem;
-    color: var(--tekst-sivi);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-40);
     margin: 0;
 }
 
 .zatvoriBtn {
-    background: var(--krem);
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    background: transparent;
+    border: 1px solid var(--ink-20);
+    width: 34px;
+    height: 34px;
     cursor: pointer;
-    color: var(--tekst-sivi);
+    color: var(--ink-55);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
+    transition: background 0.2s, color 0.2s;
     flex-shrink: 0;
 }
 
 .zatvoriBtn:hover {
-    background: var(--krem-tamni);
-    color: var(--tekst);
+    background: var(--ink-12);
+    color: var(--ink);
 }
 
 /* ── KORACI ── */
@@ -71,7 +73,7 @@
     align-items: flex-start;
     justify-content: space-between;
     position: relative;
-    padding: var(--space-sm) 0;
+    padding: 8px 0;
 }
 
 .korakWrap {
@@ -86,28 +88,28 @@
 /* Linija između koraka */
 .linija {
     position: absolute;
-    top: 22px;
+    top: 21px;
     right: 50%;
     width: 100%;
-    height: 2px;
-    background: rgba(187, 145, 98, 0.2);
+    height: 1px;
+    background: var(--ink-12);
     overflow: hidden;
 }
 
 .linijaPopunjena {
     height: 100%;
-    background: var(--braon);
+    background: var(--ink);
     width: 100%;
 }
 
 /* Krug koraka */
 .korak {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: var(--krem);
-    border: 2px solid rgba(187, 145, 98, 0.25);
-    color: var(--tekst-sivi);
+    background: var(--paper);
+    border: 1px solid var(--ink-12);
+    color: var(--ink-20);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -117,86 +119,70 @@
 }
 
 .korakProsao {
-    background: var(--krem-tamni);
-    border-color: var(--braon-svetli);
-    color: var(--braon);
+    border-color: var(--ink-20);
+    color: var(--ink-40);
 }
 
 .korakAktivan {
-    background: var(--braon);
-    border-color: var(--braon);
-    color: #fff;
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
 }
 
 .korakLabela {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--tekst-sivi);
+    color: var(--ink-40);
     text-align: center;
     transition: color 0.3s;
 }
 
 .korakLabelaProsao {
-    color: var(--braon);
+    color: var(--ink-70);
 }
 
 /* ── PORUKA ── */
 .poruka {
-    background: var(--krem);
-    border-radius: var(--radius-sm);
-    padding: var(--space-sm);
-    min-height: 56px;
+    border: 1px solid var(--ink-12);
+    padding: 16px 20px;
+    min-height: 60px;
     display: flex;
     align-items: center;
 }
 
 .porukaText {
-    font-size: 0.92rem;
-    color: var(--tekst);
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    color: var(--ink-70);
     line-height: 1.6;
     margin: 0;
     text-align: center;
     width: 100%;
 }
 
-/* ── ČEKA INDIKATOR ── */
-.ceka {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 0.75rem;
-    color: var(--tekst-sivi);
-}
-
-.cekaKrug {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--braon-svetli);
-}
 
 /* ── OTKAZANO ── */
 .otkazano {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) 0;
+    gap: 16px;
+    padding: 8px 0;
     text-align: center;
 }
 
 .otkazanoIkona {
-    color: #f58089;
+    color: var(--rust);
 }
 
 .otkazanoTekst {
-    font-family: var(--font-display);
+    font-family: var(--serif);
     font-size: 1.1rem;
     font-style: italic;
-    color: var(--tekst);
+    font-weight: 400;
+    color: var(--ink);
     margin: 0;
 }
 
@@ -204,39 +190,46 @@
 .dugme {
     width: 100%;
     padding: 13px;
-    background: var(--braon);
-    color: #fff;
+    background: var(--ink);
+    color: var(--paper);
     border: none;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-body);
-    font-size: 0.9rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .dugme:hover {
-    background: var(--braon-tamni);
+    background: var(--rust);
 }
 
 /* ── GREŠKA ── */
 .greska {
+    font-family: var(--sans);
     font-size: 0.78rem;
-    color: #c0393f;
-    text-align: center;
+    color: var(--rust);
+    border-left: 2px solid var(--rust);
+    padding: 6px 10px;
+    background: hsl(14 65% 44% / 0.06);
     margin: 0;
 }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 480px) {
     .modal {
-        padding: var(--space-md);
+        padding: 24px 20px;
+        gap: 22px;
     }
 
     .korak {
-        width: 40px;
-        height: 40px;
+        width: 38px;
+        height: 38px;
+    }
+
+    .linija {
+        top: 18px;
     }
 }
