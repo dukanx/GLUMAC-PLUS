@@ -16,7 +16,8 @@ const LS_KLJUC = 'aktivna_porudzbina_id';
 export function AktivnaPorudzbinaProvider({ children }: { children: ReactNode }) {
     const [aktivnaId, setAktivnaId] = useState<number | null>(() => {
         const stored = localStorage.getItem(LS_KLJUC);
-        return stored ? Number(stored) : null;
+        const n = stored ? Number(stored) : NaN;
+        return Number.isInteger(n) ? n : null;
     });
     const [statusOtvoren, setStatusOtvoren] = useState(false);
 

@@ -26,7 +26,8 @@ export default function FloatingBubble({ onOtvoriKorpu, sakrijenNaDesktop }: Pro
     const { aktivnaId, otvoriStatus } = useAktivnaPorudzbina();
     const isDesktop = useIsDesktop();
 
-    // Sakrivamo na desktopu ako nema aktivne porudžbine i nema stavki u korpi
+    // Na desktopu (npr. MeniPage, gde već postoji MiniKorpa) skrivamo bubble —
+    // osim ako postoji aktivna porudžbina (tad je koristan za brzo praćenje).
     const sakrij = sakrijenNaDesktop && isDesktop && aktivnaId === null;
     const prikazan = (aktivnaId !== null || ukupnoStavki > 0) && !sakrij;
 
