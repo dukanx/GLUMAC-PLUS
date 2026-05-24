@@ -8,6 +8,7 @@ import ProizvodKartica from '../components/ProizvodKartica';
 import MeniSkeleton from '../components/MeniSkeleton';
 import MiniKorpa from '../components/MiniKorpa';
 import Toast from '../components/Toast';
+import { useRadnoVreme } from '../hooks/useRadnoVreme';
 
 interface Proizvod {
     id: number;
@@ -18,30 +19,10 @@ interface Proizvod {
     alergeniNazivi?: string[];
 }
 
-interface RadnoVremeInterval {
-    dan: 'PONEDELJAK' | 'UTORAK' | 'SREDA' | 'CETVRTAK' | 'PETAK' | 'SUBOTA' | 'NEDELJA';
-    odVremena: string;
-    doVremena: string;
-}
-
 // ── Konstante ──────────────────────────────────────────────────────────────
 const TELEFON = '+381 65 817 8476';
 const ADRESA = 'Dositejeva 1a, Dorćol, Beograd';
 const MAPS_URL = 'https://www.google.com/maps/place/glumac+plus/data=!4m2!3m1!1s0x475a7bc2e551cbab:0xb7899385a5114972?sa=X&ved=1t:242&ictx=111';
-
-const DAN_SKRACENICA: Record<string, string> = {
-    PONEDELJAK: 'Pon', UTORAK: 'Uto', SREDA: 'Sri',
-    CETVRTAK: 'Čet', PETAK: 'Pet', SUBOTA: 'Sub', NEDELJA: 'Ned',
-};
-
-const REDOSLED_DANA: RadnoVremeInterval['dan'][] = [
-    'PONEDELJAK', 'UTORAK', 'SREDA', 'CETVRTAK', 'PETAK', 'SUBOTA', 'NEDELJA',
-];
-
-const DANASNJI_DAN_NAZIV: Record<number, RadnoVremeInterval['dan']> = {
-    0: 'NEDELJA', 1: 'PONEDELJAK', 2: 'UTORAK', 3: 'SREDA',
-    4: 'CETVRTAK', 5: 'PETAK', 6: 'SUBOTA',
-};
 
 // Normalizacija teksta za pretragu (uklanjanje dijakritičkih znakova, mala slova)
 function normalizuj(tekst: string): string {
@@ -56,6 +37,7 @@ function normalizuj(tekst: string): string {
 export default function MeniPage() {
     const { korpa, dodaj, povecaj, smanji } = useCart();
     const { korisnik, popust } = useAuth();
+    const { raspored, danas, danasKljuc, loading: radnoVremeLoading, imaPodataka } = useRadnoVreme();
 
     const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
     const [greska, setGreska] = useState('');
@@ -63,10 +45,6 @@ export default function MeniPage() {
     const [pretraga, setPretraga] = useState('');
     const [aktivniTab, setAktivniTab] = useState('Sve');
     const [toastPoruka, setToastPoruka] = useState<string | null>(null);
-    const [radnoVremeData, setRadnoVremeData] = useState<RadnoVremeInterval[]>([]);
-    const [radnoVremeLoading, setRadnoVremeLoading] = useState(true);
-
-    const danasnji = DANASNJI_DAN_NAZIV[new Date().getDay()];
 
     useEffect(() => {
         fetch('http://localhost:8080/api/proizvodi')
@@ -74,27 +52,6 @@ export default function MeniPage() {
             .then(data => { setProizvodi(data); setUcitava(false); })
             .catch(() => { setGreska('Ne mogu da učitam meni.'); setUcitava(false); });
     }, []);
-
-    useEffect(() => {
-        fetch('http://localhost:8080/api/radno-vreme?aktivno=true')
-            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-            .then((data: RadnoVremeInterval[]) => { setRadnoVremeData(data); setRadnoVremeLoading(false); })
-            .catch(() => { setRadnoVremeData([]); setRadnoVremeLoading(false); });
-    }, []);
-
-    const rasporedSedmice = useMemo(() =>
-        REDOSLED_DANA.map(dan => {
-            const intervali = radnoVremeData.filter(i => i.dan === dan);
-            return {
-                dan,
-                skracenica: DAN_SKRACENICA[dan],
-                vreme: intervali.length
-                    ? intervali.map(i => `${i.odVremena.slice(0, 5)}–${i.doVremena.slice(0, 5)}`).join(', ')
-                    : null,
-            };
-        }),
-        [radnoVremeData]
-    );
 
     const kategorije = useMemo(() => {
         const tipovi = [...new Set(proizvodi.map(p => p.tip))];
@@ -125,8 +82,6 @@ export default function MeniPage() {
         setToastPoruka(`${p.naziv} dodata u korpu`);
         setTimeout(() => setToastPoruka(null), 2500);
     }, [dodaj]);
-
-    const danasInfo = rasporedSedmice.find((r) => r.dan === danasnji);
 
     return (
         <div className={styles.stranica}>
@@ -180,16 +135,16 @@ export default function MeniPage() {
                     </div>
                     {radnoVremeLoading ? (
                         <p className={styles.rasporedFallback}>Učitavam...</p>
-                    ) : radnoVremeData.length === 0 ? (
+                    ) : !imaPodataka ? (
                         <p className={styles.rasporedFallback}>Radno vreme privremeno nedostupno.</p>
                     ) : (
                         <>
                             {/* Pun raspored — desktop/tablet */}
                             <div className={styles.rasporedGrid}>
-                                {rasporedSedmice.map(({ dan, skracenica, vreme }) => (
+                                {raspored.map(({ dan, skracenica, vreme }) => (
                                     <div
                                         key={dan}
-                                        className={`${styles.rasporedDan} ${dan === danasnji ? styles.danasnji : ''}`}
+                                        className={`${styles.rasporedDan} ${dan === danasKljuc ? styles.danasnji : ''}`}
                                     >
                                         <span className={styles.rasporedSkracenica}>{skracenica}</span>
                                         <span className={styles.rasporedVreme}>{vreme ?? 'zatv.'}</span>
@@ -197,11 +152,11 @@ export default function MeniPage() {
                                 ))}
                             </div>
                             {/* Samo današnji dan — mobilni */}
-                            {danasInfo && (
+                            {danas && (
                                 <div className={styles.rasporedDanas}>
-                                    <span className={styles.rasporedDanasDan}>Danas · {danasInfo.skracenica}</span>
+                                    <span className={styles.rasporedDanasDan}>Danas · {danas.skracenica}</span>
                                     <span className={styles.rasporedDanasVreme}>
-                                        {danasInfo.vreme ?? 'zatvoreno'}
+                                        {danas.vreme ?? 'zatvoreno'}
                                     </span>
                                 </div>
                             )}
