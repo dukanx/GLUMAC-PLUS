@@ -1,17 +1,27 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 // ── Tipovi ──
 interface Korisnik {
     id: number;
     ime: string;
     email: string;
+    uloga?: string;
     brojBodova: number;
     loyaltyNivo?: string;
+}
+
+interface LoyaltyProgram {
+    id: number;
+    nivo: string;
+    popust: number;
+    pragBodova: number;
 }
 
 interface AuthContextTip {
     korisnik: Korisnik | null;
     token: string | null;
+    popust: number;
+    loyaltyProgrami: LoyaltyProgram[];
     login: (korisnik: Korisnik, token: string) => void;
     logout: () => void;
     osvezi: () => Promise<void>;
@@ -31,6 +41,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return localStorage.getItem('token');
     });
 
+    const [loyaltyProgrami, setLoyaltyProgrami] = useState<LoyaltyProgram[]>([]);
+
+    useEffect(() => {
+        fetch('http://localhost:8080/api/loyalty_program')
+            .then(r => r.ok ? r.json() : [])
+            .then((data: LoyaltyProgram[]) => setLoyaltyProgrami(data))
+            .catch(() => setLoyaltyProgrami([]));
+    }, []);
+
+    const popust = useMemo(() => {
+        if (!korisnik?.loyaltyNivo) return 0;
+        return loyaltyProgrami.find(p => p.nivo === korisnik.loyaltyNivo)?.popust ?? 0;
+    }, [korisnik?.loyaltyNivo, loyaltyProgrami]);
+
     const login = (noviKorisnik: Korisnik, noviToken: string) => {
         localStorage.setItem('korisnik', JSON.stringify(noviKorisnik));
         localStorage.setItem('token', noviToken);
@@ -46,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(null);
     };
 
-    // Osvežava podatke o korisniku sa servera (npr. posle porudžbine)
+    // Osvežavanje podatke o korisniku sa servera
     const osvezi = async () => {
         if (!token) return;
         try {
@@ -59,12 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 localStorage.setItem('korisnik', JSON.stringify(data));
             }
         } catch {
-            // Tiho failuje — korisnik ostaje kao što je bio
+            // tihi fail
         }
     };
 
     return (
-        <AuthContext.Provider value={{ korisnik, token, login, logout, osvezi }}>
+        <AuthContext.Provider value={{ korisnik, token, popust, loyaltyProgrami, login, logout, osvezi }}>
             {children}
         </AuthContext.Provider>
     );

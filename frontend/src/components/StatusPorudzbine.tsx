@@ -28,6 +28,7 @@ function getKorakIndex(status: Status): number {
 export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }: Props) {
     const { token } = useAuth();
     const [status, setStatus] = useState<Status>('U_PRIPREMI');
+    const [procenjenoVreme, setProcenjenoVreme] = useState<number | null>(null);
     const [greska, setGreska] = useState(false);
 
     const zavrseno = status === 'REALIZOVANA' || status === 'OTKAZANA';
@@ -42,6 +43,7 @@ export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }
                 if (res.ok) {
                     const data = await res.json();
                     setStatus(data.status);
+                    setProcenjenoVreme(data.procenjenoVreme ?? null);
                 }
             } catch {
                 setGreska(true);
@@ -50,10 +52,10 @@ export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }
 
         fetchStatus(); // odmah jednom
 
-        if (zavrseno) return; // ne pokreći interval ako je završeno
+        if (zavrseno) return; // ne pokrecemo interval ako je završeno
 
         const interval = setInterval(fetchStatus, 8000); // svakih 8s
-        return () => clearInterval(interval); // cleanup
+        return () => clearInterval(interval); 
     }, [porudzbinaId, token, zavrseno]);
 
     const aktivniKorak = getKorakIndex(status);
@@ -73,6 +75,7 @@ export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 40 }}
                     transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                    onClick={e => e.stopPropagation()}
                 >
                     {/* Header */}
                     <div className={styles.header}>
@@ -154,23 +157,15 @@ export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }
                                         className={styles.porukaText}
                                     >
                                         {status === 'U_PRIPREMI' && 'Vaša porudžbina je primljena! Čekamo potvrdu kuhinje...'}
-                                        {status === 'SPREMNA' && 'Palačinke se prave! Uskoro su gotove.'}
+                                        {status === 'SPREMNA' && (
+                                            procenjenoVreme
+                                                ? `Vaša porudžbina je prihvaćena i procenjeno vreme čekanja je ${procenjenoVreme} minuta.`
+                                                : 'Palačinke se prave! Uskoro su gotove.'
+                                        )}
                                         {status === 'REALIZOVANA' && 'Gotovo! Dođite po svoju porudžbinu na kasu.'}
                                     </motion.p>
                                 </AnimatePresence>
                             </div>
-
-                            {/* Pulsing indikator dok čeka */}
-                            {!zavrseno && (
-                                <div className={styles.ceka}>
-                                    <motion.div
-                                        className={styles.cekaKrug}
-                                        animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0.2, 0.6] }}
-                                        transition={{ duration: 2, repeat: Infinity }}
-                                    />
-                                    <span>Automatski se osvežava...</span>
-                                </div>
-                            )}
 
                             {zavrseno && (
                                 <button className={styles.dugme} onClick={() => {

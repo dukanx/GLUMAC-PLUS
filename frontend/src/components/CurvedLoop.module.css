@@ -1,0 +1,41 @@
+.loop {
+    width: 100%;
+    min-height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    user-select: none;
+    touch-action: pan-y;
+}
+
+.svg {
+    width: 100%;
+    overflow: visible;
+    display: block;
+    aspect-ratio: 100 / 12;
+    font-size: clamp(1.25rem, 2.4vw, 2rem);
+    font-weight: 500;
+    line-height: 1;
+}
+
+.text {
+    fill: currentColor;
+}
+
+.measure {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    .loop {
+        min-height: 104px;
+    }
+
+    .svg {
+        aspect-ratio: 100 / 24;
+        font-size: clamp(5rem, 22vw, 6.5rem);
+    }
+}

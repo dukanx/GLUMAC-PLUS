@@ -1,156 +1,127 @@
-.kartica {
-    background: #fff;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(77, 58, 49, 0.07);
-    border: 1px solid rgba(134, 83, 55, 0.1);
+.red {
     display: flex;
-    flex-direction: column;
-    cursor: default;
-    transition: box-shadow 0.25s ease;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--ink-12);
 }
 
-.kartica:hover {
-    box-shadow: 0 8px 24px rgba(77, 58, 49, 0.14);
+.red:first-child {
+    border-top: 1px solid var(--ink-12);
 }
 
-/* ── SLIKA ── */
-.slikaWrap {
-    position: relative;
-    height: 165px;
-    overflow: hidden;
-    background: var(--krem);
-}
-
-.slika {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.tipBadge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: rgba(134, 83, 55, 0.92);
-    color: #fff;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 3px 10px;
-    border-radius: 20px;
-    backdrop-filter: blur(4px);
-}
-
-/* ── TEKST ── */
-.tekst {
-    padding: var(--space-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.levo {
     flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
 }
 
 .naziv {
-    font-family: var(--font-display);
+    font-family: var(--serif);
     font-size: 1.1rem;
     font-style: italic;
-    font-weight: 700;
-    color: var(--braon-tamni);
+    font-weight: 400;
+    color: var(--ink);
     margin: 0;
     line-height: 1.3;
 }
 
+
 .opis {
-    font-size: 0.82rem;
-    color: var(--tekst-sivi);
-    line-height: 1.55;
-    flex: 1;
+    font-family: var(--sans);
+    font-size: 0.83rem;
+    color: var(--ink-55);
+    line-height: 1.6;
     margin: 0;
-    display: -webkit-box;
-    line-clamp: 2;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 
-.footer {
+.alergeni {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-40);
+    line-height: 1.5;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.desno {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: auto;
-    padding-top: var(--space-xs);
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
 }
 
 .cenaWrap {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    align-items: flex-end;
+    gap: 2px;
 }
 
 .cena {
-    font-family: var(--font-display);
-    font-size: 1.05rem;
+    font-family: var(--sans);
+    font-size: 0.95rem;
     font-weight: 600;
-    color: var(--braon);
+    color: var(--ink);
+    white-space: nowrap;
 }
 
-/* Originalna cena precrtana kad je korisnik na loyalty programu */
 .cenaStara {
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    color: var(--tekst-sivi);
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--ink-40);
     text-decoration: line-through;
+    white-space: nowrap;
 }
 
-/* Cena sa popustom */
 .cenaPopust {
-    font-family: var(--font-display);
-    font-size: 1.05rem;
+    font-family: var(--sans);
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #b8860b;
-    /* tamno zlatna */
+    color: var(--rust);
+    white-space: nowrap;
 }
 
-/* ── DODAJ DUGME ── */
 .dodajBtn {
     display: flex;
     align-items: center;
     gap: 5px;
-    background: var(--braon);
-    color: #fff;
+    background: var(--ink);
+    color: var(--paper);
     border: none;
     padding: 7px 14px;
-    border-radius: var(--radius-sm);
+    border-radius: 0;
     cursor: pointer;
-    font-family: var(--font-body);
-    font-size: 0.82rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
     font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     transition: background 0.2s;
+    white-space: nowrap;
 }
 
 .dodajBtn:hover {
-    background: var(--braon-tamni);
+    background: var(--rust);
 }
 
-/* ── KONTROLE KOLIČINE ── */
 .kontrole {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: var(--krem);
-    border-radius: var(--radius-sm);
+    gap: 6px;
+    border: 1px solid var(--ink-20);
     padding: 4px 8px;
 }
 
 .kontroleBtn {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--braon);
-    color: #fff;
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    color: var(--ink);
     border: none;
     cursor: pointer;
     display: flex;
@@ -161,14 +132,28 @@
 }
 
 .kontroleBtn:hover {
-    background: var(--braon-tamni);
+    background: var(--ink-12);
 }
 
 .kolicina {
     min-width: 20px;
     text-align: center;
-    font-weight: 700;
+    font-weight: 600;
     font-size: 0.92rem;
-    color: var(--braon);
-    font-family: var(--font-body);
+    color: var(--ink);
+    font-family: var(--sans);
+}
+
+@media (max-width: 500px) {
+    .red {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .desno {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
 }

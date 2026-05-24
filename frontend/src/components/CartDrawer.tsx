@@ -4,23 +4,28 @@ import { X, Plus, Minus, Trash2, ShoppingCart, CheckCircle2 } from 'lucide-react
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
+import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
 import styles from './CartDrawer.module.css';
 
-interface CartDrawerProps {
-    onPorudzbinaKreirana: (id: number) => void;
-}
-
-export default function CartDrawer({ onPorudzbinaKreirana }: CartDrawerProps) {
+export default function CartDrawer() {
     const navigate = useNavigate();
-    const { korisnik, token, osvezi } = useAuth();
+    const { korisnik, token, osvezi, popust } = useAuth();
+    const { otvoriStatus } = useAktivnaPorudzbina();
     const {
         korpa, povecaj, smanji, ukloni, isprazni,
         ukupnaCena, ukupnoStavki,
         drawerOtvoren, zatvoriDrawer,
     } = useCart();
 
+    const [tipPorudzbine, setTipPorudzbine] = useState<TipPorudzbine>('U_LOKALU');
+    const [napomena, setNapomena] = useState('');
     const [porucivanjeUToku, setPorucivanjeUToku] = useState(false);
     const [uspesno, setUspesno] = useState(false);
+
+    //Zaokruzivanje finalne cene, isto kao na meniju
+    const zaPlacanje = popust > 0 ? Math.round(ukupnaCena * (1 - popust / 100)) : ukupnaCena;
+    const popustIznos = ukupnaCena - zaPlacanje;
 
     const handleNaruci = async () => {
         if (!korisnik || !token) {
@@ -38,7 +43,8 @@ export default function CartDrawer({ onPorudzbinaKreirana }: CartDrawerProps) {
                     'Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    korisnikId: korisnik.id,
+                    tipPorudzbine,
+                    napomena: napomena.trim() || null,
                     stavke: korpa.map(i => ({
                         proizvodId: i.proizvod.id,
                         kolicina: i.kolicina,
@@ -50,13 +56,14 @@ export default function CartDrawer({ onPorudzbinaKreirana }: CartDrawerProps) {
                 const responseData = await res.json().catch(() => null);
                 const novaPorudzbinaId: number | null = responseData?.porudzbinaId ?? null;
                 isprazni();
+                setNapomena('');
                 setUspesno(true);
                 await osvezi();
                 setTimeout(() => {
                     setUspesno(false);
                     zatvoriDrawer();
-                    if (novaPorudzbinaId) onPorudzbinaKreirana(novaPorudzbinaId);
-                }, 2500);
+                    if (novaPorudzbinaId) otvoriStatus(novaPorudzbinaId);
+                }, 2000);
             } else {
                 const data = await res.json().catch(() => null);
                 alert(data?.message ?? 'Greška prilikom naručivanja.');
@@ -116,21 +123,12 @@ export default function CartDrawer({ onPorudzbinaKreirana }: CartDrawerProps) {
                             {uspesno ? (
                                 <motion.div
                                     className={styles.uspesno}
-                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                 >
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1, rotate: 360 }}
-                                        transition={{ type: 'spring', delay: 0.1 }}
-                                    >
-                                        <CheckCircle2
-                                            size={80}
-                                            className={styles.uspesnoIkona}
-                                        />
-                                    </motion.div>
+                                    <CheckCircle2 size={56} className={styles.uspesnoIkona} />
                                     <p className={styles.uspesnoNaslov}>Porudžbina je poslata!</p>
-                                    <p className={styles.uspesnoSub}>Prijatno! 🥞</p>
+                                    <p className={styles.uspesnoSub}>Otvaramo praćenje...</p>
                                 </motion.div>
 
                             ) : korpa.length === 0 ? (
@@ -218,9 +216,48 @@ export default function CartDrawer({ onPorudzbinaKreirana }: CartDrawerProps) {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 20 }}
                                 >
+                                    {/* Tip porudžbine */}
+                                    <div className={styles.tipSekcija}>
+                                        <span className={styles.tipLabel}>Tip porudžbine</span>
+                                        <div className={styles.tipBiraci}>
+                                            {(Object.keys(TIP_LABELE) as TipPorudzbine[]).map(tip => (
+                                                <button
+                                                    key={tip}
+                                                    className={`${styles.tipBirac} ${tipPorudzbine === tip ? styles.tipAktivan : ''}`}
+                                                    onClick={() => setTipPorudzbine(tip)}
+                                                >
+                                                    {TIP_LABELE[tip]}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Napomena */}
+                                    <div className={styles.napomenaSekcija}>
+                                        <span className={styles.tipLabel}>Napomena (opciono)</span>
+                                        <textarea
+                                            className={styles.napomenaInput}
+                                            value={napomena}
+                                            onChange={e => setNapomena(e.target.value)}
+                                            placeholder="npr. bez šećera, dodatni preliv..."
+                                            maxLength={1000}
+                                            rows={2}
+                                        />
+                                    </div>
+
+                                    {popust > 0 && (
+                                        <div className={styles.popustRed}>
+                                            <span className={styles.popustLabel}>Loyalty popust ({popust}%)</span>
+                                            <span className={styles.popustIznos}>−{popustIznos} RSD</span>
+                                        </div>
+                                    )}
+
                                     <div className={styles.ukupno}>
                                         <span className={styles.ukupnoLabel}>Ukupno</span>
-                                        <span className={styles.ukupnoVrednost}>{ukupnaCena} RSD</span>
+                                        <span className={styles.ukupnoVrednost}>
+                                            {popust > 0 && <span className={styles.ukupnoStaro}>{ukupnaCena}</span>}
+                                            {zaPlacanje} RSD
+                                        </span>
                                     </div>
 
                                     <motion.button
