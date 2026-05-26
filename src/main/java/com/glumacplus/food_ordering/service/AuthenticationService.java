@@ -8,6 +8,7 @@ import com.glumacplus.food_ordering.model.Korisnik;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -32,13 +33,16 @@ public class AuthenticationService {
 
     // LOGIN
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        // AuthenticationManager rad proveru sifre
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getLozinka()
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getLozinka()
+                    )
+            );
+        } catch (BadCredentialsException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Pogrešan email ili lozinka.");
+        }
 
         //  Ako gornja linija nije bacila gresku,korisnik validan
         // Trazimo ga u bazi da bismo mogli da generisemo token.

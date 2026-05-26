@@ -467,6 +467,15 @@
     border-color: var(--rust);
 }
 
+.greska {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--rust);
+    border-left: 2px solid var(--rust);
+    padding: 6px 10px;
+    background: hsl(14 65% 44% / 0.06);
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 480px) {
     .drawer {

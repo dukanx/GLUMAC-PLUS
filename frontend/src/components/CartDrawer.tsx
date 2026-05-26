@@ -22,6 +22,7 @@ export default function CartDrawer() {
     const [napomena, setNapomena] = useState('');
     const [porucivanjeUToku, setPorucivanjeUToku] = useState(false);
     const [uspesno, setUspesno] = useState(false);
+    const [greska, setGreska] = useState('');
 
     //Zaokruzivanje finalne cene, isto kao na meniju
     const zaPlacanje = popust > 0 ? Math.round(ukupnaCena * (1 - popust / 100)) : ukupnaCena;
@@ -34,6 +35,7 @@ export default function CartDrawer() {
             return;
         }
 
+        setGreska('');
         setPorucivanjeUToku(true);
         try {
             const res = await fetch('http://localhost:8080/api/porudzbine', {
@@ -66,10 +68,10 @@ export default function CartDrawer() {
                 }, 2000);
             } else {
                 const data = await res.json().catch(() => null);
-                alert(data?.message ?? 'Greška prilikom naručivanja.');
+                setGreska(data?.message ?? 'Greška prilikom naručivanja.');
             }
         } catch {
-            alert('Server ne odgovara.');
+            setGreska('Server ne odgovara.');
         } finally {
             setPorucivanjeUToku(false);
         }
@@ -259,6 +261,8 @@ export default function CartDrawer() {
                                             {zaPlacanje} RSD
                                         </span>
                                     </div>
+
+                                    {greska && <p className={styles.greska}>{greska}</p>}
 
                                     <motion.button
                                         className={styles.naruciBtn}
