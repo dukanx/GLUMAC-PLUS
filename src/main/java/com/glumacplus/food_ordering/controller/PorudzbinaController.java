@@ -68,7 +68,7 @@ public class PorudzbinaController {
 
     @GetMapping("/moje")
     @PreAuthorize("hasRole('KORISNIK')")
-    public ResponseEntity<List<PorudzbinaViewDto>> getMyOrders(
+    public ResponseEntity<Page<PorudzbinaViewDto>> getMyOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {

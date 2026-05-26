@@ -244,17 +244,14 @@ public class PorudzbinaService {
         return PorudzbinaMapper.toViewDto(p);
     }
 
-    public List<PorudzbinaViewDto> getMyOrders(int pageNo, int pageSize) {
+    public Page<PorudzbinaViewDto> getMyOrders(int pageNo, int pageSize) {
 
         Korisnik korisnik = getCurrentUserEntity();
 
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "id"));
 
-        Page<Porudzbina> page = porudzbinaRepo.findByKorisnik_Id(korisnik.getId(), pageable);
-
-        return page.getContent().stream()
-                .map(PorudzbinaMapper::toViewDto)
-                .collect(Collectors.toList());
+        return porudzbinaRepo.findByKorisnik_Id(korisnik.getId(), pageable)
+                .map(PorudzbinaMapper::toViewDto);
     }
 
     public void cancelMyOrder(Long id) {
