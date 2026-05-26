@@ -64,6 +64,9 @@ Password inputi nemaju dugme za prikaz lozinke.
 **🟢 5. Korpa i sessionStorage**
 `mojaKorpa` se gubi zatvaranjem taba (`sessionStorage`). Razmotriti `localStorage` ako treba da traje između sesija.
 
+**🔵 5b. Panel — AbortController umesto odbacivanja zastarelog refresh-a**
+Race u `PanelPorudzbina.tsx`: auto-refresh GET pokrenut pre klika na akciju (Završi/Prihvati/Otkaži) vraćao se posle optimističkog update-a i vraćao staro stanje — kartica nestane pa se ponovo pojavi, treba drugi klik. Trenutni fix odbacuje rezultat ne-forsiranog fetch-a ako je akcija krenula nakon slanja zahteva (poređenje `poslednjaAkcija.current >= pokrenuto`). Ako to ne bude pouzdano, preći na pravi `AbortController` da se zastareli GET prekine umesto da samo ignorišemo odgovor — čistije, ali obimnije.
+
 **🔵 6. Notifikacije — odloženo za mobilnu aplikaciju**
 Backend ima ceo `Notifikacija` model + 6 tipova (`PORUDZBINA_PRIHVACENA`, `PORUDZBINA_VREME_PROMENJENO`, `PORUDZBINA_OTKAZANA`, `PROSLJENA_ZAVRSENA`, `LOYALTY_LEVEL_UP`, `RUCNO`), ali web frontend ih ne koristi. Push/in-app notifikacije će se raditi u sklopu mobilne aplikacije, ne na webu.
 

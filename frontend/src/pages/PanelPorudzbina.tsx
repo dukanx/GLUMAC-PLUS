@@ -248,12 +248,15 @@ export default function PanelPorudzbina() {
     const fetchPorudzbine = useCallback(async (force = false) => {
         if (!token) return;
         if (!force && Date.now() - poslednjaAkcija.current < 4000) return;
+        const pokrenuto = Date.now();
         try {
             const res = await fetch(`${API}/api/porudzbine/page?page=0&size=100`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 const data = await res.json();
+                // Gledalo najskoriju akciju, time resavamo konflikt autoresresh vs rucna promena
+                if (!force && poslednjaAkcija.current >= pokrenuto) return;
                 setPorudzbine(data.content ?? data);
             }
         } catch {
