@@ -66,6 +66,14 @@ public class PorudzbinaController {
         return ResponseEntity.ok(service.setEstimatedTime(id, procenjenoVreme));
     }
 
+    @GetMapping("/aktivna")
+    @PreAuthorize("hasRole('KORISNIK')")
+    public ResponseEntity<PorudzbinaViewDto> getActiveOrder() {
+        return service.getActiveOrder()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
+
     @GetMapping("/moje")
     @PreAuthorize("hasRole('KORISNIK')")
     public ResponseEntity<Page<PorudzbinaViewDto>> getMyOrders(

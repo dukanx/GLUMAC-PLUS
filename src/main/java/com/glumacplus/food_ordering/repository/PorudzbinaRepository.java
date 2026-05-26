@@ -19,5 +19,8 @@ public interface PorudzbinaRepository extends JpaRepository<Porudzbina, Long> {
 
     List<Porudzbina> findAllByStatus(StatusPorudzbine status);
 
+    boolean existsByKorisnik_IdAndStatusIn(Long korisnikId, List<StatusPorudzbine> statusi);
+
+    java.util.Optional<Porudzbina> findFirstByKorisnik_IdAndStatusInOrderByIdDesc(Long korisnikId, List<StatusPorudzbine> statusi);
 
 }

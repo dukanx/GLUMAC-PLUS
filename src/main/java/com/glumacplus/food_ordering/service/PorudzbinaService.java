@@ -74,6 +74,15 @@ public class PorudzbinaService {
         Korisnik trenutniKorisnik = getCurrentUserEntity();
         ensureRestaurantIsOpenNow();
 
+        boolean imaAktivnu = porudzbinaRepo.existsByKorisnik_IdAndStatusIn(
+                trenutniKorisnik.getId(),
+                List.of(StatusPorudzbine.U_PRIPREMI, StatusPorudzbine.SPREMNA)
+        );
+        if (imaAktivnu) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Već imaš aktivnu porudžbinu. Sačekaj da bude gotova pre nego što naručiš ponovo.");
+        }
+
         Porudzbina por = new Porudzbina();
         por.setKorisnik(trenutniKorisnik);
         por.setNapomena(normalizeNapomena(dto.getNapomena()));
@@ -242,6 +251,14 @@ public class PorudzbinaService {
         }
 
         return PorudzbinaMapper.toViewDto(p);
+    }
+
+    public Optional<PorudzbinaViewDto> getActiveOrder() {
+        Korisnik korisnik = getCurrentUserEntity();
+        return porudzbinaRepo.findFirstByKorisnik_IdAndStatusInOrderByIdDesc(
+                korisnik.getId(),
+                List.of(StatusPorudzbine.U_PRIPREMI, StatusPorudzbine.SPREMNA)
+        ).map(PorudzbinaMapper::toViewDto);
     }
 
     public Page<PorudzbinaViewDto> getMyOrders(int pageNo, int pageSize) {
