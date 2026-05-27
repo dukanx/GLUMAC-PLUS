@@ -8,6 +8,8 @@ import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
 import styles from './MiniKorpa.module.css';
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
 export default function MiniKorpa() {
     const navigate = useNavigate();
     const { korisnik, token, osvezi, popust } = useAuth();
@@ -33,7 +35,7 @@ export default function MiniKorpa() {
         setPorucivanjeUToku(true);
         setGreska('');
         try {
-            const res = await fetch('http://localhost:8080/api/porudzbine', {
+            const res = await fetch(`${API}/api/porudzbine`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

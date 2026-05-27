@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
 // ── Tipovi ──
 interface Korisnik {
     id: number;
@@ -44,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loyaltyProgrami, setLoyaltyProgrami] = useState<LoyaltyProgram[]>([]);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/loyalty_program')
+        fetch(`${API}/api/loyalty_program`)
             .then(r => r.ok ? r.json() : [])
             .then((data: LoyaltyProgram[]) => setLoyaltyProgrami(data))
             .catch(() => setLoyaltyProgrami([]));
@@ -74,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const osvezi = async () => {
         if (!token) return;
         try {
-            const res = await fetch('http://localhost:8080/api/korisnici/me', {
+            const res = await fetch(`${API}/api/korisnici/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {

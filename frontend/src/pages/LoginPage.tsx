@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './LoginPage.module.css';
 import { useAuth } from '../context/AuthContext';
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -20,7 +22,7 @@ export default function LoginPage() {
     setUcitava(true);
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const response = await fetch(`${API}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, lozinka }),

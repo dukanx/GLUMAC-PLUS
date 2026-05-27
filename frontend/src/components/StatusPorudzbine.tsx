@@ -4,6 +4,8 @@ import { CheckCircle2, Clock, ChefHat, XCircle, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import styles from './StatusPorudzbine.module.css';
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
 type Status = 'U_PRIPREMI' | 'SPREMNA' | 'REALIZOVANA' | 'OTKAZANA';
 
 interface Props {
@@ -37,7 +39,7 @@ export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }
         const fetchStatus = async () => {
             try {
                 const res = await fetch(
-                    `http://localhost:8080/api/porudzbine/${porudzbinaId}`,
+                    `${API}/api/porudzbine/${porudzbinaId}`,
                     { headers: { 'Authorization': `Bearer ${token}` } }
                 );
                 if (res.ok) {

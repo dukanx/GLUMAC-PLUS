@@ -33,6 +33,8 @@ function normalizuj(tekst: string): string {
         .replace(/đ/g, 'dj');
 }
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
 // ── Komponenta ─────────────────────────────────────────────────────────────
 export default function MeniPage() {
     const { korpa, dodaj, povecaj, smanji } = useCart();
@@ -47,7 +49,7 @@ export default function MeniPage() {
     const [toastPoruka, setToastPoruka] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/proizvodi')
+        fetch(`${API}/api/proizvodi`)
             .then(r => { if (!r.ok) throw new Error(); return r.json(); })
             .then(data => { setProizvodi(data); setUcitava(false); })
             .catch(() => { setGreska('Ne mogu da učitam meni.'); setUcitava(false); });

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './RegisterPage.module.css';
 
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
 interface RegisterForm {
     ime: string;
     email: string;
@@ -70,7 +72,7 @@ export default function RegisterPage() {
         setServerGreska('');
 
         try {
-            const response = await fetch('http://localhost:8080/api/korisnici', {
+            const response = await fetch(`${API}/api/korisnici`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
