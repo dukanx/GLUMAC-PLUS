@@ -116,8 +116,8 @@ class OmiljenaPorudzbinaServiceTest {
         OmiljenaPorudzbina zaSnimanje = captor.getValue();
 
         assertEquals(1, zaSnimanje.getStavke().size());
-        assertEquals("Nutela", zaSnimanje.getStavke().get(0).getProizvod().getNaziv());
-        assertEquals(2, zaSnimanje.getStavke().get(0).getKolicina());
+        assertEquals("Nutela", zaSnimanje.getStavke().getFirst().getProizvod().getNaziv());
+        assertEquals(2, zaSnimanje.getStavke().getFirst().getKolicina());
     }
 
     @Test
