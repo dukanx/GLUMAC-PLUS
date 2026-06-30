@@ -21,7 +21,7 @@ sloj po sloj. (Treća tačka poređenja — native Android — dolazi kasnije.)
 | Modeli | `core/models/{korisnik,proizvod,porudzbina}.model.ts` | gotovo |
 | Servisi | `core/services/{auth,cart,proizvod,porudzbina}.service.ts` | gotovo |
 | Guard | `core/guards/auth.guard.ts` | gotovo |
-| Komponente | `components/{navbar,proizvod-kartica,cart-drawer,status-porudzbine}/` | gotovo |
+| Komponente | `components/{navbar,proizvod-kartica,cart-drawer,status-porudzbine,floating-bubble}/` | gotovo |
 | Stranice | `pages/{login,register,meni,istorija}/` | gotovo |
 | Servis (stanje) | `core/services/aktivna-porudzbina.service.ts` | gotovo |
 
@@ -267,10 +267,23 @@ Drawer ima 3 među-stanja (uspešno / prazna korpa / lista stavki) — ista logi
 ➡️ Jedina prava razlika je **animacija**: React `motion` ima ulaz **i izlaz** (exit) animaciju kroz
 `AnimatePresence`; CSS verzija lako radi ulaz, a izlaz bi tražio dodatni state (svesno izostavljeno).
 
-### 6.4 Trigger korpe — `FloatingBubble` ↔ cart dugme u navbaru
+### 6.4 Trigger korpe — `FloatingBubble` (paritet) + cart dugme u navbaru
 
-React ima zaseban `FloatingBubble` (plutajuće dugme). Angular isečak koristi **dugme u navbaru**
-sa badge-om (`korpa$` → broj stavki). Funkcionalno isto (otvara drawer), manje pokretnih delova.
+Angular verzija ima **oba**: portovan `FloatingBubble` (plutajuće dugme) **i** cart dugme u navbaru.
+Razlog: React skriva bubble na `/meni` desktopu jer tamo postoji `MiniKorpa`; pošto naš isečak nema
+MiniKorpu, navbar dugme preuzima tu ulogu (korpa uvek dostupna na meniju).
+
+`FloatingBubble` ima dvostruku ulogu (verno preslikano):
+- **bez aktivne porudžbine:** ikona korpe + badge (`ukupnoStavki`), klik → otvara drawer
+- **sa aktivnom porudžbinom:** 👨‍🍳 (ChefHat), klik → otvara Status modal (`otvoriStatus`)
+
+| | React | Angular |
+|---|---|---|
+| Desktop detekcija | `useIsDesktop` hook (`matchMedia` + `useEffect`) | `matchMedia` + listener u `ngOnInit`/`ngOnDestroy` |
+| Trenutna ruta (`/meni`?) | `useLocation().pathname` | `Router.url` + `router.events` (`NavigationEnd`) |
+| Uslov prikaza | `(aktivnaId \|\| ukupnoStavki>0) && !sakrij` | isto, kroz getter `prikazan` |
+| Ulaz/izlaz animacija | `motion` spring + `AnimatePresence` | CSS `@keyframes bubbleIn` (bez exit-a) |
+| Puls (aktivna) | CSS `@keyframes puls` | isti CSS puls |
 
 ---
 
