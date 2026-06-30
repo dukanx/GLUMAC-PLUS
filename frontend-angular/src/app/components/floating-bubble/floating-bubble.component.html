@@ -1,0 +1,16 @@
+<!-- Plutajuće dugme: korpa (sa badge-om) ili praćenje aktivne porudžbine (👨‍🍳) -->
+<button
+  *ngIf="prikazan"
+  class="bubble"
+  [class.aktivan]="jeAktivan"
+  (click)="handleClick()"
+  [title]="jeAktivan ? 'Prati porudžbinu' : 'Korpa'"
+>
+  <ng-container *ngIf="jeAktivan; else korpaIkona">
+    <lucide-icon [img]="ChefHat" [size]="22" [strokeWidth]="1.5" />
+  </ng-container>
+  <ng-template #korpaIkona>
+    <lucide-icon [img]="ShoppingBag" [size]="22" [strokeWidth]="1.5" />
+    <span *ngIf="ukupnoStavki > 0" class="badge">{{ ukupnoStavki }}</span>
+  </ng-template>
+</button>
