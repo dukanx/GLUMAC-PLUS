@@ -1,0 +1,42 @@
+<div class="red">
+  <div class="levo">
+    <h3 class="naziv">{{ proizvod.naziv }}</h3>
+    <p class="opis" *ngIf="proizvod.opis">{{ proizvod.opis }}</p>
+    <p class="alergeni" *ngIf="proizvod.alergeniNazivi && proizvod.alergeniNazivi.length > 0">
+      Alergeni: {{ proizvod.alergeniNazivi.join(', ') }}
+    </p>
+  </div>
+
+  <div class="desno">
+    <div class="cenaWrap">
+      <!-- ng-container — nevidljivi "wrapper" kad trebaš *ngIf bez extra div-a -->
+      <ng-container *ngIf="cenaSaPopustom; else normalnaC">
+        <span class="cenaStara">{{ cena }} RSD</span>
+        <span class="cenaPopust">{{ cenaSaPopustom }} RSD</span>
+      </ng-container>
+      <ng-template #normalnaC>
+        <span class="cena">{{ cena }} RSD</span>
+      </ng-template>
+    </div>
+
+    <!-- Dugme ili kontrole (+ / broj / -) zavisno od kolicine -->
+    <ng-container *ngIf="kolicina === 0; else kontroleBlok">
+      <button class="dodajBtn" (click)="dodaj.emit(proizvod)">
+        <lucide-icon [img]="Plus" [size]="13" />
+        Dodaj
+      </button>
+    </ng-container>
+
+    <ng-template #kontroleBlok>
+      <div class="kontrole">
+        <button class="kontroleBtn" (click)="smanji.emit(proizvod.id)">
+          <lucide-icon [img]="Minus" [size]="12" />
+        </button>
+        <span class="kolicina">{{ kolicina }}</span>
+        <button class="kontroleBtn" (click)="povecaj.emit(proizvod.id)">
+          <lucide-icon [img]="Plus" [size]="12" />
+        </button>
+      </div>
+    </ng-template>
+  </div>
+</div>

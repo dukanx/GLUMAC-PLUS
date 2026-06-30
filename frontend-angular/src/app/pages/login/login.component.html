@@ -1,0 +1,61 @@
+<div class="stranica">
+  <div class="sadrzaj">
+
+    <span class="marka">Glumac Plus</span>
+    <div class="linija"></div>
+    <h1 class="naslov">Dobrodošli</h1>
+    <p class="podnaslov">Prijavite se na vaš nalog</p>
+
+    <!-- *ngIf — Angular ekvivalent JSX-ovog {condition && <el />} -->
+    <div *ngIf="justRegistered" class="uspesnaPoruka">
+      Nalog je kreiran — prijavite se.
+    </div>
+    <div *ngIf="greska" class="serverGreska">{{ greska }}</div>
+
+    <!-- (ngSubmit) — Angular ekvivalent onSubmit u Reactu -->
+    <form (ngSubmit)="handleSubmit()" class="forma" novalidate>
+
+      <div class="polje">
+        <label for="email" class="labela">Email</label>
+        <!-- [(ngModel)] — two-way binding: čita i piše istovremeno -->
+        <!-- Ekvivalent: value={email} onChange={e => setEmail(e.target.value)} -->
+        <input
+          id="email"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="marko@email.com"
+          class="input"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="polje">
+        <label for="lozinka" class="labela">Lozinka</label>
+        <input
+          id="lozinka"
+          type="password"
+          [(ngModel)]="lozinka"
+          name="lozinka"
+          placeholder="••••••••"
+          class="input"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <button type="submit" class="dugme" [disabled]="ucitava">
+        {{ ucitava ? 'Prijavljujem...' : 'Prijavi se' }}
+      </button>
+
+    </form>
+
+    <p class="registracijaLink">
+      Nemaš nalog?
+      <!-- routerLink — Angular ekvivalent React Routerovog <Link to="..."> -->
+      <a routerLink="/register">Registruj se</a>
+    </p>
+
+  </div>
+</div>

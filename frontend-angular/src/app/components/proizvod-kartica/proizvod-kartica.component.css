@@ -1,0 +1,146 @@
+.red {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--ink-12);
+    animation: fadeIn 0.25s ease both;
+}
+
+.red:first-child { border-top: 1px solid var(--ink-12); }
+
+.levo {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.naziv {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.opis {
+    font-family: var(--sans);
+    font-size: 0.83rem;
+    color: var(--ink-55);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.alergeni {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-40);
+    line-height: 1.5;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.desno {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.cenaWrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.cena {
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+.cenaStara {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--ink-40);
+    text-decoration: line-through;
+    white-space: nowrap;
+}
+
+.cenaPopust {
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--rust);
+    white-space: nowrap;
+}
+
+.dodajBtn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.dodajBtn:hover { background: var(--rust); }
+
+.kontrole {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--ink-20);
+    padding: 4px 8px;
+}
+
+.kontroleBtn {
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    color: var(--ink);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+.kontroleBtn:hover { background: var(--ink-12); }
+
+.kolicina {
+    min-width: 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--ink);
+    font-family: var(--sans);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 500px) {
+    .red { flex-direction: column; gap: 14px; }
+    .desno { flex-direction: row; align-items: center; justify-content: space-between; width: 100%; }
+}
