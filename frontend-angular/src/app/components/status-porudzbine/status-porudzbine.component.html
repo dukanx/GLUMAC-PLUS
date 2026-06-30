@@ -1,0 +1,72 @@
+<!-- Modal se prikazuje samo kad je status otvoren i postoji aktivna porudžbina -->
+<div *ngIf="prikazan" class="overlay" (click)="zatvori()">
+  <div class="modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <h2 class="naslov">Porudžbina #{{ porudzbinaId }}</h2>
+        <p class="podnaslov">{{ zavrseno ? 'Završeno' : 'Pratimo status...' }}</p>
+      </div>
+      <button *ngIf="zavrseno" class="zatvoriBtn" (click)="zatvori()">
+        <lucide-icon [img]="X" [size]="20" />
+      </button>
+    </div>
+
+    <!-- OTKAZANA stanje -->
+    <div *ngIf="status === 'OTKAZANA'; else tok" class="otkazano">
+      <lucide-icon [img]="XCircle" [size]="56" class="otkazanoIkona" />
+      <p class="otkazanoTekst">Porudžbina je otkazana</p>
+      <button class="dugme" (click)="zavrsiIZatvori()">Zatvori</button>
+    </div>
+
+    <!-- Normalni tok (progress koraci) -->
+    <ng-template #tok>
+      <div class="koraci">
+        <div *ngFor="let korak of KORACI; let i = index" class="korakWrap">
+          <!-- Linija između koraka -->
+          <div *ngIf="i > 0" class="linija">
+            <div class="linijaPopunjena" [style.transform]="i <= aktivniKorak ? 'scaleX(1)' : 'scaleX(0)'"></div>
+          </div>
+
+          <!-- Krug -->
+          <div
+            class="korak"
+            [class.korakProsao]="i <= aktivniKorak"
+            [class.korakAktivan]="i === aktivniKorak"
+          >
+            <lucide-icon [img]="korak.ikona" [size]="22" />
+          </div>
+
+          <span class="korakLabela" [class.korakLabelaProsao]="i <= aktivniKorak">
+            {{ korak.labela }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Poruka po statusu -->
+      <div class="poruka">
+        <p class="porukaText" [ngSwitch]="status">
+          <ng-container *ngSwitchCase="'U_PRIPREMI'">
+            Vaša porudžbina je primljena! Čekamo potvrdu kuhinje...
+          </ng-container>
+          <ng-container *ngSwitchCase="'SPREMNA'">
+            {{ procenjenoVreme
+                ? 'Vaša porudžbina je prihvaćena i procenjeno vreme čekanja je ' + procenjenoVreme + ' minuta.'
+                : 'Palačinke se prave! Uskoro su gotove.' }}
+          </ng-container>
+          <ng-container *ngSwitchCase="'REALIZOVANA'">
+            Gotovo! Dođite po svoju porudžbinu na kasu.
+          </ng-container>
+        </p>
+      </div>
+
+      <button *ngIf="zavrseno" class="dugme" (click)="zavrsiIZatvori()">Zatvori</button>
+    </ng-template>
+
+    <p *ngIf="greska" class="greska">
+      Problem sa konekcijom. Status možda nije ažuran.
+    </p>
+
+  </div>
+</div>

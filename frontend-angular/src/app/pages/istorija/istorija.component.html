@@ -1,0 +1,140 @@
+<div class="stranica">
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <div class="headerSadrzaj">
+      <span class="oznaka">Istorija</span>
+      <h1 class="naslov">Porudžbine</h1>
+      <p *ngIf="ukupnoStavki > 0" class="podNaslov">
+        Ukupno {{ ukupnoStavki }} porudžbina
+      </p>
+    </div>
+  </header>
+
+  <!-- ── SADRŽAJ ── -->
+  <main class="sadrzaj">
+
+    <!-- Toast -->
+    <div *ngIf="uspehPoruka" class="toast">
+      <lucide-icon [img]="CheckCircle" [size]="15" />
+      {{ uspehPoruka }}
+    </div>
+
+    <!-- Greška -->
+    <div *ngIf="greska" class="greskaBlok">
+      <lucide-icon [img]="AlertCircle" [size]="16" />
+      {{ greska }}
+    </div>
+
+    <!-- Aktivna porudžbina — istaknuta na vrhu -->
+    <div *ngIf="!loading && !greska && aktivna as akt" class="aktivnaKartica">
+      <div class="aktivnaGlava">
+        <span class="aktivnaLabel"><span class="aktivnaTacka"></span> Aktivna porudžbina</span>
+        <span class="aktivnaId">#{{ akt.porudzbinaId }}</span>
+      </div>
+      <div class="aktivnaProgress">
+        <div class="korakLinija"></div>
+        <div *ngFor="let k of AKTIVNI_KORACI; let i = index" class="aktivniKorak">
+          <div class="korakTacka" [class.korakTackaAktivna]="i <= aktivniIndex(akt.status)"></div>
+          <span class="korakLabela" [class.korakLabelaAktivna]="i <= aktivniIndex(akt.status)">{{ k.labela }}</span>
+        </div>
+      </div>
+      <button class="pratiDugme" (click)="pratiAktivnu()">
+        <lucide-icon [img]="Eye" [size]="14" /> Prati uživo
+      </button>
+    </div>
+
+    <!-- Skeleton loading -->
+    <div *ngIf="loading" class="lista">
+      <div *ngFor="let _ of [1,2,3,4]" class="skeleton"></div>
+    </div>
+
+    <!-- Prazno stanje -->
+    <div *ngIf="!loading && !greska && porudzbine.length === 0" class="prazno">
+      <div class="praznoIkonaWrap">
+        <lucide-icon [img]="ReceiptText" [size]="32" [strokeWidth]="1.3" />
+      </div>
+      <h2 class="praznoNaslov">Još uvek nisi naručio ništa</h2>
+      <p class="praznoTekst">Tvoja istorija porudžbina će se pojaviti ovde čim napraviš prvu.</p>
+      <a routerLink="/meni" class="praznoLink">
+        Idi na meni <lucide-icon [img]="ChevronRight" [size]="15" />
+      </a>
+    </div>
+
+    <!-- Lista -->
+    <ng-container *ngIf="!loading && !greska && istorija.length > 0">
+      <div class="lista">
+        <div *ngFor="let p of istorija; trackBy: trackById" class="kartica">
+
+          <!-- Glava -->
+          <div class="karticaGlava">
+            <div class="karticaGlavaLevo">
+              <span class="karticaId">#{{ p.porudzbinaId }}</span>
+              <span class="karticaDatum">{{ formatirajDatum(p.datum) }}</span>
+              <span *ngIf="p.tipPorudzbine" class="tipBadge">{{ tipLabela(p.tipPorudzbine) }}</span>
+            </div>
+            <div class="karticaGlavaDesno">
+              <span class="statusBadge" [ngClass]="statusInfo(p.status).klasa">
+                <lucide-icon [img]="statusInfo(p.status).ikona" [size]="13" [strokeWidth]="2" />
+                {{ statusInfo(p.status).label }}
+              </span>
+              <div class="cenaBlok">
+                <span *ngIf="imaPopust(p)" class="cenaOriginalna">{{ p.originalnaCena | number:'1.0-0' }} RSD</span>
+                <span class="cenaUkupna">{{ p.ukupanIznos | number:'1.0-0' }} RSD</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Napomena -->
+          <div *ngIf="p.napomena" class="napomena">
+            <span class="napomenaLabel">Napomena:</span> {{ p.napomena }}
+          </div>
+
+          <!-- Razvij/sakrij stavke -->
+          <button class="razvijDugme" (click)="toggleRazvij(p.porudzbinaId)" [attr.aria-expanded]="jeRazvijena(p.porudzbinaId)">
+            <span>{{ jeRazvijena(p.porudzbinaId) ? 'Sakrij stavke' : 'Prikaži stavke (' + p.stavke.length + ')' }}</span>
+            <lucide-icon [img]="ChevronDown" [size]="15" [style.transform]="jeRazvijena(p.porudzbinaId) ? 'rotate(180deg)' : 'rotate(0)'" style="transition: transform 0.22s" />
+          </button>
+
+          <div *ngIf="jeRazvijena(p.porudzbinaId)" class="stavkeBlok">
+            <ul class="stavkeLista">
+              <li *ngFor="let s of p.stavke" class="stavkaRed">
+                <span class="stavkaKolicina">{{ s.kolicina }}×</span>
+                <span class="stavkaNaziv">{{ s.nazivProizvoda }}</span>
+                <span class="stavkaCena">{{ s.iznosStavke | number:'1.0-0' }} RSD</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Akcije (samo otkazivanje; "omiljene" van isečka) -->
+          <div *ngIf="p.status === 'U_PRIPREMI'" class="karticaAkcije">
+            <button class="akcijaOtkaziDugme" (click)="otkazi(p.porudzbinaId)" [disabled]="otkazivanje === p.porudzbinaId">
+              <lucide-icon [img]="XCircle" [size]="14" [strokeWidth]="1.8" />
+              {{ otkazivanje === p.porudzbinaId ? 'Otkazujem...' : 'Otkaži' }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Paginacija -->
+      <div *ngIf="ukupnoStrana > 1" class="paginacija">
+        <button class="pagDugme" (click)="promeniStranu(stranica - 1)" [disabled]="stranica === 0" aria-label="Prethodna strana">
+          <lucide-icon [img]="ChevronLeft" [size]="16" />
+        </button>
+        <div class="pagBrojevi">
+          <button
+            *ngFor="let i of straneNiz"
+            class="pagBroj"
+            [class.pagBrojAktivan]="i === stranica"
+            (click)="promeniStranu(i)"
+          >{{ i + 1 }}</button>
+        </div>
+        <button class="pagDugme" (click)="promeniStranu(stranica + 1)" [disabled]="stranica === ukupnoStrana - 1" aria-label="Sledeća strana">
+          <lucide-icon [img]="ChevronRight" [size]="16" />
+        </button>
+      </div>
+    </ng-container>
+
+  </main>
+</div>

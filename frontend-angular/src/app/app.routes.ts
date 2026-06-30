@@ -21,12 +21,11 @@ export const routes: Routes = [
   },
 
   // istorija je zaštićena — authGuard preusmerava neulogovane na /login
-  // TODO(Faza C): otkomentarisati kad IstorijaComponent bude gotov
-  // {
-  //   path: 'istorija',
-  //   canActivate: [authGuard],
-  //   loadComponent: () => import('./pages/istorija/istorija.component').then(m => m.IstorijaComponent),
-  // },
+  {
+    path: 'istorija',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/istorija/istorija.component').then(m => m.IstorijaComponent),
+  },
 
   // Fallback — sve nepoznate rute na početnu
   { path: '**', redirectTo: 'meni' },
