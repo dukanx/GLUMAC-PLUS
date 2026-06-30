@@ -22,6 +22,14 @@ export class PorudzbinaService {
     );
   }
 
+  // GET jedne porudžbine — koristi Status modal za polling
+  getJedan(id: number): Observable<Porudzbina> {
+    return this.http.get<Porudzbina>(
+      `${environment.apiUrl}/api/porudzbine/${id}`,
+      { headers: this.headers() }
+    );
+  }
+
   getMoje(page: number, size: number): Observable<PageResponse<Porudzbina> | Porudzbina[]> {
     const params = new HttpParams().set('page', page).set('size', size);
     return this.http.get<PageResponse<Porudzbina> | Porudzbina[]>(

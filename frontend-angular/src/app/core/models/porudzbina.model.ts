@@ -22,6 +22,7 @@ export interface Porudzbina {
   originalnaCena?: number;
   napomena?: string;
   tipPorudzbine?: string;
+  procenjenoVreme?: number;
   stavke: StavkaPorudzbine[];
 }
 
