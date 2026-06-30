@@ -15,6 +15,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Servis za autentifikaciju korisnika i izdavanje JWT tokena.
+ *
+ * @author Nikola Dukić
+ * @version 1.0
+ */
 @Service
 public class AuthenticationService {
 
@@ -22,6 +28,13 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+    /**
+     * Kreira servis sa potrebnim zavisnostima.
+     *
+     * @param korisnikRepository repozitorijum korisnika
+     * @param jwtService servis za rad sa JWT tokenima
+     * @param authenticationManager Spring Security menadžer autentifikacije
+     */
     public AuthenticationService(KorisnikRepository korisnikRepository,
                                  JwtService jwtService,
                                  AuthenticationManager authenticationManager) {
@@ -30,8 +43,15 @@ public class AuthenticationService {
         this.authenticationManager = authenticationManager;
     }
 
-
-    // LOGIN
+    /**
+     * Prijavljuje korisnika na osnovu email-a i lozinke. Ako su kredencijali
+     * ispravni, generiše JWT token i vraća podatke o korisniku.
+     *
+     * @param request zahtev sa email-om i lozinkom
+     * @return odgovor sa JWT tokenom i podacima o korisniku
+     * @throws ResponseStatusException sa statusom 401 ako su kredencijali pogrešni
+     * @throws UsernameNotFoundException ako korisnik nije pronađen u bazi
+     */
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         try {
             authenticationManager.authenticate(
@@ -62,6 +82,13 @@ public class AuthenticationService {
                 .build();
     }
 
+    /**
+     * Vraća podatke o trenutno prijavljenom korisniku, na osnovu
+     * sigurnosnog konteksta.
+     *
+     * @return podaci o trenutno prijavljenom korisniku
+     * @throws ResponseStatusException sa statusom 401 ako korisnik nije prijavljen
+     */
     public KorisnikViewDto getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
