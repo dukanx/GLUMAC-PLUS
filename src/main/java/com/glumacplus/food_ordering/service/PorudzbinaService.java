@@ -28,6 +28,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Servis za upravljanje porudžbinama: kreiranje, pregled, promenu statusa,
+ * otkazivanje i dodelu loyalty bodova.
+ *
+ * @author Nikola Dukić
+ * @version 1.0
+ */
 @Service
 @Transactional
 public class PorudzbinaService {
@@ -40,6 +47,17 @@ public class PorudzbinaService {
     private final RadnoVremeRepository radnoVremeRepo;
     private final Clock appClock;
 
+    /**
+     * Kreira servis sa potrebnim zavisnostima.
+     *
+     * @param porudzbinaRepo repozitorijum porudžbina
+     * @param proizvodRepo repozitorijum proizvoda
+     * @param korisnikRepo repozitorijum korisnika
+     * @param loyaltyRepo repozitorijum loyalty programa
+     * @param notifikacijaService servis notifikacija
+     * @param radnoVremeRepo repozitorijum radnog vremena
+     * @param appClock sat aplikacije (za vreme i proveru radnog vremena)
+     */
     public PorudzbinaService(PorudzbinaRepository porudzbinaRepo, ProizvodRepository proizvodRepo, KorisnikRepository korisnikRepo, LoyaltyProgramRepository loyaltyRepo, NotifikacijaService notifikacijaService, RadnoVremeRepository radnoVremeRepo, Clock appClock){
         this.porudzbinaRepo = porudzbinaRepo;
         this.proizvodRepo = proizvodRepo;
@@ -50,6 +68,11 @@ public class PorudzbinaService {
         this.appClock = appClock;
     }
 
+    /**
+     * Vraća sve porudžbine.
+     *
+     * @return lista svih porudžbina
+     */
     public List<PorudzbinaViewDto> getAll(){
 
 
@@ -59,6 +82,15 @@ public class PorudzbinaService {
 
     }
 
+    /**
+     * Vraća stranicu porudžbina, opciono filtriranih po statusu, sortiranih
+     * opadajuće po identifikatoru.
+     *
+     * @param status filter po statusu, ili {@code null} za sve
+     * @param pageNo redni broj stranice (od 0)
+     * @param pageSize broj elemenata po stranici
+     * @return stranica porudžbina
+     */
     public Page<PorudzbinaViewDto> getAllPaged(StatusPorudzbine status, int pageNo, int pageSize) {
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "id"));
 
@@ -69,6 +101,17 @@ public class PorudzbinaService {
         return page.map(PorudzbinaMapper::toViewDto);
     }
 
+    /**
+     * Kreira novu porudžbinu za trenutno prijavljenog korisnika. Proverava
+     * radno vreme i postojanje aktivne porudžbine, računa originalnu cenu i
+     * cenu sa loyalty popustom.
+     *
+     * @param dto podaci o porudžbini (stavke, tip, napomena)
+     * @return kreirana porudžbina
+     * @throws ResponseStatusException sa statusom 400 ako je van radnog vremena,
+     *         409 ako korisnik već ima aktivnu porudžbinu, 404 ako neki
+     *         proizvod ne postoji, ili 401 ako korisnik nije prijavljen
+     */
     public PorudzbinaViewDto create(PorudzbinaDto dto) {
 
         Korisnik trenutniKorisnik = getCurrentUserEntity();
@@ -131,6 +174,15 @@ public class PorudzbinaService {
         return PorudzbinaMapper.toViewDto(por);
     }
 
+    /**
+     * Vraća porudžbinu po identifikatoru. Obični korisnik može pristupiti samo
+     * svojoj porudžbini.
+     *
+     * @param id identifikator porudžbine
+     * @return pronađena porudžbina
+     * @throws ResponseStatusException sa statusom 404 ako porudžbina ne postoji,
+     *         ili 403 ako korisnik nema pravo pristupa
+     */
     public PorudzbinaViewDto getById(Long id){
 
 
@@ -149,6 +201,17 @@ public class PorudzbinaService {
 
     }
 
+    /**
+     * Menja status porudžbine uz validaciju dozvoljenih prelaza. Pri prelasku
+     * u {@link StatusPorudzbine#REALIZOVANA} korisniku se dodeljuju loyalty
+     * bodovi i, po potrebi, podiže loyalty nivo. Šalje odgovarajuće
+     * notifikacije.
+     *
+     * @param id identifikator porudžbine
+     * @param noviStatus novi status
+     * @throws ResponseStatusException sa statusom 404 ako porudžbina ili
+     *         korisnik ne postoje, ili 400 ako prelaz statusa nije dozvoljen
+     */
     @Transactional
     public void changeStatus(Long id, StatusPorudzbine noviStatus){
 
@@ -222,6 +285,17 @@ public class PorudzbinaService {
         }
     }
 
+    /**
+     * Postavlja procenjeno vreme pripreme porudžbine i šalje odgovarajuću
+     * notifikaciju ako je porudžbina u statusu {@link StatusPorudzbine#SPREMNA}.
+     *
+     * @param id identifikator porudžbine
+     * @param procenjenoVreme procenjeno vreme u minutima (1–120)
+     * @return ažurirana porudžbina
+     * @throws ResponseStatusException sa statusom 400 ako je vreme van opsega
+     *         ili status nije U_PRIPREMI/SPREMNA, odnosno 404 ako porudžbina
+     *         ne postoji
+     */
     public PorudzbinaViewDto setEstimatedTime(Long id, Integer procenjenoVreme) {
         if (procenjenoVreme == null || procenjenoVreme <= 0 || procenjenoVreme > 120) {
             throw new ResponseStatusException(
@@ -253,6 +327,13 @@ public class PorudzbinaService {
         return PorudzbinaMapper.toViewDto(p);
     }
 
+    /**
+     * Vraća aktivnu porudžbinu trenutno prijavljenog korisnika (u statusu
+     * U_PRIPREMI ili SPREMNA), ako postoji.
+     *
+     * @return opciona aktivna porudžbina
+     * @throws ResponseStatusException sa statusom 401 ako korisnik nije prijavljen
+     */
     public Optional<PorudzbinaViewDto> getActiveOrder() {
         Korisnik korisnik = getCurrentUserEntity();
         return porudzbinaRepo.findFirstByKorisnik_IdAndStatusInOrderByIdDesc(
@@ -261,6 +342,15 @@ public class PorudzbinaService {
         ).map(PorudzbinaMapper::toViewDto);
     }
 
+    /**
+     * Vraća stranicu porudžbina trenutno prijavljenog korisnika, sortiranih
+     * opadajuće po identifikatoru.
+     *
+     * @param pageNo redni broj stranice (od 0)
+     * @param pageSize broj elemenata po stranici
+     * @return stranica porudžbina korisnika
+     * @throws ResponseStatusException sa statusom 401 ako korisnik nije prijavljen
+     */
     public Page<PorudzbinaViewDto> getMyOrders(int pageNo, int pageSize) {
 
         Korisnik korisnik = getCurrentUserEntity();
@@ -271,6 +361,14 @@ public class PorudzbinaService {
                 .map(PorudzbinaMapper::toViewDto);
     }
 
+    /**
+     * Otkazuje porudžbinu trenutno prijavljenog korisnika. Moguće je otkazati
+     * samo sopstvenu porudžbinu koja je još u pripremi.
+     *
+     * @param id identifikator porudžbine
+     * @throws ResponseStatusException sa statusom 404 ako porudžbina ne postoji,
+     *         403 ako nije korisnikova, ili 400 ako nije u statusu U_PRIPREMI
+     */
     public void cancelMyOrder(Long id) {
         Korisnik korisnik = getCurrentUserEntity();
 
@@ -294,12 +392,25 @@ public class PorudzbinaService {
         );
     }
 
+    /**
+     * Vraća entitet trenutno prijavljenog korisnika na osnovu sigurnosnog
+     * konteksta.
+     *
+     * @return entitet trenutno prijavljenog korisnika
+     * @throws ResponseStatusException sa statusom 401 ako korisnik nije prijavljen
+     */
     private Korisnik getCurrentUserEntity() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return korisnikRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Niste ulogovani"));
     }
 
+    /**
+     * Normalizuje (trimuje) napomenu. Prazna napomena se pretvara u {@code null}.
+     *
+     * @param napomena tekst napomene
+     * @return normalizovana napomena ili {@code null}
+     */
     private String normalizeNapomena(String napomena) {
         if (napomena == null) {
             return null;
@@ -308,6 +419,12 @@ public class PorudzbinaService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
+    /**
+     * Proverava da li je restoran trenutno otvoren za poručivanje. Ako nije
+     * definisano nijedno aktivno radno vreme, poručivanje je dozvoljeno.
+     *
+     * @throws ResponseStatusException sa statusom 400 ako je van radnog vremena
+     */
     private void ensureRestaurantIsOpenNow() {
         if (radnoVremeRepo.findByAktivno(true).isEmpty()) {
             return;
@@ -325,6 +442,12 @@ public class PorudzbinaService {
         }
     }
 
+    /**
+     * Mapira {@link DayOfWeek} u domenski {@link DanUNedelji}.
+     *
+     * @param dayOfWeek dan u nedelji iz {@code java.time}
+     * @return odgovarajući {@link DanUNedelji}
+     */
     private DanUNedelji mapDayOfWeek(DayOfWeek dayOfWeek) {
         return switch (dayOfWeek) {
             case MONDAY -> DanUNedelji.PONEDELJAK;
@@ -337,6 +460,14 @@ public class PorudzbinaService {
         };
     }
 
+    /**
+     * Proverava da li trenutno vreme pada unutar zadatog intervala radnog
+     * vremena. Podržava i intervale koji prelaze ponoć.
+     *
+     * @param trenutnoVreme trenutno vreme
+     * @param interval interval radnog vremena
+     * @return {@code true} ako je vreme unutar intervala, inače {@code false}
+     */
     private boolean isWithinInterval(LocalTime trenutnoVreme, RadnoVreme interval) {
         LocalTime od = interval.getOdVremena();
         LocalTime doVremena = interval.getDoVremena();
@@ -348,6 +479,14 @@ public class PorudzbinaService {
         return !trenutnoVreme.isBefore(od) || !trenutnoVreme.isAfter(doVremena);
     }
 
+    /**
+     * Šalje notifikaciju o prihvaćenoj porudžbini sa procenjenim vremenom
+     * čekanja.
+     *
+     * @param korisnikId identifikator korisnika
+     * @param porudzbinaId identifikator porudžbine
+     * @param procenjenoVreme procenjeno vreme u minutima
+     */
     private void sendAcceptedWithEstimatedTimeNotification(Long korisnikId, Long porudzbinaId, Integer procenjenoVreme) {
         notifikacijaService.createForUser(
                 korisnikId,
@@ -360,6 +499,14 @@ public class PorudzbinaService {
         );
     }
 
+    /**
+     * Šalje notifikaciju o promeni procenjenog vremena pripreme porudžbine.
+     *
+     * @param korisnikId identifikator korisnika
+     * @param porudzbinaId identifikator porudžbine
+     * @param staroVreme prethodno procenjeno vreme u minutima
+     * @param novoVreme novo procenjeno vreme u minutima
+     */
     private void sendEstimatedTimeChangedNotification(Long korisnikId, Long porudzbinaId, Integer staroVreme, Integer novoVreme) {
         notifikacijaService.createForUser(
                 korisnikId,
@@ -373,6 +520,14 @@ public class PorudzbinaService {
         );
     }
 
+    /**
+     * Validira da li je prelaz iz starog u novi status dozvoljen. Završene
+     * porudžbine (REALIZOVANA, OTKAZANA) ne mogu menjati status.
+     *
+     * @param stariStatus trenutni status porudžbine
+     * @param noviStatus željeni novi status
+     * @throws ResponseStatusException sa statusom 400 ako prelaz nije dozvoljen
+     */
     private void validateStatusTransition(StatusPorudzbine stariStatus, StatusPorudzbine noviStatus) {
         switch (stariStatus) {
             case U_PRIPREMI -> {
