@@ -16,6 +16,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servis za upravljanje omiljenim (sačuvanim) porudžbinama korisnika.
+ *
+ * @author Nikola Dukić
+ * @version 1.0
+ */
 @Service
 @Transactional
 public class OmiljenaPorudzbinaService {
@@ -26,6 +32,15 @@ public class OmiljenaPorudzbinaService {
     private final KorisnikRepository korisnikRepo;
     private final Clock appClock;
 
+    /**
+     * Kreira servis sa potrebnim zavisnostima.
+     *
+     * @param omiljenaPorudzbinaRepo repozitorijum omiljenih porudžbina
+     * @param porudzbinaRepo repozitorijum porudžbina
+     * @param porudzbinaService servis porudžbina (za ponavljanje porudžbine)
+     * @param korisnikRepo repozitorijum korisnika
+     * @param appClock sat aplikacije (za vreme kreiranja)
+     */
     public OmiljenaPorudzbinaService(
             OmiljenaPorudzbinaRepository omiljenaPorudzbinaRepo,
             PorudzbinaRepository porudzbinaRepo,
@@ -40,6 +55,13 @@ public class OmiljenaPorudzbinaService {
         this.appClock = appClock;
     }
 
+    /**
+     * Vraća omiljene porudžbine trenutno prijavljenog korisnika, sortirane
+     * opadajuće po identifikatoru.
+     *
+     * @return lista omiljenih porudžbina korisnika
+     * @throws ResponseStatusException sa statusom 401 ako korisnik nije prijavljen
+     */
     public List<OmiljenaPorudzbinaViewDto> getMyFavorites() {
         Korisnik korisnik = getCurrentUserEntity();
         return omiljenaPorudzbinaRepo.findByKorisnik_IdOrderByIdDesc(korisnik.getId()).stream()
@@ -47,6 +69,17 @@ public class OmiljenaPorudzbinaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Čuva postojeću porudžbinu kao omiljenu. Ako naziv nije zadat, koristi se
+     * podrazumevani naziv izveden iz identifikatora porudžbine.
+     *
+     * @param porudzbinaId identifikator porudžbine koja se čuva
+     * @param naziv naziv omiljene porudžbine (opciono)
+     * @return kreirana omiljena porudžbina
+     * @throws ResponseStatusException sa statusom 404 ako porudžbina ne postoji,
+     *         403 ako porudžbina ne pripada korisniku, ili 400 ako porudžbina
+     *         nema stavke
+     */
     public OmiljenaPorudzbinaViewDto createFromOrder(Long porudzbinaId, String naziv) {
         Korisnik korisnik = getCurrentUserEntity();
 
@@ -77,6 +110,16 @@ public class OmiljenaPorudzbinaService {
         return OmiljenaPorudzbinaMapper.toViewDto(omiljenaPorudzbina);
     }
 
+    /**
+     * Kreira novu porudžbinu na osnovu sačuvane omiljene porudžbine.
+     *
+     * @param omiljenaPorudzbinaId identifikator omiljene porudžbine
+     * @param tipPorudzbine tip nove porudžbine
+     * @param napomena napomena uz novu porudžbinu
+     * @return kreirana porudžbina
+     * @throws ResponseStatusException sa statusom 404 ako omiljena porudžbina
+     *         ne pripada korisniku ili ne postoji, ili 400 ako nema stavke
+     */
     public PorudzbinaViewDto repeatMyFavorite(Long omiljenaPorudzbinaId, TipPorudzbine tipPorudzbine, String napomena) {
         Korisnik korisnik = getCurrentUserEntity();
         OmiljenaPorudzbina omiljenaPorudzbina = omiljenaPorudzbinaRepo.findByIdAndKorisnik_Id(omiljenaPorudzbinaId, korisnik.getId())
@@ -103,6 +146,13 @@ public class OmiljenaPorudzbinaService {
         return porudzbinaService.create(dto);
     }
 
+    /**
+     * Briše omiljenu porudžbinu trenutno prijavljenog korisnika.
+     *
+     * @param omiljenaPorudzbinaId identifikator omiljene porudžbine
+     * @throws ResponseStatusException sa statusom 404 ako omiljena porudžbina
+     *         ne pripada korisniku ili ne postoji
+     */
     public void deleteMyFavorite(Long omiljenaPorudzbinaId) {
         Korisnik korisnik = getCurrentUserEntity();
         OmiljenaPorudzbina omiljenaPorudzbina = omiljenaPorudzbinaRepo.findByIdAndKorisnik_Id(omiljenaPorudzbinaId, korisnik.getId())
@@ -110,12 +160,27 @@ public class OmiljenaPorudzbinaService {
         omiljenaPorudzbinaRepo.delete(omiljenaPorudzbina);
     }
 
+    /**
+     * Vraća entitet trenutno prijavljenog korisnika na osnovu sigurnosnog
+     * konteksta.
+     *
+     * @return entitet trenutno prijavljenog korisnika
+     * @throws ResponseStatusException sa statusom 401 ako korisnik nije prijavljen
+     */
     private Korisnik getCurrentUserEntity() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return korisnikRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Niste ulogovani"));
     }
 
+    /**
+     * Normalizuje naziv omiljene porudžbine. Ako naziv nije zadat, vraća
+     * podrazumevani naziv izveden iz identifikatora porudžbine.
+     *
+     * @param naziv zadati naziv (može biti {@code null} ili prazan)
+     * @param porudzbinaId identifikator porudžbine (za podrazumevani naziv)
+     * @return normalizovan naziv
+     */
     private String normalizeNaziv(String naziv, Long porudzbinaId) {
         if (naziv == null || naziv.trim().isEmpty()) {
             return "Omiljena porudžbina #" + porudzbinaId;
