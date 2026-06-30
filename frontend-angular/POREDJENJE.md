@@ -21,10 +21,11 @@ sloj po sloj. (Treća tačka poređenja — native Android — dolazi kasnije.)
 | Modeli | `core/models/{korisnik,proizvod,porudzbina}.model.ts` | gotovo |
 | Servisi | `core/services/{auth,cart,proizvod,porudzbina}.service.ts` | gotovo |
 | Guard | `core/guards/auth.guard.ts` | gotovo |
-| Komponente | `components/{navbar,proizvod-kartica,cart-drawer}/` | gotovo |
-| Stranice | `pages/{login,register,meni}/` | gotovo |
+| Komponente | `components/{navbar,proizvod-kartica,cart-drawer,status-porudzbine}/` | gotovo |
+| Stranice | `pages/{login,register,meni,istorija}/` | gotovo |
 | Servis (stanje) | `core/services/aktivna-porudzbina.service.ts` | gotovo |
-| **Fali (Faza C)** | Status modal, `getJedan` u PorudzbinaService, Istorija stranica | TODO |
+
+**Vertikalni isečak je kompletan:** Register → Login → Meni → Korpa → Naručivanje → Status → Istorija.
 
 **Arhitektonski potpis Angular verzije:** standalone komponente, `inject()`, `BehaviorSubject`
 servisi (umesto Context), scoped CSS (umesto CSS Modules), template-driven forme (`ngModel`),
@@ -273,6 +274,76 @@ sa badge-om (`korpa$` → broj stavki). Funkcionalno isto (otvara drawer), manje
 
 ---
 
+## Sloj 7: Polling i složeno stanje (Faza C)
+
+### 7.1 Status porudžbine — polling (`setInterval` ↔ RxJS `timer`)
+
+Najinteresantnija razlika u celom projektu. Status modal periodično pita backend za status.
+
+```tsx
+// React (StatusPorudzbine): setInterval + ručno čišćenje
+useEffect(() => {
+  const fetchStatus = async () => { const r = await fetch(`/api/porudzbine/${id}`); setStatus(...); };
+  fetchStatus();                          // odmah jednom
+  if (zavrseno) return;                   // ne pokreći ako je gotovo
+  const interval = setInterval(fetchStatus, 8000);
+  return () => clearInterval(interval);   // cleanup
+}, [porudzbinaId, token, zavrseno]);
+```
+```ts
+// Angular (StatusPorudzbineComponent): RxJS timer + switchMap
+this.pollSub = timer(0, 8000).pipe(           // 0 = odmah, pa svakih 8s
+  switchMap(() => this.porudzbina.getJedan(id))  // otkazuje stari GET ako stigne novi tik
+).subscribe(p => {
+  this.status = p.status;
+  if (this.zavrseno) this.zaustaviPolling();  // unsubscribe kad je gotovo
+});
+```
+
+| | React | Angular |
+|---|---|---|
+| Mehanizam | `setInterval` + `fetch` | `timer(0, 8000)` + `switchMap(getJedan)` |
+| Otkazivanje zastarelog zahteva | ručno (ili se ignoriše) | **`switchMap` automatski** otkazuje prethodni GET |
+| Čišćenje | `clearInterval` u `useEffect` cleanup | `pollSub.unsubscribe()` |
+| Stop kad gotovo | `if (zavrseno) return` (re-run effecta) | `if (zavrseno) zaustaviPolling()` |
+
+➡️ Ovde RxJS zaista blista: `switchMap` rešava "race condition" (spor odgovor stigne posle novog
+zahteva) **besplatno** — u React-u bi to tražilo `AbortController` ili ručnu zastavicu.
+
+### 7.2 Status — okidanje preko deljenog servisa
+
+React modal je u `App.tsx` uslovljen contextom (`aktivnaId && statusOtvoren`). Angular modal je u
+`app.component` i sam se pretplaćuje na `AktivnaPorudzbinaService.statusOtvoren$` — kad postane `true`,
+pokreće polling; kad `false`, zaustavlja. Isti "globalni event", druga mehanika (context ↔ Observable).
+
+### 7.3 Istorija — paginacija i expand stanje
+
+```tsx
+// React: Page | List handling + expand kroz useState po kartici
+const [razvijeno, setRazvijeno] = useState(false);   // unutar svake kartice-komponente
+if (Array.isArray(data)) { setPorudzbine(data); setUkupnoStrana(1); }
+else { setPorudzbine(data.content); setUkupnoStrana(data.totalPages); }
+```
+```ts
+// Angular: isti Page|List guard + expand kroz Set<number> na nivou stranice
+private razvijeni = new Set<number>();
+toggleRazvij(id) { this.razvijeni.has(id) ? this.razvijeni.delete(id) : this.razvijeni.add(id); }
+```
+
+| | React | Angular |
+|---|---|---|
+| Page vs List odgovor | `Array.isArray(data)` grananje | isto (`Array.isArray`) |
+| Expand stanje | `useState` u **dečjoj** komponenti (`PorudzbinaKartica`) | `Set<number>` u **roditelju** (jedna komponenta) |
+| Otkazivanje | lokalni `setPorudzbine(map)` | lokalni `this.porudzbine = map(...)` |
+| Aktivna kartica | `find(U_PRIPREMI/SPREMNA)` + filter iz liste | isto, kroz gettere `aktivna`/`istorija` |
+| „Prati uživo" | `otvoriStatus(id)` (context) | `aktivnaService.otvoriStatus(id)` |
+
+**Razlika u dekompoziciji:** React deli Istoriju na pod-komponente (`PorudzbinaKartica`,
+`AktivnaKartica`, `OmiljenaModal`) — svaka sa svojim stanjem. Angular isečak drži sve u jednoj
+`IstorijaComponent` (expand kroz `Set`), jer je manje pod-stanja (nema omiljena modala).
+
+---
+
 ## Sažetak razlika (cheat-sheet)
 
 | Koncept | React | Angular |
@@ -302,6 +373,8 @@ sa badge-om (`korpa$` → broj stavki). Funkcionalno isto (otvara drawer), manje
 
 - **Faza A (gotovo):** temeljni slojevi + Login/Register + app shell + rute.
 - **Faza B (gotovo):** Meni stranica + Korpa (drawer) + naručivanje + `AktivnaPorudzbinaService`.
-- **Faza C (sledi):** Status modal (polling `getJedan` svakih 8s) + `getJedan` u `PorudzbinaService` + Istorija stranica.
+- **Faza C (gotovo):** Status modal (RxJS polling) + `getJedan` u `PorudzbinaService` + Istorija stranica.
+
+**Vertikalni isečak je završen.** Sledeća tačka poređenja: native Android implementacija.
 
 Detaljan plan: vidi `/home/dukanx/.claude/plans/radiant-humming-fountain.md` (ili sažetak u sesiji).
