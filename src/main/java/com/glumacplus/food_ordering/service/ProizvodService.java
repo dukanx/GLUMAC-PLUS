@@ -17,6 +17,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Servis za upravljanje proizvodima i njihovim alergenima.
+ *
+ * @author Nikola Dukić
+ * @version 1.0
+ */
 @Service
 @Transactional
 public class ProizvodService {
@@ -24,11 +30,23 @@ public class ProizvodService {
     private final ProizvodRepository repository;
     private final AlergenRepository alergenRepository;
 
+    /**
+     * Kreira servis sa potrebnim repozitorijumima.
+     *
+     * @param repository repozitorijum proizvoda
+     * @param alergenRepository repozitorijum alergena
+     */
     public ProizvodService(ProizvodRepository repository, AlergenRepository alergenRepository) {
         this.repository = repository;
         this.alergenRepository = alergenRepository;
     }
 
+    /**
+     * Vraća proizvode, opciono filtrirane po pojmu pretrage (naziv ili tip).
+     *
+     * @param term pojam pretrage, ili {@code null}/prazno za sve proizvode
+     * @return lista proizvoda
+     */
     public List<ProizvodViewDto> getAll(String term) {
         List<Proizvod> proizvodi;
         if (term == null || term.isBlank()) {
@@ -42,12 +60,27 @@ public class ProizvodService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Vraća proizvod po identifikatoru.
+     *
+     * @param id identifikator proizvoda
+     * @return pronađeni proizvod
+     * @throws ResponseStatusException sa statusom 404 ako proizvod ne postoji
+     */
     public ProizvodViewDto getById(Long id) {
         Proizvod proizvod = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proizvod nije pronađen"));
         return ProizvodMapper.toViewDto(proizvod);
     }
 
+    /**
+     * Kreira novi proizvod.
+     *
+     * @param dto podaci o novom proizvodu
+     * @return kreirani proizvod
+     * @throws ResponseStatusException sa statusom 400 ako proizvod sa istim
+     *         nazivom i tipom već postoji
+     */
     public ProizvodViewDto create(ProizvodDto dto) {
         if (repository.existsByNazivAndTip(dto.getNaziv(), dto.getTip())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Proizvod već postoji!");
@@ -57,6 +90,14 @@ public class ProizvodService {
         return ProizvodMapper.toViewDto(p);
     }
 
+    /**
+     * Ažurira postojeći proizvod.
+     *
+     * @param id identifikator proizvoda koji se ažurira
+     * @param dto novi podaci o proizvodu
+     * @return ažurirani proizvod
+     * @throws ResponseStatusException sa statusom 404 ako proizvod ne postoji
+     */
     public ProizvodViewDto update(Long id, ProizvodDto dto) {
         Proizvod p = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proizvod nije pronađen"));
@@ -75,6 +116,12 @@ public class ProizvodService {
         return ProizvodMapper.toViewDto(p);
     }
 
+    /**
+     * Briše proizvod po identifikatoru.
+     *
+     * @param id identifikator proizvoda koji se briše
+     * @throws ResponseStatusException sa statusom 404 ako proizvod ne postoji
+     */
     public void delete(Long id) {
         if (!repository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Proizvod nije pronađen");
@@ -82,6 +129,16 @@ public class ProizvodService {
         repository.deleteById(id);
     }
 
+    /**
+     * Postavlja skup alergena za zadati proizvod. Duplikati u listi ID-jeva se
+     * ignorišu.
+     *
+     * @param proizvodId identifikator proizvoda
+     * @param alergeniIds lista identifikatora alergena
+     * @return ažurirani proizvod sa postavljenim alergenima
+     * @throws ResponseStatusException sa statusom 400 ako je lista {@code null}
+     *         ili sadrži nepostojeće alergene, odnosno 404 ako proizvod ne postoji
+     */
     public ProizvodViewDto setAlergeni(Long proizvodId, List<Long> alergeniIds) {
         if (alergeniIds == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Lista ID-jeva alergena je obavezna");
