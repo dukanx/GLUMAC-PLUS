@@ -1,0 +1,298 @@
+.stranica {
+    min-height: 100vh;
+    background-color: var(--paper);
+    background-image: radial-gradient(circle, hsl(22 30% 14% / 0.06) 0.5px, transparent 0.5px);
+    background-size: 3px 3px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── HEADER ── */
+.pageHeader {
+    padding: 144px 8% 30px;
+    border-bottom: 1px solid var(--ink-12);
+}
+
+.pageHeaderSadrzaj { max-width: 520px; }
+
+.oznaka {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ink-40);
+    margin-bottom: 20px;
+}
+
+.linija {
+    width: 100%;
+    height: 1px;
+    background: var(--ink-12);
+    margin-bottom: 28px;
+}
+
+.naslov {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 20px;
+    line-height: 1.1;
+}
+
+.infoTagovi { display: flex; flex-direction: column; gap: 8px; }
+
+.infoTag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--ink-70);
+}
+
+.loyaltyBaner {
+    margin-top: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--ink-40);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+}
+
+.loyaltyBaner strong { color: var(--rust); font-weight: 700; }
+
+/* ── INFO SEKCIJA ── */
+.infoSekcija {
+    padding: 20px 8% 24px;
+    border-bottom: 1px solid var(--ink-12);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: var(--paper);
+    background-image: radial-gradient(circle, hsl(22 30% 14% / 0.06) 0.5px, transparent 0.5px);
+    background-size: 3px 3px;
+}
+
+.infoLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--ink-70);
+    text-decoration: none;
+    width: fit-content;
+    transition: color 0.2s;
+}
+
+.infoLink span {
+    border-bottom: 1px solid var(--ink-40);
+    padding-bottom: 1px;
+    transition: border-color 0.2s;
+}
+
+.infoLink:hover { color: var(--ink); }
+.infoLink:hover span { border-bottom-color: var(--ink); }
+.infoIkona { flex-shrink: 0; color: var(--ink-55); }
+
+/* ── KONTROLE (sticky) ── */
+.kontrole {
+    display: flex;
+    align-items: center;
+    padding: 0 8%;
+    background-color: var(--paper);
+    background-image: radial-gradient(circle, hsl(22 30% 14% / 0.06) 0.5px, transparent 0.5px);
+    background-size: 3px 3px;
+    border-bottom: 1px solid var(--ink-12);
+    position: sticky;
+    top: 72px;
+    z-index: 10;
+}
+
+.tabovi {
+    display: flex;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.tabovi::-webkit-scrollbar { display: none; }
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 16px 14px 14px;
+    cursor: pointer;
+    color: var(--ink-55);
+    white-space: nowrap;
+    transition: color 0.18s, border-color 0.18s;
+}
+
+.tab + .tab { border-left: 1px solid var(--ink-12); }
+.tab:hover { color: var(--ink); border-bottom-color: var(--ink-20); }
+.tabAktivan { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ── SEARCH ── */
+.searchWrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--ink-20);
+    padding: 20px 0 10px;
+    transition: border-color 0.2s;
+    max-width: 400px;
+}
+
+.searchWrap:focus-within { border-bottom-color: var(--ink); }
+
+.searchIkona {
+    font-size: 1.1rem;
+    color: var(--ink-55);
+    line-height: 1;
+    margin-top: -2px;
+}
+
+.searchInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--sans);
+    font-size: 0.93rem;
+    color: var(--ink);
+    flex: 1;
+    min-width: 0;
+}
+
+.searchInput::placeholder { color: var(--ink-55); }
+
+.searchBrisi {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-40);
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color 0.15s;
+}
+
+.searchBrisi:hover { color: var(--ink); }
+
+/* ── SADRŽAJ ── */
+.sadrzaj { flex: 1; padding: 0 8% 120px; }
+.sadrzajInner { display: flex; gap: 48px; align-items: flex-start; }
+.produkti { flex: 1; min-width: 0; }
+
+/* ── GREŠKA ── */
+.greska {
+    color: var(--rust);
+    border-left: 2px solid var(--rust);
+    background: hsl(14 65% 44% / 0.06);
+    padding: 10px 14px;
+    margin: 32px 0;
+    font-family: var(--sans);
+    font-size: 0.88rem;
+}
+
+/* ── PRAZNO STANJE ── */
+.praznoStanje {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 0;
+    text-align: center;
+    gap: 8px;
+}
+
+.praznoTekst {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-style: italic;
+    color: var(--ink-40);
+}
+
+.praznoHint {
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    color: var(--ink-40);
+}
+
+/* ── SEKCIJE PROIZVODA ── */
+.sekcija { display: flex; flex-direction: column; }
+
+.sekcijaGlava {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 36px 0 0;
+    color: var(--ink-40);
+}
+
+.sekcijaNaslov {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-70);
+}
+
+.lista { display: flex; flex-direction: column; }
+
+/* ── TOAST (zamena za React <Toast> komponentu) ── */
+.toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    padding: 12px 20px;
+    border-radius: 2px;
+    box-shadow: 0 6px 24px hsl(22 30% 14% / 0.25);
+    z-index: 50;
+    animation: toastUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes toastUp {
+    from { opacity: 0; transform: translate(-50%, 16px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+    .pageHeader { padding: 120px 6% 26px; }
+    .infoSekcija { padding: 16px 6% 20px; }
+    .kontrole { padding: 0 6%; }
+    .sadrzaj { padding: 0 6% 120px; }
+}
+
+@media (max-width: 640px) {
+    .infoSekcija { padding: 14px 5% 18px; }
+    .kontrole { padding: 0 5%; }
+    .searchWrap { max-width: 100%; }
+    .sadrzaj { padding: 0 5% 120px; }
+}

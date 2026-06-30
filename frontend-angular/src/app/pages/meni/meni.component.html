@@ -1,0 +1,101 @@
+<div class="stranica">
+
+  <!-- ── HEADER ── -->
+  <header class="pageHeader">
+    <div class="pageHeaderSadrzaj">
+      <span class="oznaka">Poručivanje</span>
+      <div class="linija"></div>
+      <h1 class="naslov">Meni</h1>
+      <div class="infoTagovi">
+        <div class="infoTag">
+          <lucide-icon [img]="Star" [size]="11" [strokeWidth]="1.5" />
+          Skupljaj loyalty bodove uz svaku porudžbinu
+        </div>
+        <div class="infoTag">
+          <lucide-icon [img]="ShoppingBag" [size]="11" [strokeWidth]="1.5" />
+          Bez dostave — porudžbinu preuzimaš lično
+        </div>
+      </div>
+      <div *ngIf="korisnik && popust > 0" class="loyaltyBaner">
+        <lucide-icon [img]="Star" [size]="12" [strokeWidth]="1.5" />
+        {{ korisnik.loyaltyNivo }} — popust: <strong>{{ popust }}%</strong>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── INFO SEKCIJA (lokacija, telefon) ── -->
+  <section class="infoSekcija">
+    <a [href]="MAPS_URL" target="_blank" rel="noopener noreferrer" class="infoLink">
+      <lucide-icon [img]="MapPin" [size]="12" [strokeWidth]="1.5" class="infoIkona" />
+      <span>{{ ADRESA }}</span>
+    </a>
+    <a [href]="telHref" class="infoLink">
+      <lucide-icon [img]="Phone" [size]="12" [strokeWidth]="1.5" class="infoIkona" />
+      <span>{{ TELEFON }}</span>
+    </a>
+  </section>
+
+  <!-- ── KONTROLE (tabovi, sticky) ── -->
+  <div class="kontrole">
+    <div class="tabovi">
+      <button
+        *ngFor="let kat of kategorije"
+        class="tab"
+        [class.tabAktivan]="aktivniTab === kat"
+        (click)="aktivniTab = kat"
+      >
+        {{ kat }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ── SADRŽAJ ── -->
+  <main class="sadrzaj">
+    <div class="sadrzajInner">
+      <div class="produkti">
+
+        <div class="searchWrap">
+          <span class="searchIkona">⌕</span>
+          <input
+            type="text"
+            placeholder="Pretraži..."
+            [(ngModel)]="pretraga"
+            class="searchInput"
+          />
+          <button *ngIf="pretraga" class="searchBrisi" (click)="obrisiPretragu()">×</button>
+        </div>
+
+        <p *ngIf="greska" class="greska">{{ greska }}</p>
+
+        <p *ngIf="ucitava" class="praznoTekst" style="padding:48px 0">Učitavam meni...</p>
+
+        <div *ngIf="!ucitava && filtrirani.length === 0 && !greska" class="praznoStanje">
+          <p class="praznoTekst">Nema rezultata</p>
+          <p *ngIf="pretraga" class="praznoHint">Nismo pronašli ništa za „<em>{{ pretraga }}</em>"</p>
+        </div>
+
+        <div *ngFor="let grupa of grupisani; trackBy: trackByTip" class="sekcija">
+          <div *ngIf="aktivniTab === 'Sve'" class="sekcijaGlava">
+            <span class="sekcijaNaslov">{{ grupa.tip }}</span>
+          </div>
+          <div class="lista">
+            <app-proizvod-kartica
+              *ngFor="let p of grupa.stavke; trackBy: trackById"
+              [proizvod]="p"
+              [kolicina]="kolicinaZa(p.id)"
+              [popust]="popust"
+              (dodaj)="handleDodaj($event)"
+              (povecaj)="handlePovecaj($event)"
+              (smanji)="handleSmanji($event)"
+            />
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ── TOAST ── -->
+  <div *ngIf="toastPoruka" class="toast">{{ toastPoruka }}</div>
+
+</div>

@@ -1,0 +1,124 @@
+<!-- Drawer se renderuje samo kad je otvoren (*ngIf uklanja iz DOM-a) -->
+<ng-container *ngIf="drawerOtvoren">
+
+  <!-- Overlay (klik zatvara) -->
+  <div class="overlay" (click)="zatvoriDrawer()"></div>
+
+  <!-- Drawer -->
+  <aside class="drawer">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="headerLevo">
+        <h2 class="naslov">Korpa</h2>
+        <span *ngIf="ukupnoStavki > 0" class="badge">{{ ukupnoStavki }}</span>
+      </div>
+      <button class="zatvoriBtn" (click)="zatvoriDrawer()">
+        <lucide-icon [img]="X" [size]="20" />
+      </button>
+    </div>
+
+    <!-- Sadržaj -->
+    <div class="sadrzaj">
+
+      <!-- Uspešno poslato -->
+      <div *ngIf="uspesno" class="uspesno">
+        <lucide-icon [img]="CheckCircle2" [size]="56" class="uspesnoIkona" />
+        <p class="uspesnoNaslov">Porudžbina je poslata!</p>
+        <p class="uspesnoSub">Otvaramo praćenje...</p>
+      </div>
+
+      <!-- Prazna korpa -->
+      <div *ngIf="!uspesno && korpa.length === 0" class="prazna">
+        <lucide-icon [img]="ShoppingCart" [size]="72" class="praznaIkona" />
+        <p class="praznaTekst">Korpa je prazna</p>
+        <button class="idNaMeni" (click)="idiNaMeni()">Pogledaj meni →</button>
+      </div>
+
+      <!-- Stavke -->
+      <div *ngIf="!uspesno && korpa.length > 0" class="stavke">
+        <div *ngFor="let item of korpa; trackBy: trackById" class="stavka">
+          <div class="stavkaGore">
+            <span class="stavkaNaziv">{{ item.proizvod.naziv }}</span>
+            <button class="ukloniBtn" (click)="ukloni(item.proizvod.id)">
+              <lucide-icon [img]="Trash2" [size]="15" />
+            </button>
+          </div>
+
+          <div class="stavkaDole">
+            <div class="stavkaKontrole">
+              <button class="kontroleBtn" (click)="smanji(item.proizvod.id)">
+                <lucide-icon [img]="Minus" [size]="12" />
+              </button>
+              <span class="stavkaKolicina">{{ item.kolicina }}</span>
+              <button class="kontroleBtn" (click)="povecaj(item.proizvod.id)">
+                <lucide-icon [img]="Plus" [size]="12" />
+              </button>
+            </div>
+            <span *ngIf="item.kolicina > 1" class="stavkaJedinicna">
+              {{ item.kolicina }} × {{ item.proizvod.cena | number:'1.0-0' }} RSD
+            </span>
+          </div>
+
+          <div class="stavkaUkupnoRed">
+            <span class="stavkaUkupno">{{ redniIznos(item) }} RSD</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div *ngIf="!uspesno && korpa.length > 0" class="footer">
+
+      <!-- Tip porudžbine -->
+      <div class="tipSekcija">
+        <span class="tipLabel">Tip porudžbine</span>
+        <div class="tipBiraci">
+          <button
+            *ngFor="let tip of tipovi"
+            class="tipBirac"
+            [class.tipAktivan]="tipPorudzbine === tip"
+            (click)="tipPorudzbine = tip"
+          >
+            {{ TIP_LABELE[tip] }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Napomena -->
+      <div class="napomenaSekcija">
+        <span class="tipLabel">Napomena (opciono)</span>
+        <textarea
+          class="napomenaInput"
+          [(ngModel)]="napomena"
+          placeholder="npr. bez šećera, dodatni preliv..."
+          maxlength="1000"
+          rows="2"
+        ></textarea>
+      </div>
+
+      <div *ngIf="popust > 0" class="popustRed">
+        <span class="popustLabel">Loyalty popust ({{ popust }}%)</span>
+        <span class="popustIznos">−{{ popustIznos }} RSD</span>
+      </div>
+
+      <div class="ukupno">
+        <span class="ukupnoLabel">Ukupno</span>
+        <span class="ukupnoVrednost">
+          <span *ngIf="popust > 0" class="ukupnoStaro">{{ ukupnaCena }}</span>
+          {{ zaPlacanje }} RSD
+        </span>
+      </div>
+
+      <p *ngIf="greska" class="greska">{{ greska }}</p>
+
+      <button class="naruciBtn" (click)="handleNaruci()" [disabled]="porucivanjeUToku">
+        {{ porucivanjeUToku ? 'Šaljem...' : 'Naruči' }}
+      </button>
+
+      <button class="isprazniBtn" (click)="isprazni()">Isprazni korpu</button>
+    </div>
+
+  </aside>
+</ng-container>

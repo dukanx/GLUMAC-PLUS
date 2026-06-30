@@ -1,0 +1,395 @@
+/* ── OVERLAY ── */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: hsl(22 30% 14% / 0.4);
+    z-index: 150;
+    animation: overlayFade 0.2s ease both;
+}
+
+/* ── DRAWER ── */
+.drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 400px;
+    max-width: 100vw;
+    background: var(--paper);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 32px hsl(22 30% 14% / 0.12);
+    animation: drawerIn 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes drawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+/* ── HEADER ── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--ink-12);
+    flex-shrink: 0;
+}
+
+.headerLevo { display: flex; align-items: center; gap: 10px; }
+
+.naslov {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--ink);
+    margin: 0;
+}
+
+.badge {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    display: inline-block;
+}
+
+.zatvoriBtn {
+    background: transparent;
+    border: 1px solid var(--ink-20);
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    color: var(--ink-55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.zatvoriBtn:hover { background: var(--ink-12); color: var(--ink); }
+
+/* ── SADRŽAJ ── */
+.sadrzaj { flex: 1; overflow-y: auto; padding: 8px 28px; }
+
+/* ── PRAZNA KORPA ── */
+.prazna {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 64px 0;
+    text-align: center;
+}
+
+.praznaIkona { color: var(--ink-20); }
+
+.praznaTekst {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-style: italic;
+    color: var(--ink-40);
+    margin: 0;
+}
+
+.idNaMeni {
+    background: transparent;
+    border: 1px solid var(--ink-20);
+    color: var(--ink-55);
+    padding: 9px 22px;
+    border-radius: 0;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    margin-top: 8px;
+}
+
+.idNaMeni:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+/* ── USPEŠNO ── */
+.uspesno {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    text-align: center;
+    padding: 64px 0;
+}
+
+.uspesnoIkona { color: hsl(150 35% 35%); }
+
+.uspesnoNaslov {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--ink);
+    margin: 0;
+}
+
+.uspesnoSub {
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    color: var(--ink-55);
+    margin: 0;
+}
+
+/* ── STAVKE ── */
+.stavke { display: flex; flex-direction: column; }
+
+.stavka {
+    border-bottom: 1px solid var(--ink-12);
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stavka:first-child { border-top: 1px solid var(--ink-12); }
+
+.stavkaGore {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.stavkaNaziv {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--ink);
+    flex: 1;
+    line-height: 1.3;
+}
+
+.ukloniBtn {
+    background: transparent;
+    border: none;
+    color: var(--ink-40);
+    cursor: pointer;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+    flex-shrink: 0;
+}
+
+.ukloniBtn:hover { color: var(--rust); }
+
+.stavkaDole { display: flex; justify-content: space-between; align-items: center; }
+
+.stavkaUkupnoRed {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 8px;
+    border-top: 1px solid var(--ink-12);
+    margin-top: 4px;
+}
+
+.stavkaKontrole { display: flex; align-items: center; gap: 8px; }
+
+.kontroleBtn {
+    width: 28px;
+    height: 28px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.kontroleBtn:hover { background: var(--rust); }
+
+.stavkaKolicina {
+    min-width: 24px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-family: var(--sans);
+}
+
+.stavkaJedinicna {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--ink-40);
+}
+
+.stavkaUkupno {
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+/* ── TIP PORUDŽBINE ── */
+.tipSekcija { display: flex; flex-direction: column; gap: 8px; }
+
+.tipLabel {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-40);
+}
+
+.tipBiraci { display: flex; }
+
+.tipBirac {
+    flex: 1;
+    padding: 9px 4px;
+    background: transparent;
+    border: 1px solid var(--ink-20);
+    border-right: none;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    color: var(--ink-55);
+    text-align: center;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.tipBirac:last-child { border-right: 1px solid var(--ink-20); }
+.tipBirac:hover { background: var(--ink-12); color: var(--ink); }
+.tipAktivan { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.tipAktivan:hover { background: var(--ink); color: var(--paper); }
+
+/* ── NAPOMENA ── */
+.napomenaSekcija { display: flex; flex-direction: column; gap: 8px; }
+
+.napomenaInput {
+    width: 100%;
+    border: 1px solid var(--ink-20);
+    background: transparent;
+    padding: 9px 11px;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 40px;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.napomenaInput:focus { outline: none; border-color: var(--ink); }
+.napomenaInput::placeholder { color: var(--ink-40); }
+
+/* ── POPUST RED ── */
+.popustRed { display: flex; justify-content: space-between; align-items: baseline; }
+
+.popustLabel { font-family: var(--sans); font-size: 0.82rem; color: var(--ink-55); }
+
+.popustIznos {
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--rust);
+}
+
+.ukupnoStaro {
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--ink-40);
+    text-decoration: line-through;
+    margin-right: 8px;
+}
+
+/* ── FOOTER ── */
+.footer {
+    padding: 16px 28px 24px;
+    border-top: 1px solid var(--ink-12);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.ukupno {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 8px;
+}
+
+.ukupnoLabel {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-55);
+}
+
+.ukupnoVrednost {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-style: italic;
+    color: var(--ink);
+}
+
+.naruciBtn {
+    width: 100%;
+    padding: 14px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 0;
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.naruciBtn:hover:not(:disabled) { background: var(--rust); }
+.naruciBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.isprazniBtn {
+    width: 100%;
+    padding: 9px;
+    background: transparent;
+    color: var(--ink-40);
+    border: 1px solid var(--ink-20);
+    border-radius: 0;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.isprazniBtn:hover { color: var(--rust); border-color: var(--rust); }
+
+.greska {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--rust);
+    border-left: 2px solid var(--rust);
+    padding: 6px 10px;
+    background: hsl(14 65% 44% / 0.06);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+    .drawer { width: 100vw; }
+}
