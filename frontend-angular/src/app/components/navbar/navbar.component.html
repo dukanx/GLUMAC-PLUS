@@ -1,0 +1,83 @@
+<!-- [class] binding — dinamička klasa na osnovu svojstava -->
+<!-- Ekvivalent: className={[styles.navbar, scrolled && styles.navbarScrolled].join(' ')} -->
+<nav
+  [class.navbar]="true"
+  [class.navbarScrolled]="scrolled"
+  [class.navbarTamni]="true"
+>
+
+  <!-- routerLink — Angular ekvivalent <Link to="/"> -->
+  <a routerLink="/" class="logo">
+    <span class="logoTekst">Glumac Plus</span>
+  </a>
+
+  <!-- Desktop navigacija (vertikalni isečak: Meni + Porudžbine) -->
+  <div class="center">
+    <a routerLink="/meni" routerLinkActive="navLinkAktivan" class="navLink">
+      <lucide-icon [img]="UtensilsCrossed" [size]="13" [strokeWidth]="1.5" />
+      Meni
+    </a>
+    <ng-container *ngIf="korisnik">
+      <span class="navDivider"></span>
+      <a routerLink="/istorija" routerLinkActive="navLinkAktivan" class="navLink">
+        <lucide-icon [img]="ClipboardList" [size]="13" [strokeWidth]="1.5" />
+        Porudžbine
+      </a>
+    </ng-container>
+  </div>
+
+  <!-- Desno — korpa + login/logout -->
+  <div class="desno">
+    <!-- Cart dugme sa badge-om broja stavki (zamena za React FloatingBubble) -->
+    <button class="korpaDugme" (click)="otvoriKorpu()" title="Korpa">
+      <lucide-icon [img]="ShoppingBag" [size]="16" [strokeWidth]="1.5" />
+      <span *ngIf="brojStavki > 0" class="korpaBadge">{{ brojStavki }}</span>
+    </button>
+
+    <ng-container *ngIf="korisnik; else loginDugme">
+      <span class="korisnikIme">{{ korisnik.ime }}</span>
+      <button class="dugmeOdjava" (click)="handleLogout()" title="Odjavi se">
+        <lucide-icon [img]="LogOut" [size]="16" [strokeWidth]="1.5" />
+      </button>
+    </ng-container>
+
+    <ng-template #loginDugme>
+      <a routerLink="/login" class="dugmePrijava">
+        <lucide-icon [img]="LogIn" [size]="13" [strokeWidth]="1.5" />
+        Prijava
+      </a>
+    </ng-template>
+  </div>
+
+  <!-- Hamburger (mobilni) -->
+  <div class="mobileDesno" *ngIf="korisnik">
+    <span class="mobileIme">{{ korisnik.ime }}</span>
+  </div>
+
+  <button
+    class="hamburger"
+    [class.hamburgerOtvoren]="menuOtvoren"
+    (click)="menuOtvoren = !menuOtvoren"
+    [attr.aria-label]="menuOtvoren ? 'Zatvori meni' : 'Otvori meni'"
+  >
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+</nav>
+
+<!-- Mobilni meni — *ngIf prikazuje/sakriva element (uklanja iz DOM-a) -->
+<!-- Ekvivalent: {menuOtvoren && <div>...</div>} u JSX-u -->
+<div class="mobileMenu mobileMenuSvetli" *ngIf="menuOtvoren">
+  <a routerLink="/meni" routerLinkActive="mobilniLinkAktivan" class="mobilniLink" (click)="zatvori()">Meni</a>
+  <ng-container *ngIf="korisnik">
+    <a routerLink="/istorija" routerLinkActive="mobilniLinkAktivan" class="mobilniLink" (click)="zatvori()">Porudžbine</a>
+  </ng-container>
+  <div class="mobilniDivider"></div>
+  <ng-container *ngIf="korisnik; else mobilniLogin">
+    <button class="mobilniOdjava" (click)="handleLogout()">Odjavi se</button>
+  </ng-container>
+  <ng-template #mobilniLogin>
+    <a routerLink="/login" class="mobilniLink" (click)="zatvori()">Prijava</a>
+  </ng-template>
+</div>

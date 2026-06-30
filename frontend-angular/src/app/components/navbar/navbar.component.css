@@ -1,0 +1,296 @@
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    padding: 0 8%;
+    background: transparent;
+    transition: background 0.4s ease-out, backdrop-filter 0.4s ease-out;
+}
+
+.navbarScrolled {
+    background: hsl(36 30% 94% / 0.72);
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+}
+
+.navbarScrolled::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -16px;
+    height: 16px;
+    background: linear-gradient(to bottom, hsl(36 30% 94% / 0.45), transparent);
+    pointer-events: none;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.logoTekst {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+}
+
+.center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.navLink {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink-55);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    padding-bottom: 3px;
+    transition: color 0.25s;
+}
+
+.navLink::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0; height: 1px;
+    background: currentColor;
+    transition: width 0.3s ease-out;
+}
+
+.navLink:hover::after,
+.navLinkAktivan::after { width: 100%; }
+.navLink:hover { color: var(--ink); }
+.navLinkAktivan { color: var(--rust) !important; }
+
+.navDivider {
+    width: 1px;
+    height: 14px;
+    background: var(--ink-20);
+    flex-shrink: 0;
+}
+
+.desno {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.korisnikIme {
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--ink-70);
+}
+
+/* Cart dugme + badge */
+.korpaDugme {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: var(--ink-70);
+    transition: color 0.25s;
+}
+.korpaDugme:hover { color: var(--rust); }
+
+.korpaBadge {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: var(--rust);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.dugmeOdjava {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: var(--ink-40);
+    transition: color 0.25s;
+}
+.dugmeOdjava:hover { color: var(--rust); }
+
+.dugmePrijava {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--ink-20);
+    color: var(--ink-70);
+    padding: 7px 16px;
+    text-decoration: none;
+    transition: border-color 0.25s, color 0.25s;
+}
+.dugmePrijava:hover { border-color: var(--ink); color: var(--ink); }
+
+.mobileDesno {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    z-index: 1;
+}
+
+.mobileIme {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--ink-70);
+}
+
+.hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 4px;
+    margin-left: 10px;
+    z-index: 1;
+    color: var(--ink-70);
+    transition: color 0.25s;
+}
+.hamburger:hover { color: var(--ink); }
+
+.bar {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: currentColor;
+    transform-origin: center;
+    transition: transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                opacity 0.25s ease,
+                width 0.35s ease;
+}
+
+.hamburgerOtvoren .bar:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.hamburgerOtvoren .bar:nth-child(2) { opacity: 0; width: 0; }
+.hamburgerOtvoren .bar:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+@keyframes dropdownIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.mobileMenu {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    padding: 8px 8% 72px;
+    display: flex;
+    flex-direction: column;
+    animation: dropdownIn 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.mobileMenuSvetli {
+    background: hsl(36 30% 94% / 0.92);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border-bottom: 1px solid var(--ink-12);
+}
+
+.mobilniLink {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-70);
+    text-decoration: none;
+    padding: 15px 0;
+    transition: color 0.2s, padding-left 0.2s;
+    border-top: 1px solid var(--ink-12);
+}
+.mobilniLink:first-child { border-top: none; }
+.mobilniLink:hover { color: var(--ink); padding-left: 6px; }
+.mobilniLinkAktivan { color: var(--rust); }
+
+.mobilniDivider {
+    height: 0;
+    border-top: 1.5px solid var(--ink-20);
+    margin: 4px 0;
+}
+
+.mobilniOdjava {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-40);
+    background: transparent;
+    border: none;
+    padding: 15px 0;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.mobilniOdjava:hover { color: var(--rust); }
+
+@media (max-width: 768px) {
+    .navbar { padding: 0 5%; }
+    .center { display: none; }
+    .desno  { display: none; }
+    .mobileDesno { display: flex; }
+    .hamburger { display: flex; }
+}
+
+@media (min-width: 769px) {
+    .mobileMenu { display: none !important; }
+}

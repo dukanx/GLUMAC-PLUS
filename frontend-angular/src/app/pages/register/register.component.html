@@ -1,0 +1,90 @@
+<div class="stranica">
+  <div class="sadrzaj">
+
+    <span class="marka">Glumac Plus</span>
+    <div class="linija"></div>
+    <h1 class="naslov">Kreiraj nalog</h1>
+    <p class="podnaslov">Pridruži se i počni da skupljaš bodove</p>
+
+    <div *ngIf="serverGreska" class="serverGreska">{{ serverGreska }}</div>
+
+    <!-- novalidate — gasi browser validaciju, koristimo svoju (validiraj()) -->
+    <form (ngSubmit)="handleSubmit()" class="forma" novalidate>
+
+      <div class="polje">
+        <label for="ime" class="labela">Ime</label>
+        <input
+          id="ime"
+          name="ime"
+          type="text"
+          [(ngModel)]="ime"
+          (ngModelChange)="ocistiGresku('ime')"
+          placeholder="Marko Marković"
+          class="input"
+          [class.inputGreska]="greske.ime"
+          autocomplete="name"
+        />
+        <span *ngIf="greske.ime" class="greska">{{ greske.ime }}</span>
+      </div>
+
+      <div class="polje">
+        <label for="email" class="labela">Email</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          [(ngModel)]="email"
+          (ngModelChange)="ocistiGresku('email')"
+          placeholder="marko@email.com"
+          class="input"
+          [class.inputGreska]="greske.email"
+          autocomplete="email"
+        />
+        <span *ngIf="greske.email" class="greska">{{ greske.email }}</span>
+      </div>
+
+      <div class="polje">
+        <label for="lozinka" class="labela">Lozinka</label>
+        <input
+          id="lozinka"
+          name="lozinka"
+          type="password"
+          [(ngModel)]="lozinka"
+          (ngModelChange)="ocistiGresku('lozinka')"
+          placeholder="Minimum 8 karaktera"
+          class="input"
+          [class.inputGreska]="greske.lozinka"
+          autocomplete="new-password"
+        />
+        <span *ngIf="greske.lozinka" class="greska">{{ greske.lozinka }}</span>
+      </div>
+
+      <div class="polje">
+        <label for="potvrda" class="labela">Potvrdi lozinku</label>
+        <input
+          id="potvrda"
+          name="potvrda"
+          type="password"
+          [(ngModel)]="potvrda"
+          (ngModelChange)="ocistiGresku('potvrda')"
+          placeholder="Ponovi lozinku"
+          class="input"
+          [class.inputGreska]="greske.potvrda"
+          autocomplete="new-password"
+        />
+        <span *ngIf="greske.potvrda" class="greska">{{ greske.potvrda }}</span>
+      </div>
+
+      <button type="submit" class="dugme" [disabled]="ucitava">
+        {{ ucitava ? 'Kreiram nalog...' : 'Kreiraj nalog' }}
+      </button>
+
+    </form>
+
+    <p class="loginLink">
+      Već imaš nalog?
+      <a routerLink="/login">Prijavi se</a>
+    </p>
+
+  </div>
+</div>
