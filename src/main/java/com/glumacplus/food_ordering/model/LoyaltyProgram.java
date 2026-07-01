@@ -78,9 +78,15 @@ public class LoyaltyProgram {
     /**
      * Postavlja naziv nivoa.
      *
-     * @param nivo naziv nivoa
+     * @param nivo naziv nivoa; ne sme biti {@code null} niti prazan
+     * @throws IllegalArgumentException ako je naziv nivoa {@code null} ili prazan
      */
-    public void setNivo(String nivo) { this.nivo = nivo; }
+    public void setNivo(String nivo) {
+        if (nivo == null || nivo.isBlank()) {
+            throw new IllegalArgumentException("Naziv nivoa je obavezan");
+        }
+        this.nivo = nivo;
+    }
 
     /**
      * Vraća procenat popusta.
@@ -92,9 +98,15 @@ public class LoyaltyProgram {
     /**
      * Postavlja procenat popusta.
      *
-     * @param popust procenat popusta
+     * @param popust procenat popusta; mora biti u opsegu od 0 do 100
+     * @throws IllegalArgumentException ako je popust van opsega [0, 100]
      */
-    public void setPopust(double popust) { this.popust = popust; }
+    public void setPopust(double popust) {
+        if (popust < 0 || popust > 100) {
+            throw new IllegalArgumentException("Popust mora biti između 0 i 100");
+        }
+        this.popust = popust;
+    }
 
     /**
      * Vraća korisnike koji pripadaju ovom nivou.
@@ -122,9 +134,13 @@ public class LoyaltyProgram {
     /**
      * Postavlja prag bodova za dostizanje nivoa.
      *
-     * @param pragBodova prag bodova
+     * @param pragBodova prag bodova; ne sme biti negativan
+     * @throws IllegalArgumentException ako je prag bodova negativan
      */
     public void setPragBodova(int pragBodova) {
+        if (pragBodova < 0) {
+            throw new IllegalArgumentException("Prag bodova ne sme biti negativan");
+        }
         this.pragBodova = pragBodova;
     }
 }

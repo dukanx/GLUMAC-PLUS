@@ -82,9 +82,13 @@ public class Alergen {
     /**
      * Postavlja naziv alergena.
      *
-     * @param naziv naziv
+     * @param naziv naziv; ne sme biti {@code null} niti prazan
+     * @throws IllegalArgumentException ako je naziv {@code null} ili prazan
      */
     public void setNaziv(String naziv) {
+        if (naziv == null || naziv.isBlank()) {
+            throw new IllegalArgumentException("Naziv je obavezan");
+        }
         this.naziv = naziv;
     }
 

@@ -88,9 +88,13 @@ public class RadnoVreme {
     /**
      * Postavlja dan u nedelji.
      *
-     * @param dan dan u nedelji
+     * @param dan dan u nedelji; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je dan {@code null}
      */
     public void setDan(DanUNedelji dan) {
+        if (dan == null) {
+            throw new IllegalArgumentException("Dan je obavezan");
+        }
         this.dan = dan;
     }
 
@@ -106,9 +110,13 @@ public class RadnoVreme {
     /**
      * Postavlja vreme početka radnog vremena.
      *
-     * @param odVremena vreme početka
+     * @param odVremena vreme početka; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je vreme početka {@code null}
      */
     public void setOdVremena(LocalTime odVremena) {
+        if (odVremena == null) {
+            throw new IllegalArgumentException("Vreme početka je obavezno");
+        }
         this.odVremena = odVremena;
     }
 
@@ -124,9 +132,13 @@ public class RadnoVreme {
     /**
      * Postavlja vreme kraja radnog vremena.
      *
-     * @param doVremena vreme kraja
+     * @param doVremena vreme kraja; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je vreme kraja {@code null}
      */
     public void setDoVremena(LocalTime doVremena) {
+        if (doVremena == null) {
+            throw new IllegalArgumentException("Vreme kraja je obavezno");
+        }
         this.doVremena = doVremena;
     }
 
@@ -142,9 +154,13 @@ public class RadnoVreme {
     /**
      * Postavlja oznaku da li je radno vreme aktivno.
      *
-     * @param aktivno oznaka aktivnosti
+     * @param aktivno oznaka aktivnosti; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je oznaka aktivnosti {@code null}
      */
     public void setAktivno(Boolean aktivno) {
+        if (aktivno == null) {
+            throw new IllegalArgumentException("Oznaka aktivnosti je obavezna");
+        }
         this.aktivno = aktivno;
     }
 }

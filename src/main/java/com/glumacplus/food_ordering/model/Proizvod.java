@@ -117,9 +117,15 @@ public class Proizvod {
     /**
      * Postavlja naziv proizvoda.
      *
-     * @param naziv naziv proizvoda
+     * @param naziv naziv proizvoda; ne sme biti {@code null} niti prazan
+     * @throws IllegalArgumentException ako je naziv {@code null} ili prazan
      */
-    public void setNaziv(String naziv) { this.naziv = naziv; }
+    public void setNaziv(String naziv) {
+        if (naziv == null || naziv.isBlank()) {
+            throw new IllegalArgumentException("Naziv je obavezan");
+        }
+        this.naziv = naziv;
+    }
 
     /**
      * Vraća tip proizvoda.
@@ -145,10 +151,17 @@ public class Proizvod {
     /**
      * Postavlja cenu proizvoda, zaokruženu na dve decimale (HALF_UP).
      *
-     * @param cena cena proizvoda
+     * @param cena cena proizvoda; ne sme biti {@code null} niti manja ili jednaka nuli
+     * @throws IllegalArgumentException ako je cena {@code null} ili nije pozitivna
      */
     public void setCena(BigDecimal cena) {
-        this.cena = cena == null ? null : cena.setScale(2, RoundingMode.HALF_UP);
+        if (cena == null) {
+            throw new IllegalArgumentException("Cena je obavezna");
+        }
+        if (cena.signum() <= 0) {
+            throw new IllegalArgumentException("Cena mora biti veća od nule");
+        }
+        this.cena = cena.setScale(2, RoundingMode.HALF_UP);
     }
 
     /**
@@ -175,9 +188,15 @@ public class Proizvod {
     /**
      * Postavlja energetsku vrednost u kalorijama.
      *
-     * @param kalorije broj kalorija
+     * @param kalorije broj kalorija; ne sme biti negativan
+     * @throws IllegalArgumentException ako je broj kalorija negativan
      */
-    public void setKalorije(double kalorije) { this.kalorije = kalorije; }
+    public void setKalorije(double kalorije) {
+        if (kalorije < 0) {
+            throw new IllegalArgumentException("Kalorije ne smeju biti negativne");
+        }
+        this.kalorije = kalorije;
+    }
 
     /**
      * Vraća količinu proteina.
@@ -189,9 +208,15 @@ public class Proizvod {
     /**
      * Postavlja količinu proteina.
      *
-     * @param proteini količina proteina
+     * @param proteini količina proteina; ne sme biti negativna
+     * @throws IllegalArgumentException ako je količina proteina negativna
      */
-    public void setProteini(double proteini) { this.proteini = proteini; }
+    public void setProteini(double proteini) {
+        if (proteini < 0) {
+            throw new IllegalArgumentException("Proteini ne smeju biti negativni");
+        }
+        this.proteini = proteini;
+    }
 
     /**
      * Vraća količinu masti.
@@ -203,9 +228,15 @@ public class Proizvod {
     /**
      * Postavlja količinu masti.
      *
-     * @param masti količina masti
+     * @param masti količina masti; ne sme biti negativna
+     * @throws IllegalArgumentException ako je količina masti negativna
      */
-    public void setMasti(double masti) { this.masti = masti; }
+    public void setMasti(double masti) {
+        if (masti < 0) {
+            throw new IllegalArgumentException("Masti ne smeju biti negativne");
+        }
+        this.masti = masti;
+    }
 
     /**
      * Vraća količinu ugljenih hidrata.
@@ -217,9 +248,15 @@ public class Proizvod {
     /**
      * Postavlja količinu ugljenih hidrata.
      *
-     * @param ugljeniHidrati količina ugljenih hidrata
+     * @param ugljeniHidrati količina ugljenih hidrata; ne sme biti negativna
+     * @throws IllegalArgumentException ako je količina ugljenih hidrata negativna
      */
-    public void setUgljeniHidrati(double ugljeniHidrati) { this.ugljeniHidrati = ugljeniHidrati; }
+    public void setUgljeniHidrati(double ugljeniHidrati) {
+        if (ugljeniHidrati < 0) {
+            throw new IllegalArgumentException("Ugljeni hidrati ne smeju biti negativni");
+        }
+        this.ugljeniHidrati = ugljeniHidrati;
+    }
 
     /**
      * Vraća skup alergena koje proizvod sadrži.

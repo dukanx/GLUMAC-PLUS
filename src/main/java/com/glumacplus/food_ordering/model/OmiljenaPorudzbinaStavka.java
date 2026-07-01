@@ -66,9 +66,13 @@ public class OmiljenaPorudzbinaStavka {
     /**
      * Postavlja omiljenu porudžbinu kojoj stavka pripada.
      *
-     * @param omiljenaPorudzbina omiljena porudžbina
+     * @param omiljenaPorudzbina omiljena porudžbina; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je omiljena porudžbina {@code null}
      */
     public void setOmiljenaPorudzbina(OmiljenaPorudzbina omiljenaPorudzbina) {
+        if (omiljenaPorudzbina == null) {
+            throw new IllegalArgumentException("Omiljena porudžbina je obavezna");
+        }
         this.omiljenaPorudzbina = omiljenaPorudzbina;
     }
 
@@ -84,9 +88,13 @@ public class OmiljenaPorudzbinaStavka {
     /**
      * Postavlja proizvod na koji se stavka odnosi.
      *
-     * @param proizvod proizvod
+     * @param proizvod proizvod; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je proizvod {@code null}
      */
     public void setProizvod(Proizvod proizvod) {
+        if (proizvod == null) {
+            throw new IllegalArgumentException("Proizvod je obavezan");
+        }
         this.proizvod = proizvod;
     }
 
@@ -102,9 +110,13 @@ public class OmiljenaPorudzbinaStavka {
     /**
      * Postavlja količinu proizvoda.
      *
-     * @param kolicina količina
+     * @param kolicina količina; mora biti veća od nule
+     * @throws IllegalArgumentException ako je količina manja ili jednaka nuli
      */
     public void setKolicina(double kolicina) {
+        if (kolicina <= 0) {
+            throw new IllegalArgumentException("Količina mora biti veća od nule");
+        }
         this.kolicina = kolicina;
     }
 }

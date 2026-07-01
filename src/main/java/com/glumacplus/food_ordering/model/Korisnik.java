@@ -98,9 +98,15 @@ public class Korisnik {
     /**
      * Postavlja ime korisnika.
      *
-     * @param ime ime korisnika
+     * @param ime ime korisnika; ne sme biti {@code null} niti prazno
+     * @throws IllegalArgumentException ako je ime {@code null} ili prazno
      */
-    public void setIme(String ime) { this.ime = ime; }
+    public void setIme(String ime) {
+        if (ime == null || ime.isBlank()) {
+            throw new IllegalArgumentException("Ime je obavezno");
+        }
+        this.ime = ime;
+    }
 
     /**
      * Vraća email korisnika.
@@ -112,9 +118,15 @@ public class Korisnik {
     /**
      * Postavlja email korisnika.
      *
-     * @param email email korisnika
+     * @param email email korisnika; ne sme biti {@code null} niti prazan
+     * @throws IllegalArgumentException ako je email {@code null} ili prazan
      */
-    public void setEmail(String email) { this.email = email; }
+    public void setEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email je obavezan");
+        }
+        this.email = email;
+    }
 
     /**
      * Vraća heširanu lozinku korisnika.
@@ -126,9 +138,15 @@ public class Korisnik {
     /**
      * Postavlja heširanu lozinku korisnika.
      *
-     * @param lozinka heširana lozinka korisnika
+     * @param lozinka heširana lozinka korisnika; ne sme biti {@code null} niti prazna
+     * @throws IllegalArgumentException ako je lozinka {@code null} ili prazna
      */
-    public void setLozinka(String lozinka) { this.lozinka = lozinka; }
+    public void setLozinka(String lozinka) {
+        if (lozinka == null || lozinka.isBlank()) {
+            throw new IllegalArgumentException("Lozinka je obavezna");
+        }
+        this.lozinka = lozinka;
+    }
 
     /**
      * Vraća trenutni broj loyalty bodova.
@@ -140,9 +158,15 @@ public class Korisnik {
     /**
      * Postavlja broj loyalty bodova.
      *
-     * @param brojBodova broj loyalty bodova
+     * @param brojBodova broj loyalty bodova; ne sme biti negativan
+     * @throws IllegalArgumentException ako je broj bodova negativan
      */
-    public void setBrojBodova(double brojBodova) { this.brojBodova = brojBodova; }
+    public void setBrojBodova(double brojBodova) {
+        if (brojBodova < 0) {
+            throw new IllegalArgumentException("Broj bodova ne sme biti negativan");
+        }
+        this.brojBodova = brojBodova;
+    }
 
     /**
      * Vraća loyalty program kom korisnik pripada.
@@ -168,9 +192,15 @@ public class Korisnik {
     /**
      * Postavlja ulogu korisnika.
      *
-     * @param uloga uloga korisnika
+     * @param uloga uloga korisnika; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je uloga {@code null}
      */
-    public void setUloga(Uloga uloga) { this.uloga = uloga; }
+    public void setUloga(Uloga uloga) {
+        if (uloga == null) {
+            throw new IllegalArgumentException("Uloga je obavezna");
+        }
+        this.uloga = uloga;
+    }
 
     /**
      * Vraća datum i vreme poslednje upotrebe popusta.

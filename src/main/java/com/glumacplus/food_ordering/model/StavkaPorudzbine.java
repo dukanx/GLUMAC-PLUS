@@ -95,9 +95,13 @@ public class StavkaPorudzbine {
     /**
      * Postavlja količinu proizvoda i preračunava iznos stavke.
      *
-     * @param kolicina količina
+     * @param kolicina količina; mora biti veća od nule
+     * @throws IllegalArgumentException ako je količina manja ili jednaka nuli
      */
     public void setKolicina(double kolicina) {
+        if (kolicina <= 0) {
+            throw new IllegalArgumentException("Količina mora biti veća od nule");
+        }
         this.kolicina = kolicina;
         recalculateIznosStavke();
     }
@@ -113,10 +117,17 @@ public class StavkaPorudzbine {
      * Postavlja cenu proizvoda (zaokruženu na dve decimale) i preračunava
      * iznos stavke.
      *
-     * @param cena cena
+     * @param cena cena; ne sme biti {@code null} niti manja ili jednaka nuli
+     * @throws IllegalArgumentException ako je cena {@code null} ili nije pozitivna
      */
     public void setCena(BigDecimal cena) {
-        this.cena = cena == null ? null : cena.setScale(2, RoundingMode.HALF_UP);
+        if (cena == null) {
+            throw new IllegalArgumentException("Cena je obavezna");
+        }
+        if (cena.signum() <= 0) {
+            throw new IllegalArgumentException("Cena mora biti veća od nule");
+        }
+        this.cena = cena.setScale(2, RoundingMode.HALF_UP);
         recalculateIznosStavke();
     }
 
@@ -146,9 +157,15 @@ public class StavkaPorudzbine {
     /**
      * Postavlja porudžbinu kojoj stavka pripada.
      *
-     * @param porudzbina porudžbina
+     * @param porudzbina porudžbina; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je porudžbina {@code null}
      */
-    public void setPorudzbina(Porudzbina porudzbina) { this.porudzbina = porudzbina; }
+    public void setPorudzbina(Porudzbina porudzbina) {
+        if (porudzbina == null) {
+            throw new IllegalArgumentException("Porudžbina je obavezna");
+        }
+        this.porudzbina = porudzbina;
+    }
 
     /**
      * Vraća proizvod na koji se stavka odnosi.
@@ -160,9 +177,15 @@ public class StavkaPorudzbine {
     /**
      * Postavlja proizvod na koji se stavka odnosi.
      *
-     * @param proizvod proizvod
+     * @param proizvod proizvod; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je proizvod {@code null}
      */
-    public void setProizvod(Proizvod proizvod) { this.proizvod = proizvod; }
+    public void setProizvod(Proizvod proizvod) {
+        if (proizvod == null) {
+            throw new IllegalArgumentException("Proizvod je obavezan");
+        }
+        this.proizvod = proizvod;
+    }
 
     /**
      * Preračunava iznos stavke kao {@code kolicina * cena}. Ako cena nije

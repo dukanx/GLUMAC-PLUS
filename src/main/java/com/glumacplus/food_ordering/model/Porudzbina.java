@@ -154,9 +154,13 @@ public class Porudzbina {
     /**
      * Postavlja datum i vreme kreiranja porudžbine.
      *
-     * @param datum datum porudžbine
+     * @param datum datum porudžbine; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je datum {@code null}
      */
     public void setDatum(LocalDateTime datum) {
+        if (datum == null) {
+            throw new IllegalArgumentException("Datum je obavezan");
+        }
         this.datum = datum;
     }
 
@@ -172,10 +176,17 @@ public class Porudzbina {
     /**
      * Postavlja ukupan iznos porudžbine, zaokružen na dve decimale (HALF_UP).
      *
-     * @param ukupanIznos ukupan iznos
+     * @param ukupanIznos ukupan iznos; ne sme biti {@code null} niti negativan
+     * @throws IllegalArgumentException ako je iznos {@code null} ili negativan
      */
     public void setUkupanIznos(BigDecimal ukupanIznos) {
-        this.ukupanIznos = ukupanIznos == null ? null : ukupanIznos.setScale(2, RoundingMode.HALF_UP);
+        if (ukupanIznos == null) {
+            throw new IllegalArgumentException("Ukupan iznos je obavezan");
+        }
+        if (ukupanIznos.signum() < 0) {
+            throw new IllegalArgumentException("Ukupan iznos ne sme biti negativan");
+        }
+        this.ukupanIznos = ukupanIznos.setScale(2, RoundingMode.HALF_UP);
     }
 
     /**
@@ -190,9 +201,13 @@ public class Porudzbina {
     /**
      * Postavlja status porudžbine.
      *
-     * @param status status porudžbine
+     * @param status status porudžbine; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je status {@code null}
      */
     public void setStatus(StatusPorudzbine status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Status je obavezan");
+        }
         this.status = status;
     }
 
@@ -208,10 +223,17 @@ public class Porudzbina {
     /**
      * Postavlja originalnu cenu porudžbine, zaokruženu na dve decimale (HALF_UP).
      *
-     * @param originalnaCena originalna cena
+     * @param originalnaCena originalna cena; ne sme biti {@code null} niti negativna
+     * @throws IllegalArgumentException ako je cena {@code null} ili negativna
      */
     public void setOriginalnaCena(BigDecimal originalnaCena) {
-        this.originalnaCena = originalnaCena == null ? null : originalnaCena.setScale(2, RoundingMode.HALF_UP);
+        if (originalnaCena == null) {
+            throw new IllegalArgumentException("Originalna cena je obavezna");
+        }
+        if (originalnaCena.signum() < 0) {
+            throw new IllegalArgumentException("Originalna cena ne sme biti negativna");
+        }
+        this.originalnaCena = originalnaCena.setScale(2, RoundingMode.HALF_UP);
     }
 
     /**
@@ -244,9 +266,13 @@ public class Porudzbina {
     /**
      * Postavlja tip porudžbine.
      *
-     * @param tipPorudzbine tip porudžbine
+     * @param tipPorudzbine tip porudžbine; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je tip porudžbine {@code null}
      */
     public void setTipPorudzbine(TipPorudzbine tipPorudzbine) {
+        if (tipPorudzbine == null) {
+            throw new IllegalArgumentException("Tip porudžbine je obavezan");
+        }
         this.tipPorudzbine = tipPorudzbine;
     }
 
@@ -280,9 +306,13 @@ public class Porudzbina {
     /**
      * Postavlja korisnika koji je kreirao porudžbinu.
      *
-     * @param korisnik korisnik porudžbine
+     * @param korisnik korisnik porudžbine; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je korisnik {@code null}
      */
     public void setKorisnik(Korisnik korisnik) {
+        if (korisnik == null) {
+            throw new IllegalArgumentException("Korisnik je obavezan");
+        }
         this.korisnik = korisnik;
     }
 

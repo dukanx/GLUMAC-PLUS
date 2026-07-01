@@ -97,9 +97,13 @@ public class Notifikacija {
     /**
      * Postavlja korisnika kome je notifikacija upućena.
      *
-     * @param korisnik korisnik
+     * @param korisnik korisnik; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je korisnik {@code null}
      */
     public void setKorisnik(Korisnik korisnik) {
+        if (korisnik == null) {
+            throw new IllegalArgumentException("Korisnik je obavezan");
+        }
         this.korisnik = korisnik;
     }
 
@@ -115,9 +119,13 @@ public class Notifikacija {
     /**
      * Postavlja tekst poruke.
      *
-     * @param poruka poruka
+     * @param poruka poruka; ne sme biti {@code null} niti prazna
+     * @throws IllegalArgumentException ako je poruka {@code null} ili prazna
      */
     public void setPoruka(String poruka) {
+        if (poruka == null || poruka.isBlank()) {
+            throw new IllegalArgumentException("Poruka je obavezna");
+        }
         this.poruka = poruka;
     }
 
@@ -133,9 +141,13 @@ public class Notifikacija {
     /**
      * Postavlja tip notifikacije.
      *
-     * @param tip tip notifikacije
+     * @param tip tip notifikacije; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je tip {@code null}
      */
     public void setTip(NotifikacijaTip tip) {
+        if (tip == null) {
+            throw new IllegalArgumentException("Tip notifikacije je obavezan");
+        }
         this.tip = tip;
     }
 
@@ -151,9 +163,13 @@ public class Notifikacija {
     /**
      * Postavlja oznaku da li je notifikacija pročitana.
      *
-     * @param procitana status pročitanosti
+     * @param procitana status pročitanosti; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je status pročitanosti {@code null}
      */
     public void setProcitana(Boolean procitana) {
+        if (procitana == null) {
+            throw new IllegalArgumentException("Status pročitanosti je obavezan");
+        }
         this.procitana = procitana;
     }
 
@@ -169,9 +185,13 @@ public class Notifikacija {
     /**
      * Postavlja datum i vreme kreiranja notifikacije.
      *
-     * @param datum datum notifikacije
+     * @param datum datum notifikacije; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je datum {@code null}
      */
     public void setDatum(LocalDateTime datum) {
+        if (datum == null) {
+            throw new IllegalArgumentException("Datum je obavezan");
+        }
         this.datum = datum;
     }
 }
