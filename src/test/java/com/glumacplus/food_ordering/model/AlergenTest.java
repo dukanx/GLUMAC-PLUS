@@ -30,12 +30,20 @@ class AlergenTest {
         assertEquals("Prisutan u pšenici i ječmu", novi.getOpis());
     }
 
-
-
     @Test
     void testSetNaziv() {
         a.setNaziv("Laktoza");
         assertEquals("Laktoza", a.getNaziv());
+    }
+
+    @Test
+    void testSetNazivNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> a.setNaziv(null));
+    }
+
+    @Test
+    void testSetNazivPrazanBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> a.setNaziv("  "));
     }
 
     @Test

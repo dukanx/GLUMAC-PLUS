@@ -45,15 +45,48 @@ class LoyaltyProgramTest {
     }
 
     @Test
+    void testSetNivoNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> lp.setNivo(null));
+    }
+
+    @Test
+    void testSetNivoPrazanBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> lp.setNivo("  "));
+    }
+
+    @Test
     void testSetPopust() {
         lp.setPopust(15.0);
         assertEquals(15.0, lp.getPopust());
     }
 
     @Test
+    void testSetPopustNegativanBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> lp.setPopust(-1));
+    }
+
+    @Test
+    void testSetPopustPreko100BacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> lp.setPopust(101));
+    }
+
+    @Test
+    void testSetPopustGranicneVrednostiDozvoljene() {
+        lp.setPopust(0);
+        assertEquals(0, lp.getPopust());
+        lp.setPopust(100);
+        assertEquals(100, lp.getPopust());
+    }
+
+    @Test
     void testSetPragBodova() {
         lp.setPragBodova(1000);
         assertEquals(1000, lp.getPragBodova());
+    }
+
+    @Test
+    void testSetPragBodovaNegativanBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> lp.setPragBodova(-1));
     }
 
     @Test

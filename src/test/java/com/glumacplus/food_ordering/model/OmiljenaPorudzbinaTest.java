@@ -35,6 +35,16 @@ class OmiljenaPorudzbinaTest {
     }
 
     @Test
+    void testSetNazivNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> op.setNaziv(null));
+    }
+
+    @Test
+    void testSetNazivPrazanBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> op.setNaziv("  "));
+    }
+
+    @Test
     void testSetDatumKreiranja() {
         LocalDateTime datum = LocalDateTime.of(2025, 3, 10, 14, 0);
         op.setDatumKreiranja(datum);
@@ -42,10 +52,20 @@ class OmiljenaPorudzbinaTest {
     }
 
     @Test
+    void testSetDatumKreiranjaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> op.setDatumKreiranja(null));
+    }
+
+    @Test
     void testSetKorisnik() {
         Korisnik k = new Korisnik("Nikola", "nikola@gmail.com", "loz", 0, Uloga.KORISNIK);
         op.setKorisnik(k);
         assertEquals("Nikola", op.getKorisnik().getIme());
+    }
+
+    @Test
+    void testSetKorisnikNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> op.setKorisnik(null));
     }
 
     @Test
