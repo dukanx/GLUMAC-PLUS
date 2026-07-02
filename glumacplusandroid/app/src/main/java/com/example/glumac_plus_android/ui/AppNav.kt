@@ -2,7 +2,9 @@ package com.example.glumac_plus_android.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -11,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.glumac_plus_android.ui.auth.LoginScreen
@@ -19,6 +22,7 @@ import com.example.glumac_plus_android.ui.istorija.IstorijaScreen
 import com.example.glumac_plus_android.ui.korpa.CartScreen
 import com.example.glumac_plus_android.ui.meni.MeniScreen
 import com.example.glumac_plus_android.ui.status.StatusScreen
+import com.example.glumac_plus_android.viewmodel.AktivnaPorudzbinaViewModel
 import com.example.glumac_plus_android.viewmodel.AuthViewModel
 import com.example.glumac_plus_android.viewmodel.CartViewModel
 
@@ -38,9 +42,15 @@ object Ruta {
 // NavHost = kontejner koji renderuje ekran za trenutnu rutu (ekvivalent Angular <router-outlet>).
 // rememberNavController() = NavController koji preživljava recomposition (kao Router servis).
 @Composable
-fun AppNav(auth: AuthViewModel, cart: CartViewModel) {
+fun AppNav(auth: AuthViewModel, cart: CartViewModel, aktivna: AktivnaPorudzbinaViewModel) {
     val nav = rememberNavController()
     val korisnik by auth.korisnik.collectAsState()
+    val korpa by cart.korpa.collectAsState()
+    val aktivnaId by aktivna.aktivnaId.collectAsState()
+
+    // Trenutna ruta — da znamo na kojim ekranima da prikažemo FloatingBubble
+    val backEntry by nav.currentBackStackEntryAsState()
+    val trenutnaRuta = backEntry?.destination?.route
 
     // Reaguj na promenu auth stanja: čim se korisnik pojavi (login ili obnovljena sesija) -> meni;
     // na odjavu -> login. (Ekvivalent bi bio Angular guard/redirect.)
@@ -54,7 +64,20 @@ fun AppNav(auth: AuthViewModel, cart: CartViewModel) {
         }
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        floatingActionButton = {
+            // Prikaži bubble samo na Meni/Istorija (na korpi/statusu je suvišan)
+            if (trenutnaRuta == Ruta.MENI || trenutnaRuta == Ruta.ISTORIJA) {
+                FloatingBubble(
+                    aktivnaId = aktivnaId,
+                    brojStavki = korpa.sumOf { it.kolicina },
+                    onPrati = { id -> nav.navigate(Ruta.status(id)) },
+                    onKorpa = { nav.navigate(Ruta.KORPA) }
+                )
+            }
+        }
+    ) { padding ->
         NavHost(
             navController = nav,
             startDestination = Ruta.LOGIN,
@@ -71,7 +94,7 @@ fun AppNav(auth: AuthViewModel, cart: CartViewModel) {
                     cart = cart,
                     onOtvoriKorpu = { nav.navigate(Ruta.KORPA) },
                     onOtvoriIstoriju = { nav.navigate(Ruta.ISTORIJA) },
-                    onOdjava = { auth.logout() }
+                    onOdjava = { auth.logout(); aktivna.ocisti() }
                 )
             }
             composable(Ruta.KORPA) {
@@ -80,7 +103,8 @@ fun AppNav(auth: AuthViewModel, cart: CartViewModel) {
                     auth = auth,
                     onNazad = { nav.popBackStack() },
                     onNaruceno = { id ->
-                        // Posle naručivanja idi na Status (i skloni korpu sa back stack-a)
+                        // Zabeleži aktivnu porudžbinu (za FloatingBubble) i idi na Status
+                        aktivna.postavi(id)
                         nav.navigate(Ruta.status(id)) { popUpTo(Ruta.KORPA) { inclusive = true } }
                     }
                 )
@@ -97,8 +121,32 @@ fun AppNav(auth: AuthViewModel, cart: CartViewModel) {
                 arguments = listOf(navArgument(Ruta.STATUS_ARG) { type = NavType.LongType })
             ) { entry ->
                 val id = entry.arguments?.getLong(Ruta.STATUS_ARG) ?: 0L
-                StatusScreen(auth = auth, porudzbinaId = id, onZatvori = { nav.popBackStack() })
+                StatusScreen(
+                    auth = auth,
+                    porudzbinaId = id,
+                    onZatvori = { nav.popBackStack() },
+                    onZavrseno = { aktivna.ocisti() }
+                )
             }
+        }
+    }
+}
+
+// FloatingBubble — globalni brzi pristup (ekvivalent Angular FloatingBubble):
+// ako postoji aktivna porudžbina -> "Prati porudžbinu"; inače ako ima stavki -> "Korpa · N".
+@Composable
+private fun FloatingBubble(
+    aktivnaId: Long?,
+    brojStavki: Int,
+    onPrati: (Long) -> Unit,
+    onKorpa: () -> Unit
+) {
+    when {
+        aktivnaId != null -> ExtendedFloatingActionButton(onClick = { onPrati(aktivnaId) }) {
+            Text("Prati porudžbinu")
+        }
+        brojStavki > 0 -> ExtendedFloatingActionButton(onClick = onKorpa) {
+            Text("Korpa · $brojStavki")
         }
     }
 }
