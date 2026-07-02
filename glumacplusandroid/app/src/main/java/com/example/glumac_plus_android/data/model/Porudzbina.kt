@@ -19,7 +19,7 @@ enum class StatusPorudzbine {
 @Serializable
 data class StavkaPorudzbine(
     val nazivProizvoda: String,
-    val kolicina: Int,
+    val kolicina: Double,
     val cena: Double,
     val iznosStavke: Double
 )

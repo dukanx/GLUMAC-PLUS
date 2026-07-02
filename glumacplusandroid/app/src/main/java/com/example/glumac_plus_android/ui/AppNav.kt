@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.glumac_plus_android.ui.auth.LoginScreen
 import com.example.glumac_plus_android.ui.auth.RegisterScreen
+import com.example.glumac_plus_android.ui.korpa.CartScreen
 import com.example.glumac_plus_android.ui.meni.MeniScreen
 import com.example.glumac_plus_android.viewmodel.AuthViewModel
 import com.example.glumac_plus_android.viewmodel.CartViewModel
@@ -22,6 +23,7 @@ object Ruta {
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val MENI = "meni"
+    const val KORPA = "korpa"
 }
 
 // NavHost = kontejner koji renderuje ekran za trenutnu rutu (ekvivalent Angular <router-outlet>).
@@ -55,7 +57,14 @@ fun AppNav(auth: AuthViewModel, cart: CartViewModel) {
                 RegisterScreen(auth, onIdiNaLogin = { nav.popBackStack() })
             }
             composable(Ruta.MENI) {
-                MeniScreen(cart = cart, onOdjava = { auth.logout() })
+                MeniScreen(
+                    cart = cart,
+                    onOtvoriKorpu = { nav.navigate(Ruta.KORPA) },
+                    onOdjava = { auth.logout() }
+                )
+            }
+            composable(Ruta.KORPA) {
+                CartScreen(cart = cart, auth = auth, onNazad = { nav.popBackStack() })
             }
         }
     }
