@@ -32,7 +32,12 @@ import com.example.glumac_plus_android.viewmodel.CartViewModel
 import com.example.glumac_plus_android.viewmodel.MeniViewModel
 
 @Composable
-fun MeniScreen(cart: CartViewModel, onOtvoriKorpu: () -> Unit, onOdjava: () -> Unit) {
+fun MeniScreen(
+    cart: CartViewModel,
+    onOtvoriKorpu: () -> Unit,
+    onOtvoriIstoriju: () -> Unit,
+    onOdjava: () -> Unit
+) {
     val vm: MeniViewModel = viewModel()
     val proizvodi by vm.proizvodi.collectAsState()
     val ucitava by vm.ucitava.collectAsState()
@@ -51,6 +56,7 @@ fun MeniScreen(cart: CartViewModel, onOtvoriKorpu: () -> Unit, onOdjava: () -> U
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Meni", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            TextButton(onClick = onOtvoriIstoriju) { Text("Porudžbine") }
             TextButton(onClick = onOtvoriKorpu) { Text("Korpa (${korpa.sumOf { it.kolicina }})") }
             TextButton(onClick = onOdjava) { Text("Odjavi se") }
         }
