@@ -31,7 +31,7 @@ import com.example.glumac_plus_android.viewmodel.AuthViewModel
 import com.example.glumac_plus_android.viewmodel.StatusViewModel
 
 @Composable
-fun StatusScreen(auth: AuthViewModel, porudzbinaId: Long, onZatvori: () -> Unit) {
+fun StatusScreen(auth: AuthViewModel, porudzbinaId: Long, onZatvori: () -> Unit, onZavrseno: () -> Unit) {
     val vm: StatusViewModel = viewModel()
     val token by auth.token.collectAsState()
     val status by vm.status.collectAsState()
@@ -43,6 +43,9 @@ fun StatusScreen(auth: AuthViewModel, porudzbinaId: Long, onZatvori: () -> Unit)
     }
 
     val zavrseno = status == StatusPorudzbine.REALIZOVANA || status == StatusPorudzbine.OTKAZANA
+
+    // Kad porudžbina dođe do kraja, očisti "aktivnu" (da FloatingBubble prestane da je prati)
+    LaunchedEffect(zavrseno) { if (zavrseno) onZavrseno() }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
