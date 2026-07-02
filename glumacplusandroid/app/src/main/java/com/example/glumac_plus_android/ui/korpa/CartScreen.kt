@@ -35,7 +35,7 @@ import com.example.glumac_plus_android.viewmodel.AuthViewModel
 import com.example.glumac_plus_android.viewmodel.CartViewModel
 
 @Composable
-fun CartScreen(cart: CartViewModel, auth: AuthViewModel, onNazad: () -> Unit) {
+fun CartScreen(cart: CartViewModel, auth: AuthViewModel, onNazad: () -> Unit, onNaruceno: (Long) -> Unit) {
     val korpa by cart.korpa.collectAsState()
     val token by auth.token.collectAsState()
     val porucivanje by cart.porucivanje.collectAsState()
@@ -116,7 +116,7 @@ fun CartScreen(cart: CartViewModel, auth: AuthViewModel, onNazad: () -> Unit) {
 
             Spacer(Modifier.height(12.dp))
             Button(
-                onClick = { token?.let { cart.naruci("Bearer $it", tip, napomena) { onNazad() } } },
+                onClick = { token?.let { t -> cart.naruci("Bearer $t", tip, napomena) { id -> onNaruceno(id) } } },
                 enabled = !porucivanje,
                 modifier = Modifier.fillMaxWidth()
             ) {
