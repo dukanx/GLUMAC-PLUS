@@ -15,6 +15,7 @@ import com.example.glumac_plus_android.ui.auth.LoginScreen
 import com.example.glumac_plus_android.ui.auth.RegisterScreen
 import com.example.glumac_plus_android.ui.meni.MeniScreen
 import com.example.glumac_plus_android.viewmodel.AuthViewModel
+import com.example.glumac_plus_android.viewmodel.CartViewModel
 
 // Rute — konstante da izbegnemo "magične stringove" (ekvivalent Angular path-eva).
 object Ruta {
@@ -26,7 +27,7 @@ object Ruta {
 // NavHost = kontejner koji renderuje ekran za trenutnu rutu (ekvivalent Angular <router-outlet>).
 // rememberNavController() = NavController koji preživljava recomposition (kao Router servis).
 @Composable
-fun AppNav(auth: AuthViewModel) {
+fun AppNav(auth: AuthViewModel, cart: CartViewModel) {
     val nav = rememberNavController()
     val korisnik by auth.korisnik.collectAsState()
 
@@ -54,7 +55,7 @@ fun AppNav(auth: AuthViewModel) {
                 RegisterScreen(auth, onIdiNaLogin = { nav.popBackStack() })
             }
             composable(Ruta.MENI) {
-                MeniScreen(onOdjava = { auth.logout() })
+                MeniScreen(cart = cart, onOdjava = { auth.logout() })
             }
         }
     }

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.glumac_plus_android.ui.AppNav
 import com.example.glumac_plus_android.ui.theme.GlumacplusandroidTheme
 import com.example.glumac_plus_android.viewmodel.AuthViewModel
+import com.example.glumac_plus_android.viewmodel.CartViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,7 +18,8 @@ class MainActivity : ComponentActivity() {
             GlumacplusandroidTheme {
                 // Jedna instanca AuthViewModel-a za celu navigaciju (deli se između ekrana).
                 val auth: AuthViewModel = viewModel()
-                AppNav(auth)
+                val cart: CartViewModel = viewModel()
+                AppNav(auth, cart)
             }
         }
     }
