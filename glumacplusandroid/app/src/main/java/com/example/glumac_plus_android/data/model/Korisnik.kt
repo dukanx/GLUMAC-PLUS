@@ -10,8 +10,8 @@ data class Korisnik(
     val id: Long,
     val ime: String,
     val email: String,
-    val uloga: String? = null,        // ? + = null → polje sme da fali (nullable, kao "?" u TS)
-    val brojBodova: Int = 0,
+    val uloga: String? = null,
+    val brojBodova: Double = 0.0,
     val loyaltyNivo: String? = null
 )
 
@@ -19,7 +19,7 @@ data class Korisnik(
 data class LoyaltyProgram(
     val id: Long,
     val nivo: String,
-    val popust: Int,
+    val popust: Double,
     val pragBodova: Int
 )
 
