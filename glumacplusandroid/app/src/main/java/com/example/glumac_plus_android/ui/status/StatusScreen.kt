@@ -12,10 +12,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,6 +36,7 @@ import com.example.glumac_plus_android.data.model.StatusPorudzbine
 import com.example.glumac_plus_android.viewmodel.AuthViewModel
 import com.example.glumac_plus_android.viewmodel.StatusViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatusScreen(auth: AuthViewModel, porudzbinaId: Long, onZatvori: () -> Unit, onZavrseno: () -> Unit) {
     val vm: StatusViewModel = viewModel()
@@ -43,53 +50,61 @@ fun StatusScreen(auth: AuthViewModel, porudzbinaId: Long, onZatvori: () -> Unit,
     }
 
     val zavrseno = status == StatusPorudzbine.REALIZOVANA || status == StatusPorudzbine.OTKAZANA
-
-    // Kad porudžbina dođe do kraja, očisti "aktivnu" (da FloatingBubble prestane da je prati)
     LaunchedEffect(zavrseno) { if (zavrseno) onZavrseno() }
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Porudžbina #$porudzbinaId", style = MaterialTheme.typography.headlineMedium)
-        Text(
-            if (zavrseno) "Završeno" else "Pratimo status...",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Porudžbina #$porudzbinaId") },
+            navigationIcon = {
+                IconButton(onClick = onZatvori) {
+                    Icon(Icons.Filled.Close, contentDescription = "Zatvori")
+                }
+            }
         )
-        Spacer(Modifier.height(28.dp))
 
-        if (status == StatusPorudzbine.OTKAZANA) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
-                "Porudžbina je otkazana",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.error
+                if (zavrseno) "Završeno" else "Pratimo status...",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        } else {
-            StatusKoraci(aktivni = aktivniIndex(status))
-            Spacer(Modifier.height(24.dp))
-            Text(
-                porukaZa(status, procenjeno),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-        }
+            Spacer(Modifier.height(28.dp))
 
-        if (greska) {
-            Spacer(Modifier.height(12.dp))
-            Text(
-                "Problem sa konekcijom. Status možda nije ažuran.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
+            if (status == StatusPorudzbine.OTKAZANA) {
+                Text(
+                    "Porudžbina je otkazana",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+            } else {
+                StatusKoraci(aktivni = aktivniIndex(status))
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    porukaZa(status, procenjeno),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
+            }
 
-        Spacer(Modifier.height(28.dp))
-        if (zavrseno) {
-            Button(onClick = onZatvori, modifier = Modifier.fillMaxWidth()) { Text("Zatvori") }
-        } else {
-            TextButton(onClick = onZatvori) { Text("Zatvori") }
+            if (greska) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Problem sa konekcijom. Status možda nije ažuran.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            Spacer(Modifier.height(28.dp))
+            if (zavrseno) {
+                Button(onClick = onZatvori, modifier = Modifier.fillMaxWidth()) { Text("Zatvori") }
+            } else {
+                TextButton(onClick = onZatvori) { Text("Zatvori") }
+            }
         }
     }
 }
