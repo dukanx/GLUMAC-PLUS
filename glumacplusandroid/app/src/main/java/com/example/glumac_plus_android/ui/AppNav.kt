@@ -96,6 +96,7 @@ fun AppNav(auth: AuthViewModel, cart: CartViewModel, aktivna: AktivnaPorudzbinaV
             composable(Ruta.MENI) {
                 MeniScreen(
                     cart = cart,
+                    auth = auth,
                     onOtvoriIstoriju = { nav.navigate(Ruta.ISTORIJA) },
                     onOdjava = { auth.logout(); aktivna.ocisti() }
                 )
