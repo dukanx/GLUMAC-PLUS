@@ -10,15 +10,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,6 +47,7 @@ import com.example.glumac_plus_android.data.model.StatusPorudzbine
 import com.example.glumac_plus_android.viewmodel.AuthViewModel
 import com.example.glumac_plus_android.viewmodel.IstorijaViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IstorijaScreen(auth: AuthViewModel, onNazad: () -> Unit, onPrati: (Long) -> Unit) {
     val vm: IstorijaViewModel = viewModel()
@@ -44,17 +56,17 @@ fun IstorijaScreen(auth: AuthViewModel, onNazad: () -> Unit, onPrati: (Long) -> 
     val ucitava by vm.ucitava.collectAsState()
     val greska by vm.greska.collectAsState()
 
-    // Učitaj kad token bude dostupan (ekvivalent Angular useEffect/ngOnInit + subscribe).
     LaunchedEffect(token) { token?.let { vm.ucitaj("Bearer $it") } }
 
     Column(Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextButton(onClick = onNazad) { Text("← Nazad") }
-            Text("Porudžbine", style = MaterialTheme.typography.headlineMedium)
-        }
+        TopAppBar(
+            title = { Text("Porudžbine") },
+            navigationIcon = {
+                IconButton(onClick = onNazad) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Nazad")
+                }
+            }
+        )
 
         when {
             ucitava -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -98,8 +110,11 @@ private fun PorudzbinaKartica(p: Porudzbina, onOtkazi: () -> Unit, onPrati: () -
             ) {
                 Column {
                     Text("#${p.porudzbinaId}", style = MaterialTheme.typography.titleMedium)
-                    Text(formatirajDatum(p.datum), style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        formatirajDatum(p.datum),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(statusLabela(p.status), style = MaterialTheme.typography.labelMedium)
@@ -109,6 +124,12 @@ private fun PorudzbinaKartica(p: Porudzbina, onOtkazi: () -> Unit, onPrati: () -
 
             Spacer(Modifier.height(8.dp))
             TextButton(onClick = { razvijeno = !razvijeno }) {
+                Icon(
+                    if (razvijeno) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.size(4.dp))
                 Text(if (razvijeno) "Sakrij stavke" else "Prikaži stavke (${p.stavke.size})")
             }
 
@@ -124,14 +145,21 @@ private fun PorudzbinaKartica(p: Porudzbina, onOtkazi: () -> Unit, onPrati: () -
                 }
             }
 
-            // Aktivna (U_PRIPREMI/SPREMNA) → "Prati"; otkazivanje samo dok je U_PRIPREMI (kao Angular)
             val aktivna = p.status == StatusPorudzbine.U_PRIPREMI || p.status == StatusPorudzbine.SPREMNA
             if (aktivna) {
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onPrati) { Text("Prati") }
+                    Button(onClick = onPrati) {
+                        Icon(Icons.Filled.Visibility, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(6.dp))
+                        Text("Prati")
+                    }
                     if (p.status == StatusPorudzbine.U_PRIPREMI) {
-                        OutlinedButton(onClick = onOtkazi) { Text("Otkaži") }
+                        OutlinedButton(onClick = onOtkazi) {
+                            Icon(Icons.Filled.Cancel, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text("Otkaži")
+                        }
                     }
                 }
             }
@@ -146,6 +174,5 @@ private fun statusLabela(s: StatusPorudzbine): String = when (s) {
     StatusPorudzbine.OTKAZANA -> "Otkazana"
 }
 
-// "2026-07-02T18:01:24.4696" -> "2026-07-02 18:01"
 private fun formatirajDatum(iso: String): String =
     if (iso.length >= 16) iso.take(16).replace('T', ' ') else iso

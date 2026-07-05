@@ -7,9 +7,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -20,8 +27,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.glumac_plus_android.viewmodel.AuthViewModel
 
@@ -31,8 +40,8 @@ fun RegisterScreen(auth: AuthViewModel, onIdiNaLogin: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var lozinka by remember { mutableStateOf("") }
     var potvrda by remember { mutableStateOf("") }
+    var prikaziLozinku by remember { mutableStateOf(false) }
 
-    // Greške po polju — lokalno stanje (ekvivalent React `greske` objekta).
     var greskaIme by remember { mutableStateOf<String?>(null) }
     var greskaEmail by remember { mutableStateOf<String?>(null) }
     var greskaLozinka by remember { mutableStateOf<String?>(null) }
@@ -41,7 +50,6 @@ fun RegisterScreen(auth: AuthViewModel, onIdiNaLogin: () -> Unit) {
     val serverGreska by auth.greska.collectAsState()
     val ucitava by auth.ucitava.collectAsState()
 
-    // Ista pravila kao Angular validiraj(): ime obavezno, email regex, lozinka >=8, potvrda se poklapa.
     fun validiraj(): Boolean {
         greskaIme = if (ime.isBlank()) "Ime je obavezno" else null
         greskaEmail = when {
@@ -62,14 +70,32 @@ fun RegisterScreen(auth: AuthViewModel, onIdiNaLogin: () -> Unit) {
         return listOf(greskaIme, greskaEmail, greskaLozinka, greskaPotvrda).all { it == null }
     }
 
+    val transformacija = if (prikaziLozinku) VisualTransformation.None else PasswordVisualTransformation()
+    val okoLozinke: @Composable () -> Unit = {
+        IconButton(onClick = { prikaziLozinku = !prikaziLozinku }) {
+            Icon(
+                if (prikaziLozinku) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                contentDescription = "Prikaži/sakrij lozinku"
+            )
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("GLUMAC PLUS", style = MaterialTheme.typography.labelMedium)
+        Icon(
+            Icons.Filled.Restaurant,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(56.dp)
+        )
+        Spacer(Modifier.height(12.dp))
+        Text("GLUMAC PLUS", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text("Kreiraj nalog", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(24.dp))
 
@@ -100,7 +126,8 @@ fun RegisterScreen(auth: AuthViewModel, onIdiNaLogin: () -> Unit) {
             onValueChange = { lozinka = it; greskaLozinka = null },
             label = { Text("Lozinka") },
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = transformacija,
+            trailingIcon = okoLozinke,
             isError = greskaLozinka != null,
             supportingText = greskaLozinka?.let { { Text(it) } },
             modifier = Modifier.fillMaxWidth()
@@ -112,7 +139,8 @@ fun RegisterScreen(auth: AuthViewModel, onIdiNaLogin: () -> Unit) {
             onValueChange = { potvrda = it; greskaPotvrda = null },
             label = { Text("Potvrdi lozinku") },
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = transformacija,
+            trailingIcon = okoLozinke,
             isError = greskaPotvrda != null,
             supportingText = greskaPotvrda?.let { { Text(it) } },
             modifier = Modifier.fillMaxWidth()

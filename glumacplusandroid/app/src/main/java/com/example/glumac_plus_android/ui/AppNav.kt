@@ -2,7 +2,11 @@ package com.example.glumac_plus_android.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -92,7 +96,6 @@ fun AppNav(auth: AuthViewModel, cart: CartViewModel, aktivna: AktivnaPorudzbinaV
             composable(Ruta.MENI) {
                 MeniScreen(
                     cart = cart,
-                    onOtvoriKorpu = { nav.navigate(Ruta.KORPA) },
                     onOtvoriIstoriju = { nav.navigate(Ruta.ISTORIJA) },
                     onOdjava = { auth.logout(); aktivna.ocisti() }
                 )
@@ -142,11 +145,15 @@ private fun FloatingBubble(
     onKorpa: () -> Unit
 ) {
     when {
-        aktivnaId != null -> ExtendedFloatingActionButton(onClick = { onPrati(aktivnaId) }) {
-            Text("Prati porudžbinu")
-        }
-        brojStavki > 0 -> ExtendedFloatingActionButton(onClick = onKorpa) {
-            Text("Korpa · $brojStavki")
-        }
+        aktivnaId != null -> ExtendedFloatingActionButton(
+            onClick = { onPrati(aktivnaId) },
+            icon = { Icon(Icons.Filled.Restaurant, contentDescription = null) },
+            text = { Text("Prati porudžbinu") }
+        )
+        brojStavki > 0 -> ExtendedFloatingActionButton(
+            onClick = onKorpa,
+            icon = { Icon(Icons.Filled.ShoppingCart, contentDescription = null) },
+            text = { Text("Korpa · $brojStavki") }
+        )
     }
 }
