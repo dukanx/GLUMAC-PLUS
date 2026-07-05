@@ -43,6 +43,7 @@ import com.example.glumac_plus_android.data.model.StavkaKorpe
 import com.example.glumac_plus_android.data.model.TipPorudzbine
 import com.example.glumac_plus_android.viewmodel.AuthViewModel
 import com.example.glumac_plus_android.viewmodel.CartViewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,9 +52,14 @@ fun CartScreen(cart: CartViewModel, auth: AuthViewModel, onNazad: () -> Unit, on
     val token by auth.token.collectAsState()
     val porucivanje by cart.porucivanje.collectAsState()
     val greska by cart.greskaPorudzbine.collectAsState()
+    val popust by auth.popust.collectAsState()
 
     var tip by remember { mutableStateOf(TipPorudzbine.U_LOKALU) }
     var napomena by remember { mutableStateOf("") }
+
+    // Zaokruživanje finalne cene, isto pravilo kao Angular/backend: round(ukupno * (1 - popust/100))
+    val ukupno = cart.ukupnaCena
+    val zaPlacanje = if (popust > 0) (ukupno * (1 - popust / 100)).roundToInt() else ukupno
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -106,12 +112,22 @@ fun CartScreen(cart: CartViewModel, auth: AuthViewModel, onNazad: () -> Unit, on
             )
 
             Spacer(Modifier.height(12.dp))
+            if (popust > 0) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Loyalty popust (${popust.toInt()}%)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("−${ukupno - zaPlacanje} RSD", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                }
+                Spacer(Modifier.height(4.dp))
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Ukupno", style = MaterialTheme.typography.titleMedium)
-                Text("${cart.ukupnaCena} RSD", style = MaterialTheme.typography.titleMedium)
+                Text("$zaPlacanje RSD", style = MaterialTheme.typography.titleMedium)
             }
 
             if (greska != null) {

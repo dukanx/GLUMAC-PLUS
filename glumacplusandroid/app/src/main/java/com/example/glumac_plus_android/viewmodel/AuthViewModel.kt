@@ -6,12 +6,16 @@ import androidx.lifecycle.viewModelScope
 import com.example.glumac_plus_android.data.local.TokenStore
 import com.example.glumac_plus_android.data.model.Korisnik
 import com.example.glumac_plus_android.data.model.LoginRequest
+import com.example.glumac_plus_android.data.model.LoyaltyProgram
 import com.example.glumac_plus_android.data.model.RegisterRequest
 import com.example.glumac_plus_android.data.remote.ApiClient
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -40,6 +44,15 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     private val _ucitava = MutableStateFlow(false)
     val ucitava: StateFlow<Boolean> = _ucitava.asStateFlow()
 
+    private val _loyaltyProgrami = MutableStateFlow<List<LoyaltyProgram>>(emptyList())
+
+    // Izvedeni popust (%) — program koji odgovara korisnikovom loyaltyNivo-u.
+    // combine = spaja dva StateFlow-a (kao Angular getter koji zavisi od korisnik + programa).
+    val popust: StateFlow<Double> = combine(korisnik, _loyaltyProgrami) { k, progs ->
+        if (k?.loyaltyNivo == null) 0.0
+        else progs.find { it.nivo == k.loyaltyNivo }?.popust ?: 0.0
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0.0)
+
     val jeUlogovan: Boolean get() = _token.value != null
     private val bearer: String? get() = _token.value?.let { "Bearer $it" }
 
@@ -50,6 +63,10 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             tokenStore.korisnikJson.first()?.let { js ->
                 runCatching { _korisnik.value = json.decodeFromString<Korisnik>(js) }
             }
+        }
+        // Loyalty programi (javni endpoint) — za preračun popusta.
+        viewModelScope.launch {
+            runCatching { _loyaltyProgrami.value = api.loyaltyProgrami() }
         }
     }
 
