@@ -4,8 +4,8 @@ import { CheckCircle2, Clock, ChefHat, XCircle, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import styles from './StatusPorudzbine.module.css';
 import type { StatusPorudzbine } from '../types/porudzbina';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+import * as porudzbineApi from '../api/porudzbine';
+import { ApiError } from '../api/client';
 
 interface Props {
     porudzbinaId: number;
@@ -37,17 +37,12 @@ export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }
     useEffect(() => {
         const fetchStatus = async () => {
             try {
-                const res = await fetch(
-                    `${API}/api/porudzbine/${porudzbinaId}`,
-                    { headers: { 'Authorization': `Bearer ${token}` } }
-                );
-                if (res.ok) {
-                    const data = await res.json();
-                    setStatus(data.status);
-                    setProcenjenoVreme(data.procenjenoVreme ?? null);
-                }
-            } catch {
-                setGreska(true);
+                const data = await porudzbineApi.getJedan(porudzbinaId);
+                setStatus(data.status);
+                setProcenjenoVreme(data.procenjenoVreme ?? null);
+            } catch (e) {
+                // HTTP greške (npr. povremeni 500) ignorišemo tokom polling-a; samo mrežne prijavljujemo.
+                if (!(e instanceof ApiError)) setGreska(true);
             }
         };
 

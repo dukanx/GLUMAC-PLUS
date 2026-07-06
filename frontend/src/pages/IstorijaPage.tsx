@@ -11,6 +11,8 @@ import { useAuth } from '../context/AuthContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { tipLabela, type Porudzbina } from '../types/porudzbina';
 import styles from './IstorijaPage.module.css';
+import * as porudzbineApi from '../api/porudzbine';
+import { ApiError } from '../api/client';
 
 /* ─── Pomocne funkcije ────────────────────────────────────── */
 
@@ -329,12 +331,7 @@ export default function IstorijaPage() {
         setLoading(true);
         setGreska('');
         try {
-            const res = await fetch(
-                `${API}/api/porudzbine/moje?page=${page}&size=${PAGE_SIZE}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (!res.ok) throw new Error('Greška pri učitavanju');
-            const data = await res.json();
+            const data = await porudzbineApi.getMoje(page, PAGE_SIZE);
             if (Array.isArray(data)) {
                 // Backend vraća plain listu (bez paginacije)
                 setPorudzbine(data);
@@ -361,22 +358,14 @@ export default function IstorijaPage() {
         if (!token) return;
         setOtkazivanje(id);
         try {
-            const res = await fetch(`${API}/api/porudzbine/${id}/otkazi`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) {
-                // Ažuriramo lokalni state — samo promenimo status, ne refetch-ujemo
-                setPorudzbine((prev) =>
-                    prev.map((p) => p.porudzbinaId === id ? { ...p, status: 'OTKAZANA' } : p)
-                );
-                prikaziUspeh('Porudžbina je otkazana.');
-            } else {
-                const err = await res.json().catch(() => ({}));
-                prikaziUspeh(err.message ?? 'Nije moguće otkazati.');
-            }
-        } catch {
-            prikaziUspeh('Greška u mreži.');
+            await porudzbineApi.otkazi(id);
+            // Ažuriramo lokalni state — samo promenimo status, ne refetch-ujemo
+            setPorudzbine((prev) =>
+                prev.map((p) => p.porudzbinaId === id ? { ...p, status: 'OTKAZANA' } : p)
+            );
+            prikaziUspeh('Porudžbina je otkazana.');
+        } catch (e) {
+            prikaziUspeh(e instanceof ApiError ? (e.body?.message ?? 'Nije moguće otkazati.') : 'Greška u mreži.');
         } finally {
             setOtkazivanje(null);
         }

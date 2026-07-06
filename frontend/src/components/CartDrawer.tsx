@@ -7,8 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
 import styles from './CartDrawer.module.css';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+import * as porudzbineApi from '../api/porudzbine';
+import { ApiError } from '../api/client';
 
 export default function CartDrawer() {
     const navigate = useNavigate();
@@ -40,40 +40,28 @@ export default function CartDrawer() {
         setGreska('');
         setPorucivanjeUToku(true);
         try {
-            const res = await fetch(`${API}/api/porudzbine`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    tipPorudzbine,
-                    napomena: napomena.trim() || null,
-                    stavke: korpa.map(i => ({
-                        proizvodId: i.proizvod.id,
-                        kolicina: i.kolicina,
-                    })),
-                }),
+            const nova = await porudzbineApi.kreiraj({
+                tipPorudzbine,
+                napomena: napomena.trim() || null,
+                stavke: korpa.map(i => ({
+                    proizvodId: i.proizvod.id,
+                    kolicina: i.kolicina,
+                })),
             });
-
-            if (res.ok) {
-                const responseData = await res.json().catch(() => null);
-                const novaPorudzbinaId: number | null = responseData?.porudzbinaId ?? null;
-                isprazni();
-                setNapomena('');
-                setUspesno(true);
-                await osvezi();
-                setTimeout(() => {
-                    setUspesno(false);
-                    zatvoriDrawer();
-                    if (novaPorudzbinaId) otvoriStatus(novaPorudzbinaId);
-                }, 2000);
-            } else {
-                const data = await res.json().catch(() => null);
-                setGreska(data?.message ?? 'Greška prilikom naručivanja.');
-            }
-        } catch {
-            setGreska('Server ne odgovara.');
+            const novaPorudzbinaId: number | null = nova?.porudzbinaId ?? null;
+            isprazni();
+            setNapomena('');
+            setUspesno(true);
+            await osvezi();
+            setTimeout(() => {
+                setUspesno(false);
+                zatvoriDrawer();
+                if (novaPorudzbinaId) otvoriStatus(novaPorudzbinaId);
+            }, 2000);
+        } catch (e) {
+            setGreska(e instanceof ApiError
+                ? (e.body?.message ?? 'Greška prilikom naručivanja.')
+                : 'Server ne odgovara.');
         } finally {
             setPorucivanjeUToku(false);
         }

@@ -10,6 +10,7 @@ import MiniKorpa from '../components/MiniKorpa';
 import Toast from '../components/Toast';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
 import type { Proizvod } from '../types/proizvod';
+import * as proizvodiApi from '../api/proizvodi';
 
 // ── Konstante ──────────────────────────────────────────────────────────────
 const TELEFON = '+381 65 817 8476';
@@ -25,8 +26,6 @@ function normalizuj(tekst: string): string {
         .replace(/đ/g, 'dj');
 }
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
-
 // ── Komponenta ─────────────────────────────────────────────────────────────
 export default function MeniPage() {
     const { korpa, dodaj, povecaj, smanji } = useCart();
@@ -41,8 +40,7 @@ export default function MeniPage() {
     const [toastPoruka, setToastPoruka] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch(`${API}/api/proizvodi`)
-            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+        proizvodiApi.getSvi()
             .then(data => { setProizvodi(data); setUcitava(false); })
             .catch(() => { setGreska('Ne mogu da učitam meni.'); setUcitava(false); });
     }, []);

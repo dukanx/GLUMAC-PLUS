@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import type { Korisnik, LoyaltyProgram } from '../types/korisnik';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+import * as authApi from '../api/auth';
 
 // ── Tipovi ──
 interface AuthContextTip {
@@ -31,9 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loyaltyProgrami, setLoyaltyProgrami] = useState<LoyaltyProgram[]>([]);
 
     useEffect(() => {
-        fetch(`${API}/api/loyalty_program`)
-            .then(r => r.ok ? r.json() : [])
-            .then((data: LoyaltyProgram[]) => setLoyaltyProgrami(data))
+        authApi.getLoyaltyProgrami()
+            .then(setLoyaltyProgrami)
             .catch(() => setLoyaltyProgrami([]));
     }, []);
 
@@ -61,14 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const osvezi = async () => {
         if (!token) return;
         try {
-            const res = await fetch(`${API}/api/korisnici/me`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setKorisnik(data);
-                localStorage.setItem('korisnik', JSON.stringify(data));
-            }
+            const data = await authApi.getMe();
+            setKorisnik(data);
+            localStorage.setItem('korisnik', JSON.stringify(data));
         } catch {
             // tihi fail
         }

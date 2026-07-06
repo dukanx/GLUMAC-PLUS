@@ -14,7 +14,7 @@ const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 const PRESET_VREMENA = [10, 15, 20, 30];
 
-const STATUS_LABELA: Record<Status, string> = {
+const STATUS_LABELA: Record<StatusPorudzbine, string> = {
     U_PRIPREMI:  'Nova',
     SPREMNA:     'U pripremi',
     REALIZOVANA: 'Završena',

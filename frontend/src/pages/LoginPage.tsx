@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './LoginPage.module.css';
 import { useAuth } from '../context/AuthContext';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+import * as authApi from '../api/auth';
+import { ApiError } from '../api/client';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -22,22 +22,13 @@ export default function LoginPage() {
     setUcitava(true);
 
     try {
-      const response = await fetch(`${API}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, lozinka }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        login(data.korisnik, data.token);
-        navigate('/meni');
-      } else {
-        const data = await response.json().catch(() => null);
-        setGreska(data?.message ?? 'Pogrešan email ili lozinka.');
-      }
-    } catch {
-      setGreska('Server ne odgovara. Proverite konekciju.');
+      const data = await authApi.login(email, lozinka);
+      login(data.korisnik, data.token);
+      navigate('/meni');
+    } catch (e) {
+      setGreska(e instanceof ApiError
+        ? (e.body?.message ?? 'Pogrešan email ili lozinka.')
+        : 'Server ne odgovara. Proverite konekciju.');
     } finally {
       setUcitava(false);
     }

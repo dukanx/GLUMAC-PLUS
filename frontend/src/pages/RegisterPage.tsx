@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './RegisterPage.module.css';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+import * as authApi from '../api/auth';
+import { ApiError } from '../api/client';
 
 interface RegisterForm {
     ime: string;
@@ -72,28 +72,16 @@ export default function RegisterPage() {
         setServerGreska('');
 
         try {
-            const response = await fetch(`${API}/api/korisnici`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ime: forma.ime,
-                    email: forma.email,
-                    lozinka: forma.lozinka,
-                }),
-            });
-
-            if (response.ok) {
-                navigate('/login?registered=true');
+            await authApi.register(forma.ime, forma.email, forma.lozinka);
+            navigate('/login?registered=true');
+        } catch (e) {
+            if (e instanceof ApiError && e.body?.errors) {
+                setGreske(e.body.errors);
+            } else if (e instanceof ApiError) {
+                setServerGreska(e.body?.message ?? 'Došlo je do greške. Pokušajte ponovo.');
             } else {
-                const data = await response.json().catch(() => null);
-                if (data?.errors) {
-                    setGreske(data.errors);
-                } else {
-                    setServerGreska(data?.message ?? 'Došlo je do greške. Pokušajte ponovo.');
-                }
+                setServerGreska('Server ne odgovara. Proverite konekciju.');
             }
-        } catch {
-            setServerGreska('Server ne odgovara. Proverite konekciju.');
         } finally {
             setUcitava(false);
         }
