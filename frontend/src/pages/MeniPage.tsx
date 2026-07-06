@@ -9,15 +9,7 @@ import MeniSkeleton from '../components/MeniSkeleton';
 import MiniKorpa from '../components/MiniKorpa';
 import Toast from '../components/Toast';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
-
-interface Proizvod {
-    id: number;
-    naziv: string;
-    opis?: string;
-    cena: number;
-    tip: string;
-    alergeniNazivi?: string[];
-}
+import type { Proizvod } from '../types/proizvod';
 
 // ── Konstante ──────────────────────────────────────────────────────────────
 const TELEFON = '+381 65 817 8476';

@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
+import type { Proizvod } from '../types/proizvod';
 import styles from './OmiljenePage.module.css';
 
 /* ─── Tipovi ─────────────────────────────────────────────── */
@@ -22,12 +23,6 @@ interface Omiljena {
     id: number;
     naziv: string;
     stavke: OmiljenaStavka[];
-}
-
-interface Proizvod {
-    id: number;
-    naziv: string;
-    cena: number;
 }
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';

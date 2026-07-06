@@ -1,18 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-
-interface Proizvod {
-    id: number;
-    naziv: string;
-    opis?: string;
-    cena: number;
-    tip: string;
-    alergeniNazivi?: string[];
-}
-
-interface StavkaKorpe {
-    proizvod: Proizvod;
-    kolicina: number;
-}
+import type { Proizvod, StavkaKorpe } from '../types/proizvod';
 
 interface CartContextTip {
     korpa: StavkaKorpe[];

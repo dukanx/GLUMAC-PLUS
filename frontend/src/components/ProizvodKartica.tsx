@@ -2,15 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Minus } from 'lucide-react';
 import styles from './ProizvodKartica.module.css';
 import React from 'react';
-
-interface Proizvod {
-    id: number;
-    naziv: string;
-    opis?: string;
-    cena: number;
-    tip: string;
-    alergeniNazivi?: string[];
-}
+import type { Proizvod } from '../types/proizvod';
 
 interface Props {
     proizvod: Proizvod;

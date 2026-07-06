@@ -5,29 +5,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { tipLabela } from '../types/porudzbina';
+import { tipLabela, type Porudzbina, type StatusPorudzbine } from '../types/porudzbina';
 import styles from './PanelPorudzbina.module.css';
 
-type Status = 'U_PRIPREMI' | 'SPREMNA' | 'REALIZOVANA' | 'OTKAZANA';
 type Tab = 'PRIPREMA' | 'ZAVRSENE' | 'OTKAZANE';
-
-interface StavkaPorudzbine {
-    nazivProizvoda: string;
-    kolicina: number;
-    cena: number;
-}
-
-interface Porudzbina {
-    porudzbinaId: number;
-    datum: string;
-    status: Status;
-    ukupanIznos: number;
-    procenjenoVreme?: number | null;
-    korisnikIme?: string;
-    napomena?: string;
-    tipPorudzbine?: string;
-    stavke: StavkaPorudzbine[];
-}
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
@@ -40,7 +21,7 @@ const STATUS_LABELA: Record<Status, string> = {
     OTKAZANA:    'Otkazana',
 };
 
-const TABOVI: { kljuc: Tab; labela: string; status: Status }[] = [
+const TABOVI: { kljuc: Tab; labela: string; status: StatusPorudzbine }[] = [
     { kljuc: 'PRIPREMA', labela: 'U pripremi', status: 'SPREMNA' },
     { kljuc: 'ZAVRSENE', labela: 'Završene',   status: 'REALIZOVANA' },
     { kljuc: 'OTKAZANE', labela: 'Otkazane',   status: 'OTKAZANA' },
@@ -272,7 +253,7 @@ export default function PanelPorudzbina() {
         return () => clearInterval(interval);
     }, [fetchPorudzbine]);
 
-    const patchStatus = async (id: number, noviStatus: Status): Promise<boolean> => {
+    const patchStatus = async (id: number, noviStatus: StatusPorudzbine): Promise<boolean> => {
         if (!token) return false;
         const res = await fetch(`${API}/api/porudzbine/${id}/status?status=${noviStatus}`, {
             method: 'PATCH',

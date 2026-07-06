@@ -1,24 +1,9 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import type { Korisnik, LoyaltyProgram } from '../types/korisnik';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 // ── Tipovi ──
-interface Korisnik {
-    id: number;
-    ime: string;
-    email: string;
-    uloga?: string;
-    brojBodova: number;
-    loyaltyNivo?: string;
-}
-
-interface LoyaltyProgram {
-    id: number;
-    nivo: string;
-    popust: number;
-    pragBodova: number;
-}
-
 interface AuthContextTip {
     korisnik: Korisnik | null;
     token: string | null;

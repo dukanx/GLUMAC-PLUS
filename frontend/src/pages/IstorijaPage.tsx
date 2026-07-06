@@ -9,28 +9,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
-import { tipLabela } from '../types/porudzbina';
+import { tipLabela, type Porudzbina } from '../types/porudzbina';
 import styles from './IstorijaPage.module.css';
-
-/* ─── Tipovi ─────────────────────────────────────────────── */
-
-interface Stavka {
-    nazivProizvoda: string;
-    kolicina: number;
-    cena: number;
-    iznosStavke: number;
-}
-
-interface Porudzbina {
-    porudzbinaId: number;
-    datum: string;
-    status: 'U_PRIPREMI' | 'SPREMNA' | 'REALIZOVANA' | 'OTKAZANA';
-    ukupanIznos: number;
-    originalnaCena?: number;
-    napomena?: string;
-    tipPorudzbine?: string;
-    stavke: Stavka[];
-}
 
 /* ─── Pomocne funkcije ────────────────────────────────────── */
 

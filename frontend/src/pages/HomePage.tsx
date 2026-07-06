@@ -8,6 +8,7 @@ import { useRadnoVreme } from '../hooks/useRadnoVreme';
 import CurvedLoop from '../components/CurvedLoop';
 import Toast from '../components/Toast';
 import styles from './HomePage.module.css';
+import type { Proizvod } from '../types/proizvod';
 import glovoLogo from '../assets/Glovo_Logo.svg.png';
 import woltLogo from '../assets/Wolt-Logo.png';
 import gpWhiteLogo from '../assets/GPwhiteNOBG.png';
@@ -32,14 +33,6 @@ function Reveal({ children, className = '' }: { children: ReactNode; className?:
 /* ─── Podaci ──────────────────────────────────────────────────────── */
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
-
-interface Proizvod {
-    id: number;
-    naziv: string;
-    opis?: string;
-    cena: number;
-    tip: string;
-}
 
 // Kurirani izbor preporuka — naziv se mečuje sa pravim proizvodom iz backenda,
 // slika je dekorativna (backend proizvodi nemaju slike).

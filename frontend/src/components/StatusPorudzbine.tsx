@@ -3,10 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, Clock, ChefHat, XCircle, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import styles from './StatusPorudzbine.module.css';
+import type { StatusPorudzbine } from '../types/porudzbina';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
-
-type Status = 'U_PRIPREMI' | 'SPREMNA' | 'REALIZOVANA' | 'OTKAZANA';
 
 interface Props {
     porudzbinaId: number;
@@ -20,7 +19,7 @@ const KORACI = [
     { status: 'REALIZOVANA', labela: 'Gotovo!', ikona: CheckCircle2 },
 ];
 
-function getKorakIndex(status: Status): number {
+function getKorakIndex(status: StatusPorudzbine): number {
     if (status === 'U_PRIPREMI') return 0;
     if (status === 'SPREMNA') return 1;
     if (status === 'REALIZOVANA') return 2;
@@ -29,7 +28,7 @@ function getKorakIndex(status: Status): number {
 
 export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }: Props) {
     const { token } = useAuth();
-    const [status, setStatus] = useState<Status>('U_PRIPREMI');
+    const [status, setStatus] = useState<StatusPorudzbine>('U_PRIPREMI');
     const [procenjenoVreme, setProcenjenoVreme] = useState<number | null>(null);
     const [greska, setGreska] = useState(false);
 
