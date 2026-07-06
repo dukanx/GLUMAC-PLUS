@@ -106,6 +106,32 @@ Dodaci su `Proizvod` sa `tip = "dodaci"` (već postoje u bazi), samo se sada vez
 
 ---
 
+## 🟢 Kafka — minimalni event-driven demo (za odbranu)
+
+**Cilj:** pokazati znanje event-driven arhitekture na JEDNOM realnom flow-u, korisno a ne overkill. Sve ostalo (login, meni, korpa) ostaje običan REST.
+
+**Zašto baš ovde:** `PorudzbinaService.changeStatus()` trenutno radi sve sinhrono u jednoj metodi — i loyalty level-up obračun i pozive `notifikacijaService.createForUser(...)`. Kuhinja čeka da se sve to izvrši. To je idealna tačka za decoupling: servis upiše status u bazu i objavi event, a posledice (notifikacija + loyalty) obrade nezavisni consumer-i.
+
+**Scope (minimalno):** promena statusa porudžbine → event → consumer(i) za notifikaciju + loyalty. Ništa više.
+
+**Backend koraci:**
+1. `pom.xml`: dodati `spring-kafka`. Lokalno Kafka kroz `docker-compose.yml` (Kafka + Zookeeper/KRaft) da demo radi bez instalacije.
+2. `application.properties`: `spring.kafka.bootstrap-servers`, consumer group-id, JSON ser/deserializer, trusted packages.
+3. Event DTO `PorudzbinaStatusPromenjenEvent(porudzbinaId, korisnikId, stariStatus, noviStatus, procenjenoVreme, timestamp)`.
+4. Producer: u `changeStatus()` POSLE `porudzbinaRepo.save(p)` objaviti event na topic `porudzbina-status` sa **key = `porudzbinaId`** (ključno: garantuje redosled eventova po istoj porudžbini). Najbolje preko `@TransactionalEventListener(AFTER_COMMIT)` da se event ne pošalje ako transakcija padne.
+5. Consumer-i (svaki svoja consumer-group):
+   - `NotifikacijaListener` → na osnovu `noviStatus` pozove postojeći `notifikacijaService.createForUser(...)` (logika preseljena iz `changeStatus`).
+   - `LoyaltyListener` → kad `noviStatus == REALIZOVANA`, odradi obračun poena/level-up (preseliti iz `changeStatus`); za level-up notifikaciju opet objavi event ili je consumer sam pošalje.
+6. Retry + **dead-letter topic** (`porudzbina-status.DLT`) preko `DefaultErrorHandler` — ako notifikacija padne, poruka ide u DLT umesto da se izgubi. Ovo je glavni "reliability" talking-point za odbranu.
+
+**Koncepti koje demo pokriva (za usmenu):** producer/consumer, topic, partition **key** za očuvanje redosleda, **consumer groups** (isti event obrade i notifikacija i loyalty nezavisno), retry + dead-letter, decoupling (kuhinja ne čeka).
+
+**Šta SVESNO NE raditi (da ne bude overkill):** ne provlačiti kroz Kafka kreiranje porudžbine, login, čitanje menija; ne uvoditi Kafka Streams/KSQL; ne praviti više od jednog-dva topica.
+
+**Veza:** ovo je konkretizacija tačke 4 ispod (Scalability). Outbox pattern (tačka 5) je sledeći logičan korak ako se traži potpuna pouzdanost producer-a, ali za demo je `@TransactionalEventListener(AFTER_COMMIT)` dovoljan.
+
+---
+
 ## Scalability & Reliability
 
 1. Dodati paginaciju, sortiranje i filtriranje za endpointe `omiljene-porudzbine` (Page response umesto List).
