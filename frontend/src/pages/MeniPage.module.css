@@ -1,448 +1,343 @@
+/* Meni — papirni rukopisni stil (dizajn: Meni 2a). */
+
 .stranica {
     min-height: 100vh;
-    background-color: var(--paper);
-    background-image: radial-gradient(circle, hsl(22 30% 14% / 0.06) 0.5px, transparent 0.5px);
-    background-size: 3px 3px;
-    display: flex;
-    flex-direction: column;
+    padding-bottom: 70px;
 }
 
-/* ── HEADER ── */
-.pageHeader {
-    padding: 144px 8% 30px;
-    border-bottom: 1px solid var(--ink-12);
+/* ── Header ── */
+.mhead {
+    text-align: center;
+    padding: 40px 5% 0;
 }
 
-.pageHeaderSadrzaj {
-    max-width: 520px;
-}
-
-.oznaka {
+.eyeb {
+    font-family: var(--font-cav);
+    font-size: 24px;
+    color: var(--rust);
     display: block;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--ink-40);
-    margin-bottom: 20px;
-}
-
-.linija {
-    width: 100%;
-    height: 1px;
-    background: var(--ink-12);
-    margin-bottom: 28px;
+    margin-bottom: 8px;
+    transform: rotate(-1.2deg);
 }
 
 .naslov {
-    font-family: var(--serif);
-    font-size: clamp(2.4rem, 5vw, 3.6rem);
-    font-weight: 400;
-    font-style: italic;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-    margin: 0 0 20px;
-    line-height: 1.1;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 64px;
+    line-height: .95;
+    letter-spacing: .02em;
+    margin: 0;
 }
 
 .infoTagovi {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    align-items: center;
 }
 
 .infoTag {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-family: var(--sans);
-    font-size: 0.92rem;
-    font-weight: 500;
-    color: var(--ink-70);
+    font-family: var(--font-cav);
+    font-size: 19px;
+    color: var(--ink70);
+    border: 2px dashed var(--ink20);
+    border-radius: 999px;
+    padding: 3px 16px 5px;
 }
 
-.loyaltyBaner {
+.infoTagGlovo {
+    composes: infoTag;
+    border-color: hsl(45 95% 45% / .75);
+    color: var(--ink);
+}
+
+.infoTagWolt {
+    composes: infoTag;
+    border-color: hsl(197 100% 40% / .6);
+    color: var(--ink);
+}
+
+.dostavaPitanje {
+    font-family: var(--font-cav);
+    font-size: 20px;
+    color: var(--ink55);
+    margin-left: 10px;
+}
+
+.loyBan {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-cav);
+    font-size: 21px;
+    color: var(--ink);
+    background: #fff;
+    box-shadow: 0 8px 20px hsl(22 30% 14% / .12);
+    padding: 6px 20px 8px;
+    transform: rotate(-1deg);
+    margin-top: 18px;
+}
+
+.loyBanSivo {
+    color: var(--ink40);
+}
+
+/* ── Info traka: adresa · telefon · radno vreme ── */
+.infoStrip {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 44px;
+    padding: 20px 5% 18px;
+    flex-wrap: wrap;
+    border-bottom: 2px dashed var(--ink12);
     margin-top: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid var(--ink-40);
-    color: var(--ink);
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 7px 14px;
 }
 
-.loyaltyBaner strong {
+.infoBl {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+    padding-bottom: 5px;
+}
+
+.infoBlH {
+    font-family: var(--font-cav);
+    font-size: 19px;
     color: var(--rust);
+}
+
+.infoBlV {
+    font-family: var(--font-hand);
     font-weight: 700;
-}
-
-/* ── INFO SEKCIJA ── */
-.infoSekcija {
-    padding: 20px 8% 24px;
-    border-bottom: 1px solid var(--ink-12);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background-color: var(--paper);
-    background-image: radial-gradient(circle, hsl(22 30% 14% / 0.06) 0.5px, transparent 0.5px);
-    background-size: 3px 3px;
-}
-
-/* Link sa editorial undrelinom samo na tekstu */
-.infoLink {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--sans);
-    font-size: 0.92rem;
-    font-weight: 500;
-    color: var(--ink-70);
-    text-decoration: none;
-    width: fit-content;
-    transition: color 0.2s;
-}
-
-.infoLink span {
-    border-bottom: 1px solid var(--ink-40);
-    padding-bottom: 1px;
-    transition: border-color 0.2s;
-}
-
-.infoLink:hover {
+    font-size: 22px;
+    letter-spacing: .04em;
+    line-height: 1.1;
     color: var(--ink);
 }
 
-.infoLink:hover span {
-    border-bottom-color: var(--ink);
+.infoBlLink {
+    composes: infoBlV;
+    text-decoration: underline;
 }
 
-.infoIkona {
-    flex-shrink: 0;
-    color: var(--ink-55);
-}
-
-/* ── RADNO VREME ── */
-.rasporedBlok {
+.rvGrid {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 4px;
-}
-
-.rasporedGlava {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--sans);
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.rasporedFallback {
-    font-family: var(--sans);
-    font-size: 0.88rem;
-    color: var(--ink-55);
-    padding-left: 22px;
-}
-
-.rasporedGrid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
     gap: 6px;
 }
 
-.rasporedDan {
+.rvDan {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
-    padding: 8px 4px;
-    border: 1px solid var(--ink-12);
+    gap: 1px;
+    padding: 5px 8px 3px;
+    border: 2px solid transparent;
+    border-radius: 12px;
 }
 
-.rasporedSkracenica {
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-70);
+.rvDanas {
+    composes: rvDan;
+    border: 2px dashed hsl(14 65% 44% / .5);
 }
 
-.rasporedVreme {
-    font-family: var(--sans);
-    font-size: 0.74rem;
-    color: var(--ink-70);
-    text-align: center;
-    line-height: 1.3;
+.rvSkr {
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--ink55);
+    line-height: 1;
 }
 
-/* Kompaktni prikaz samo današnjeg dana — mobilni */
-.rasporedDanas {
-    display: none;
-    align-items: baseline;
+.rvVr {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.rvFallback {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--ink40);
+}
+
+/* ── Tabovi ── */
+.tabRow {
+    display: flex;
     gap: 10px;
-    border: 1px solid var(--ink-20);
-    padding: 7px 12px;
-    width: fit-content;
-    margin-left: 22px;
-}
-
-.rasporedDanasDan {
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-70);
-}
-
-.rasporedDanasVreme {
-    font-family: var(--sans);
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.danasnji {
-    border-color: var(--ink);
-}
-
-.danasnji .rasporedSkracenica {
-    color: var(--ink);
-}
-
-.danasnji .rasporedVreme {
-    color: var(--ink);
-    font-weight: 600;
-}
-
-/* ── KONTROLE (sticky) ── */
-.kontrole {
-    display: flex;
-    align-items: center;
-    padding: 0 8%;
-    background-color: var(--paper);
-    background-image: radial-gradient(circle, hsl(22 30% 14% / 0.06) 0.5px, transparent 0.5px);
-    background-size: 3px 3px;
-    border-bottom: 1px solid var(--ink-12);
-    position: sticky;
-    top: 72px;
-    z-index: 10;
-}
-
-.tabovi {
-    display: flex;
-    overflow-x: auto;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-.tabovi::-webkit-scrollbar {
-    display: none;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 22px 5% 0;
 }
 
 .tab {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 23px;
+    letter-spacing: .05em;
+    padding: 8px 20px 4px;
+    border: 2px solid var(--ink40);
+    border-radius: var(--wob);
     background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    padding: 16px 14px 14px;
+    color: var(--ink70);
     cursor: pointer;
-    color: var(--ink-55);
+    line-height: 1;
     white-space: nowrap;
-    transition: color 0.18s, border-color 0.18s;
-}
-
-/* Tanka uspravna crta između tabova */
-.tab + .tab {
-    border-left: 1px solid var(--ink-12);
-}
-
-.tab:hover {
-    color: var(--ink);
-    border-bottom-color: var(--ink-20);
 }
 
 .tabAktivan {
-    color: var(--ink);
-    border-bottom-color: var(--ink);
+    composes: tab;
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+    transform: rotate(-1.5deg);
 }
 
-/* ── SEARCH ── */
-.searchWrap {
+/* ── Sadržaj: lista + korpa ── */
+.sadrzaj {
+    display: grid;
+    grid-template-columns: 7fr 4fr;
+    gap: 56px;
+    padding: 34px 5% 0;
+    align-items: start;
+}
+
+.srch {
     display: flex;
     align-items: center;
-    gap: 8px;
-    border-bottom: 1px solid var(--ink-20);
-    padding: 20px 0 10px;
-    transition: border-color 0.2s;
-    max-width: 400px;
+    gap: 10px;
+    border-bottom: 2px dashed var(--ink40);
+    padding: 6px 4px;
+    font-family: var(--font-cav);
+    font-size: 21px;
+    color: var(--ink40);
+    max-width: 340px;
 }
 
-.searchWrap:focus-within {
-    border-bottom-color: var(--ink);
-}
-
-.searchIkona {
-    font-size: 1.1rem;
-    color: var(--ink-55);
+.srchIkona {
+    font-size: 24px;
     line-height: 1;
-    margin-top: -2px;
 }
 
-.searchInput {
-    border: none;
+.srchInput {
+    border: 0;
+    background: transparent;
     outline: none;
-    background: transparent;
-    font-family: var(--sans);
-    font-size: 0.93rem;
+    font-family: var(--font-cav);
+    font-size: 21px;
     color: var(--ink);
-    flex: 1;
-    min-width: 0;
+    width: 100%;
 }
 
-.searchInput::placeholder {
-    color: var(--ink-55);
+.srchInput::placeholder {
+    color: var(--ink40);
 }
 
-.searchBrisi {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: var(--ink-40);
-    font-size: 1.1rem;
+.srchBrisi {
+    background: none;
+    border: 0;
+    font-size: 22px;
+    color: var(--ink40);
     line-height: 1;
-    padding: 0 2px;
-    transition: color 0.15s;
 }
 
-.searchBrisi:hover {
-    color: var(--ink);
+.kSekc {
+    font-family: var(--font-cav);
+    font-size: 27px;
+    color: var(--rust);
+    margin: 36px 0 4px;
+    transform: rotate(-1deg);
 }
 
-/* ── SADRŽAJ ── */
-.sadrzaj {
-    flex: 1;
-    padding: 0 8% 120px;
-}
-
-/* Dva stuba na desktopu */
-.sadrzajInner {
-    display: flex;
-    gap: 48px;
-    align-items: flex-start;
-}
-
-.produkti {
-    flex: 1;
-    min-width: 0;
+.prviKSekc {
+    composes: kSekc;
+    margin-top: 28px;
 }
 
 .korpaKolona {
-    display: none;
+    position: sticky;
+    top: 96px;
 }
 
-/* ── GREŠKA ── */
-.greska {
-    color: var(--rust);
-    border-left: 2px solid var(--rust);
-    background: hsl(14 65% 44% / 0.06);
-    padding: 10px 14px;
-    margin: 32px 0;
-    font-family: var(--sans);
-    font-size: 0.88rem;
-}
-
-/* ── PRAZNO STANJE ── */
-.praznoStanje {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 80px 0;
+/* Prazno stanje / greška */
+.prazno {
     text-align: center;
-    gap: 8px;
+    padding: 46px 0;
 }
 
 .praznoTekst {
-    font-family: var(--serif);
-    font-size: 1.4rem;
-    font-style: italic;
-    color: var(--ink-40);
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: .04em;
 }
 
 .praznoHint {
-    font-family: var(--sans);
-    font-size: 0.88rem;
-    color: var(--ink-40);
+    font-family: var(--font-cav);
+    font-size: 20px;
+    color: var(--ink55);
+    margin-top: 6px;
 }
 
-/* ── SEKCIJE PROIZVODA ── */
-.sekcija {
-    display: flex;
-    flex-direction: column;
+.greska {
+    font-family: var(--font-cav);
+    font-size: 20px;
+    color: var(--rust);
+    transform: rotate(-1deg);
+    margin: 20px 0;
 }
 
-.sekcijaGlava {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 36px 0 0;
-    color: var(--ink-40);
-}
-
-.sekcijaNaslov {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--ink-70);
-}
-
-.lista {
-    display: flex;
-    flex-direction: column;
-}
-
-/* ── RESPONSIVE ── */
-@media (min-width: 1000px) {
-    .korpaKolona {
-        display: block;
-        width: 300px;
-        flex-shrink: 0;
-        position: sticky;
-        top: 140px;
+/* ── Mobilni ── */
+@media (max-width: 1000px) {
+    .sadrzaj {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 18px 5% 0;
     }
-}
 
-@media (max-width: 900px) {
-    .pageHeader { padding: 120px 6% 26px; }
-    .infoSekcija { padding: 16px 6% 20px; }
-    .rasporedGrid { grid-template-columns: repeat(4, 1fr); }
-    .kontrole { padding: 0 6%; }
-    .sadrzaj { padding: 0 6% 120px; }
-}
+    .korpaKolona {
+        display: none;
+    }
 
-@media (max-width: 640px) {
-    .infoSekcija { padding: 14px 5% 18px; }
-    /* Na mobilnom: sakriven pun grid, prikazuje samo današnji dan */
-    .rasporedGrid { display: none; }
-    .rasporedDanas { display: inline-flex; }
-    .kontrole { padding: 0 5%; }
-    .searchWrap { max-width: 100%; }
-    .sadrzaj { padding: 0 5% 120px; }
+    .naslov {
+        font-size: 52px;
+    }
+
+    .eyeb {
+        font-size: 21px;
+    }
+
+    .infoStrip {
+        gap: 18px;
+        padding: 16px 5% 14px;
+    }
+
+    .tabRow {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding: 16px 5% 0;
+        scrollbar-width: none;
+    }
+
+    .tabRow::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab,
+    .tabAktivan {
+        font-size: 20px;
+    }
+
+    .srch {
+        max-width: none;
+    }
 }

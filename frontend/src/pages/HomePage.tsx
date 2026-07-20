@@ -1,501 +1,640 @@
-import { useRef, useState, useEffect, useMemo } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useInView } from 'motion/react';
-import { MapPin, Clock, Phone, Plus } from 'lucide-react';
+import type { ReactNode, CSSProperties } from 'react';
+import { motion } from 'motion/react';
+import styles from './HomePage.module.css';
+import logoDark from '../assets/logoDark.png';
+import gpWhite from '../assets/GPwhiteNOBG.png';
+import glovoLogo from '../assets/glovo.png';
+import woltLogo from '../assets/wolt.png';
+import maskota from '../assets/maskota.png';
+import bg from '../assets/bg.png';
+import bg1 from '../assets/bg1.png';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
-import CurvedLoop from '../components/CurvedLoop';
-import Toast from '../components/Toast';
-import styles from './HomePage.module.css';
 import type { Proizvod } from '../types/proizvod';
-import glovoLogo from '../assets/Glovo_Logo.svg.png';
-import woltLogo from '../assets/Wolt-Logo.png';
-import gpWhiteLogo from '../assets/GPwhiteNOBG.png';
-import gpBlackLogo from '../assets/GPblackNOBG.png';
-import heroLogo from '../assets/logo.png';
+import * as proizvodiApi from '../api/proizvodi';
 
-/* ─── Reveal — scroll-triggered fade (CSS klase, bez motion.div) ─── */
+const GLOVO_URL = 'https://glovoapp.com/en/rs/belgrade/stores/glumac-plus-beg';
+const WOLT_URL = 'https://wolt.com/en/srb/belgrade/restaurant/palainkarnica-glumac-plus';
+const MAPS_URL = 'https://www.google.com/maps/place/Glumac+plus/data=!4m2!3m1!1s0x0:0xb7899385a5114972?sa=X&ved=1t:2428&ictx=111';
+const SLOGAN = '— sveže, brzo, u srcu Dorćola —';
 
-function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
-    const ref = useRef<HTMLDivElement>(null);
-    const inView = useInView(ref, { once: true, margin: '0px 0px -8% 0px' });
+const MARQUEE = [
+    'Nutella Plazma', 'Glumac palačinka', 'Specijalni kremovi', 'Šunka kačkavalj',
+    'Palačinka piletina', 'Pohovani meni', 'Giros',
+];
+
+const RECENZIJE = [
+    { tekst: 'Najbolje palačinke u gradu, bez konkurencije. Glumac palačinka je obavezna.', ime: 'Marko J.', kad: 'pre 2 nedelje', varijantaB: false },
+    { tekst: 'Uvek sveže, uvek brzo. Osoblje super ljubazno, a lokal ima dušu.', ime: 'Jelena P.', kad: 'pre mesec dana', varijantaB: true },
+    { tekst: 'Dolazim godinama, još od stare lokacije. Kvalitet nikad nije pao.', ime: 'Nikola S.', kad: 'pre 3 meseca', varijantaB: false },
+];
+
+// Scroll-reveal omotač (dizajnov .rvl efekat)
+function Rvl({ children, delay = 0, className, style }: {
+    children: ReactNode; delay?: number; className?: string; style?: CSSProperties;
+}) {
     return (
-        <div
-            ref={ref}
-            className={`${styles.reveal} ${inView ? styles.in : ''} ${className}`.trim()}
+        <motion.div
+            className={className}
+            style={style}
+            initial={{ opacity: 0, y: 48, scale: 0.965 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.08 }}
+            transition={{ duration: 0.85, delay, ease: [0.22, 1, 0.36, 1] }}
         >
             {children}
-        </div>
+        </motion.div>
     );
 }
 
-/* ─── Podaci ──────────────────────────────────────────────────────── */
+// Talasasti separator u marquee traci
+function MarqX() {
+    return (
+        <svg className={styles.marqX} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M2 12 C 5 6, 8 16, 11 9 C 13 5, 16 13, 18 9"
+                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        </svg>
+    );
+}
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+// Puna zvezdica (Google ocena)
+function ZvezdaPuna() {
+    return (
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" />
+        </svg>
+    );
+}
 
-// Kurirani izbor preporuka — naziv se mečuje sa pravim proizvodom iz backenda,
-// slika je dekorativna (backend proizvodi nemaju slike).
-const PREPORUKE_FILTER = [
-    { kljuc: 'dubai',    slika: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400&auto=format&fit=crop' },
-    { kljuc: 'glumac',   slika: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&auto=format&fit=crop' },
-    { kljuc: 'šunka',    slika: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=400&auto=format&fit=crop' },
-    { kljuc: 'giros',    slika: 'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=400&auto=format&fit=crop' },
-    { kljuc: 'piletina', slika: 'https://images.unsplash.com/photo-1519676867240-f03562e64548?w=400&auto=format&fit=crop' },
-];
+// Radno vreme u kontakt bloku — grupiše uzastopne dane sa istim vremenom
+function RadnoVreme() {
+    const { raspored, loading, imaPodataka } = useRadnoVreme();
 
-const MARQUEE_ITEMS = [
-    'Nutella Plazma', 'Glumac palačinka', 'Specijalni kremovi',
-    'Šljiva, domaće slatko', 'Šunka Kačkavalj', 'Palačinka piletina',
-    'Pohovani meni', 'Giros',
-];
+    if (loading) return <p className={styles.rvVr}>učitavam…</p>;
+    if (!imaPodataka) return <p className={styles.rvVr}>privremeno nedostupno</p>;
 
-const FOOD_SEPARATOR = '\u{1F374}\uFE0E';
-const formatLoopItem = (item: string) => {
-    const lower = item.toLocaleLowerCase('sr-RS');
-    return lower.charAt(0).toLocaleUpperCase('sr-RS') + lower.slice(1);
-};
-const CURVED_LOOP_TEXT = `${MARQUEE_ITEMS.map(formatLoopItem).join(` ${FOOD_SEPARATOR} `)} ${FOOD_SEPARATOR}`;
+    const grupe: { od: string; do_: string; vreme: string | null }[] = [];
+    for (const dan of raspored) {
+        const poslednja = grupe[grupe.length - 1];
+        if (poslednja && poslednja.vreme === dan.vreme) {
+            poslednja.do_ = dan.skracenica;
+        } else {
+            grupe.push({ od: dan.skracenica, do_: dan.skracenica, vreme: dan.vreme });
+        }
+    }
 
-const USP = [
-    { br: '01', naslov: 'Poruči direktno', tekst: 'Online narudžbina kroz sajt — bodovi se automatski pripisuju.' },
-    { br: '02', naslov: 'Preuzmi uživo', tekst: 'Dođi po porudžbinu u lokal — uvek sveža, gotova na vreme.' },
-    { br: '03', naslov: 'Skupljaj bodove', tekst: 'Svaka porudžbina donosi loyalty bodove — do 20% popusta.' },
-];
-
-const NIVOI = [
-    { naziv: 'Nova zvezda', prag: '0 bodova', popust: '0%' },
-    { naziv: 'Epizodista', prag: '100 bodova', popust: '5%' },
-    { naziv: 'Glavna uloga', prag: '500 bodova', popust: '10%' },
-    { naziv: 'Oscar za palačinke', prag: '1000 bodova', popust: '20%' },
-];
-
-const STATS = [
-    { v: '2000',   l: 'Godina otvaranja'  },
-    { v: '40+',    l: 'Vrsta u ponudi'    },
-    { v: 'Dorćol', l: 'Naša četvrt'       },
-    { v: '7/7',    l: 'Dana otvoreni'     },
-];
-
-const GALERIJA = [
-    { src: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&auto=format&fit=crop', alt: 'Enterijer lokala', label: 'Ambijent', velika: true },
-    { src: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=700&auto=format&fit=crop', alt: 'Palačinke', label: 'Slatke', velika: false },
-    { src: 'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=700&auto=format&fit=crop', alt: 'Hrana', label: 'Sveže', velika: false },
-    { src: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&auto=format&fit=crop', alt: 'Detalji', label: 'Detalji', velika: false },
-];
-
-/* ─── Stranica ────────────────────────────────────────────────────── */
+    return (
+        <>
+            {grupe.map((g, i) => (
+                <div key={i} className={styles.rvRow}>
+                    <span className={styles.rvDan}>
+                        {g.od === g.do_ ? g.od : `${g.od} – ${g.do_}`}
+                    </span>
+                    <span className={styles.rvVr}>{g.vreme ?? 'zatvoreno'}</span>
+                </div>
+            ))}
+        </>
+    );
+}
 
 export default function HomePage() {
-    const { raspored, danas } = useRadnoVreme();
+    const { korisnik, loyaltyProgrami, popust } = useAuth();
     const { dodaj } = useCart();
-
+    const { danas } = useRadnoVreme();
     const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
-    const [toastPoruka, setToastPoruka] = useState<string | null>(null);
+    const [tipOtvoren, setTipOtvoren] = useState<number | null>(null);
 
     useEffect(() => {
-        fetch(`${API}/api/proizvodi`)
-            .then(r => r.ok ? r.json() : [])
+        proizvodiApi.getSvi()
             .then(setProizvodi)
             .catch(() => setProizvodi([]));
     }, []);
 
-    const preporuke = useMemo(() =>
-        PREPORUKE_FILTER
-            .map(f => {
-                const proizvod = proizvodi.find(p => p.naziv.toLowerCase().includes(f.kljuc));
-                return proizvod ? { proizvod, slika: f.slika } : null;
-            })
-            .filter((x): x is { proizvod: Proizvod; slika: string } => x !== null),
+    // Preporuke — prvih 5 proizvoda sa opisom
+    const preporuke = useMemo(
+        () => proizvodi.filter(p => p.opis).slice(0, 5),
         [proizvodi]
     );
 
-    const handleDodaj = (p: Proizvod) => {
-        dodaj(p);
-        setToastPoruka(`${p.naziv} dodata u korpu`);
-        setTimeout(() => setToastPoruka(null), 2500);
-    };
+    // Loyalty nivoi sortirani po pragu (sa backenda)
+    const nivoi = useMemo(
+        () => [...loyaltyProgrami].sort((a, b) => a.pragBodova - b.pragBodova),
+        [loyaltyProgrami]
+    );
+
+    const sledeciNivo = korisnik
+        ? nivoi.find(n => n.pragBodova > korisnik.brojBodova)
+        : undefined;
+
+    const progresDo = sledeciNivo && korisnik
+        ? Math.min(100, Math.round(korisnik.brojBodova / sledeciNivo.pragBodova * 100))
+        : 100;
+
+    const danasVreme = danas?.vreme ?? null;
 
     return (
-        <div className={styles.stranica}>
+        <div className={styles.pg}>
 
-            {/* ── 1. HERO ── */}
+            {/* Zavese — uvodna animacija */}
+            <div className={styles.zavese} aria-hidden="true">
+                <svg className={`${styles.zavPola} ${styles.zavL}`} viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="zavNab" x1="0" y1="0" x2="0.16" y2="0" spreadMethod="repeat">
+                            <stop offset="0" stopColor="hsl(358 62% 25%)" />
+                            <stop offset="0.3" stopColor="hsl(358 68% 35%)" />
+                            <stop offset="0.55" stopColor="hsl(358 62% 23%)" />
+                            <stop offset="0.8" stopColor="hsl(358 66% 31%)" />
+                            <stop offset="1" stopColor="hsl(358 62% 25%)" />
+                        </linearGradient>
+                        <linearGradient id="zavSen" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stopColor="hsl(358 70% 10%)" stopOpacity=".45" />
+                            <stop offset="0.22" stopColor="hsl(358 70% 10%)" stopOpacity="0" />
+                            <stop offset="0.72" stopColor="hsl(358 70% 8%)" stopOpacity="0" />
+                            <stop offset="1" stopColor="hsl(358 70% 8%)" stopOpacity=".55" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M0 0 L97 0 C 92 10, 97 21, 92 33 C 88 45, 97 55, 92 67 C 88 79, 96 89, 93 100 L 84 100 C 81 93.5, 73 93.5, 70 100 L 54 100 C 51 93.5, 43 93.5, 40 100 L 24 100 C 21 94.5, 13 94.5, 10 100 L 0 100 Z" fill="url(#zavNab)" />
+                    <path d="M0 0 L97 0 C 92 10, 97 21, 92 33 C 88 45, 97 55, 92 67 C 88 79, 96 89, 93 100 L 84 100 C 81 93.5, 73 93.5, 70 100 L 54 100 C 51 93.5, 43 93.5, 40 100 L 24 100 C 21 94.5, 13 94.5, 10 100 L 0 100 Z" fill="url(#zavSen)" />
+                </svg>
+                <svg className={`${styles.zavPola} ${styles.zavR}`} viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M100 0 L3 0 C 8 10, 3 21, 8 33 C 12 45, 3 55, 8 67 C 12 79, 4 89, 7 100 L 16 100 C 19 93.5, 27 93.5, 30 100 L 46 100 C 49 93.5, 57 93.5, 60 100 L 76 100 C 79 94.5, 87 94.5, 90 100 L 100 100 Z" fill="url(#zavNab)" />
+                    <path d="M100 0 L3 0 C 8 10, 3 21, 8 33 C 12 45, 3 55, 8 67 C 12 79, 4 89, 7 100 L 16 100 C 19 93.5, 27 93.5, 30 100 L 46 100 C 49 93.5, 57 93.5, 60 100 L 76 100 C 79 94.5, 87 94.5, 90 100 L 100 100 Z" fill="url(#zavSen)" />
+                </svg>
+            </div>
+
+            {/* ── Hero ── */}
             <section className={styles.hero}>
-                <video className={styles.heroVideo} autoPlay muted loop playsInline>
-                    <source src="https://videos.pexels.com/video-files/6327757/6327757-uhd_2560_1440_25fps.mp4" type="video/mp4" />
-                </video>
+                <svg className={styles.heroDoodle} style={{ top: 60, left: '9%', width: 90, transform: 'rotate(-16deg)' }} viewBox="0 0 100 60" fill="none"><path d="M6 50 C 30 10, 62 8, 90 26" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M78 18 L 91 26 L 79 34" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                <svg className={styles.heroDoodle} style={{ top: 96, right: '8%', width: 64, color: 'var(--rust)', transform: 'rotate(12deg)' }} viewBox="0 0 60 60" fill="none"><path d="M30 4 L 34 24 L 54 28 L 34 32 L 30 54 L 26 32 L 6 28 L 26 24 Z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" fill="none" /></svg>
+                <svg className={styles.heroDoodle} style={{ bottom: 120, left: '14%', width: 70 }} viewBox="0 0 80 30" fill="none"><path d="M4 18 C 18 6, 28 26, 42 14 C 54 4, 64 22, 76 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
+                <svg className={styles.heroDoodle} style={{ top: 110, left: '24%', width: 34, color: 'var(--rust)', opacity: .7, transform: 'rotate(14deg)' }} viewBox="0 0 40 40" fill="none"><path d="M20 4 C 20.5 14, 19.5 26, 20 36 M4 20 C 14 19.5, 26 20.5, 36 20" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
+                <svg className={styles.heroDoodle} style={{ top: 84, right: '22%', width: 46, transform: 'rotate(-10deg)' }} viewBox="0 0 50 50" fill="none"><path d="M25 4 L 27 18 M25 46 L 23 32 M4 25 L 18 27 M46 25 L 32 23" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                <svg className={styles.heroDoodle} style={{ bottom: 150, right: '15%', width: 56, transform: 'rotate(6deg)' }} viewBox="0 0 60 60" fill="none"><path d="M30 30 C 30 24, 38 24, 38 30 C 38 38, 24 38, 24 29 C 24 18, 42 18, 43 30 C 44 44, 20 46, 17 30 C 14 12, 44 8, 50 26" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" /></svg>
+                <svg className={styles.heroDoodle} style={{ bottom: 60, left: '28%', width: 26, color: 'var(--rust)', opacity: .6, transform: 'rotate(-18deg)' }} viewBox="0 0 40 40" fill="none"><path d="M20 6 L 22 16 L 33 20 L 22 24 L 20 34 L 18 24 L 7 20 L 18 16 Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /></svg>
 
-                <div className={styles.heroOverlay} />
-                <div className={styles.heroLinija} />
+                <span className={styles.estUgao}>
+                    est. 2000
+                    <svg viewBox="0 0 100 10" fill="none" preserveAspectRatio="none"><path d="M3 6 C 30 3, 70 8, 97 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
+                </span>
 
-                <motion.div
-                    className={styles.heroSadrzaj}
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-                >
+                <span className={styles.skrolDole}>
+                    <svg viewBox="0 0 40 58" fill="none"><path d="M20 3 C 32 5, 33 19, 21 20 C 12 20.5, 12 11, 20 11.5 C 31 12.5, 27 33, 22 48" stroke="currentColor" strokeWidth="2.7" strokeLinecap="round" /><path d="M13 40 L 22 50 L 30 39" stroke="currentColor" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </span>
 
-                    <img src={heroLogo} alt="Glumac Plus" className={styles.heroLogoImg} />
+                {/* Polaroidi */}
+                <div className={styles.hfL}>
+                    <span className={styles.tape} />
+                    <img src={bg} alt="Palačinke" />
+                    <span className={styles.hfCap}>sveže sa plotne ♥</span>
+                </div>
+                <div className={styles.hfR}>
+                    <span className={styles.tape} />
+                    <img src={bg1} alt="Palačinke" />
+                    <span className={styles.hfCap}>klasika ☺</span>
+                </div>
 
-                    <p className={styles.heroLede}>Palačinke koje te stvarno zasite.</p>
+                {/* Mobilni okvir + est. */}
+                <svg className={styles.heroOkvir} viewBox="0 0 390 700" fill="none" preserveAspectRatio="none"><rect x="6" y="6" width="378" height="688" rx="26" stroke="currentColor" strokeWidth="2.5" strokeDasharray="14 11" /></svg>
+                <span className={styles.estMob}>
+                    est. 2000
+                    <svg viewBox="0 0 100 10" fill="none" preserveAspectRatio="none"><path d="M3 6 C 30 3, 70 8, 97 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
+                </span>
 
-                    <div className={styles.heroDugmadi}>
-                        <Link to="/meni" className={styles.inkDugme}>Poruči odmah</Link>
-                        <Link to="/loyalty" className={styles.ghostDugme}>Loyalty program →</Link>
+                <img src={logoDark} alt="Glumac Plus" className={styles.heroLogo} />
+                <h1 className={styles.heroH1}>
+                    Palačinke koje te<br />
+                    <span className={`${styles.rust} ${styles.krug}`}>
+                        stvarno zasite.
+                        <svg className={styles.zasPod} viewBox="0 0 200 24" preserveAspectRatio="none"><path d="M6 14 C 40 7, 90 4, 140 6 C 165 7, 185 9, 195 12 C 170 11, 120 11, 70 14 C 40 16, 18 17, 8 16 Z" fill="currentColor" opacity=".6" /></svg>
+                    </span>
+                </h1>
+                <p className={styles.heroLede}>{SLOGAN}</p>
+
+                <div className={styles.heroCtas}>
+                    <Link to="/meni" className={styles.ctaVel}>
+                        <svg className={styles.ctaIko} viewBox="0 0 80 80" fill="none"><path d="M40 24 L 40 72" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /><path d="M33 8 L 33 20 M40 6 L 40 20 M47 8 L 47 20" stroke="currentColor" strokeWidth="3.6" strokeLinecap="round" /><path d="M33 20 C 33 27, 47 27, 47 20" stroke="currentColor" strokeWidth="3.6" strokeLinecap="round" fill="none" /><path d="M24 46 L 8 46 C 6 42, 8 37, 13 37 L 24 37 Z" stroke="currentColor" strokeWidth="3.6" strokeLinejoin="round" /><path d="M24 41.5 L 72 41.5" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg>
+                        Poruči odmah
+                    </Link>
+                    <Link to="/loyalty" className={styles.hbtn}>
+                        Loyalty program{' '}
+                        <svg style={{ width: 17, height: 17, verticalAlign: -2 }} viewBox="0 0 60 60" fill="none"><path d="M30 6 L 34 24 L 52 28 L 34 33 L 30 52 L 26 33 L 8 28 L 26 24 Z" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /></svg>
+                    </Link>
+                    <span className={styles.ctaStrel}>
+                        <svg width="52" height="46" viewBox="0 0 60 54" fill="none"><path d="M52 4 C 46 24, 34 38, 16 46" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" /><path d="M24 46 L 14 47 L 19 38" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                    </span>
+                </div>
+
+                {/* Mobilni "poruči" blok */}
+                <div className={styles.hpBlok}>
+                    <h1 className={styles.hpH}>
+                        Palačinke koje te<br />
+                        <span className={`${styles.rust} ${styles.krug}`}>
+                            stvarno zasite.
+                            <svg className={styles.zasPod} viewBox="0 0 200 24" preserveAspectRatio="none"><path d="M6 14 C 40 7, 90 4, 140 6 C 165 7, 185 9, 195 12 C 170 11, 120 11, 70 14 C 40 16, 18 17, 8 16 Z" fill="currentColor" opacity=".6" /></svg>
+                        </span>
+                    </h1>
+                    <div className={styles.hpKart}>
+                        <span className={styles.tape} />
+                        <p className={styles.hpKor}>poruči online — preuzmi u lokalu</p>
+                        <Link to="/meni" className={`${styles.hbtnPun} ${styles.hpGlavni}`}>
+                            Meni
+                            <svg className={styles.ctaIko} viewBox="0 0 60 70" fill="none"><path d="M10 8 C 24 4, 38 4, 50 8 L 48 62 C 36 66, 24 66, 12 62 Z" stroke="currentColor" strokeWidth="3.2" strokeLinejoin="round" /><path d="M20 24 L 40 24 M20 34 L 42 34 M20 44 L 36 44" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" /></svg>
+                        </Link>
+                        <Link to="/loyalty" className={`${styles.hbtn} ${styles.hpLoy}`}>
+                            Loyalty program{' '}
+                            <svg style={{ width: 16, height: 16, verticalAlign: -2 }} viewBox="0 0 60 60" fill="none"><path d="M30 6 L 34 24 L 52 28 L 34 33 L 30 52 L 26 33 L 8 28 L 26 24 Z" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /></svg>
+                        </Link>
+                        <div className={styles.hpInfo}>
+                            <span>{danasVreme ? `danas ${danasVreme}` : 'danas zatvoreno'}</span>
+                            <span className={styles.hiSep}>·</span>
+                            <span>Dorćol, Beograd</span>
+                        </div>
                     </div>
-                </motion.div>
-
-                <div className={styles.heroSkrol}>↓</div>
+                    <div className={styles.hpDostRed}>
+                        <span className={styles.hpDostLab}>dostava:</span>
+                        <a className={`${styles.hpDost} ${styles.hpDostG}`} href={GLOVO_URL} target="_blank" rel="noopener noreferrer">
+                            <img src={glovoLogo} alt="Glovo" />
+                        </a>
+                        <a className={`${styles.hpDost} ${styles.hpDostW}`} href={WOLT_URL} target="_blank" rel="noopener noreferrer">
+                            <img src={woltLogo} alt="Wolt" />
+                        </a>
+                    </div>
+                    <a className={styles.hpKontInfo} href="#kontakt">
+                        kontakt i info
+                        <svg viewBox="0 0 30 40" fill="none" style={{ width: 13, height: 17, marginLeft: 6, verticalAlign: -3 }}><path d="M13 4 C 18 12, 19 22, 15 33" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /><path d="M8 26 L 15 34 L 23 27" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </a>
+                </div>
             </section>
 
-            {/* ── 2. NARUČIVANJE / DOSTAVA ── */}
-            <section className={styles.dostavaSekcija}>
-
-                {/* Levo — Glovo + Wolt */}
-                <div className={styles.dostavaLevo}>
-                    <Reveal>
-                        <p className={styles.sekcijskiLabel}>— Naručite online</p>
-                        <h2 className={styles.dostavaLevoNaslov}>
-                            Dostava<br />
-                            <em className={styles.rustItalic}>na vašu adresu.</em>
-                        </h2>
-                    </Reveal>
-
-                    <div className={styles.dostavaKartice}>
-                        <div className={`${styles.dostavaKartica} ${styles.dostavaGlovo}`}>
-                            <img src={glovoLogo} alt="Glovo" className={styles.dostavaLogo} />
-                            <a
-                                href="https://glovoapp.com/en/rs/belgrade/stores/glumac-plus-beg"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`${styles.dostavaBtn} ${styles.dostavaGlovoBtn}`}
-                            >
-                                Poruči →
-                            </a>
-                        </div>
-
-                        <div className={`${styles.dostavaKartica} ${styles.dostavaWolt}`}>
-                            <img src={woltLogo} alt="Wolt" className={styles.dostavaLogo} />
-                            <a
-                                href="https://wolt.com/en/srb/belgrade/restaurant/palainkarnica-glumac-plus"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`${styles.dostavaBtn} ${styles.dostavaWoltBtn}`}
-                            >
-                                Poruči →
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Desno — USP + linkovi */}
-                <div className={styles.dostavaDesno}>
-                    <p className={styles.sekcijskiLabel}>— Ili poruči kod nas</p>
-
-                    <ol className={styles.uspLista}>
-                        {USP.map((usp) => (
-                            <Reveal key={usp.br}>
-                                <li className={styles.uspRed}>
-                                    <em className={styles.uspBroj}>{usp.br}</em>
-                                    <div>
-                                        <h3 className={styles.uspNaslov}>{usp.naslov}</h3>
-                                        <p className={styles.uspTekst}>{usp.tekst}</p>
-                                    </div>
-                                </li>
-                            </Reveal>
-                        ))}
-                    </ol>
-
-                    <div className={styles.dostavaLinkovi}>
-                        <Link to="/meni" className={styles.dostavaMenuBtn}>Poruči sada →</Link>
-                        <Link to="/loyalty" className={styles.strelicaDole}> Loyalty program →</Link>
-                    </div>
-                </div>
-            </section>
-
-            {/* ── 3. CURVED LOOP ── */}
-            <div className={styles.curvedLoopRow} aria-hidden="true">
-                <div className={styles.curvedLoopDesktop}>
-                    <CurvedLoop
-                        marqueeText={CURVED_LOOP_TEXT}
-                        speed={1}
-                        curveAmount={170}
-                        direction="left"
-                        interactive
-                        className={styles.curvedLoopText}
-                    />
-                </div>
-
-                <div className={styles.curvedLoopMobile}>
-                    <CurvedLoop
-                        marqueeText={CURVED_LOOP_TEXT}
-                        speed={0.9}
-                        curveAmount={86}
-                        direction="left"
-                        interactive
-                        className={styles.curvedLoopText}
-                    />
+            {/* ── Marquee ── */}
+            <div className={styles.marq} aria-hidden="true">
+                <div className={styles.marqIn}>
+                    {[...MARQUEE, ...MARQUEE].map((m, i) => (
+                        <span key={i} style={{ display: 'inline-flex', gap: 36, alignItems: 'center' }}>
+                            {m}<MarqX />
+                        </span>
+                    ))}
                 </div>
             </div>
-            <div className={styles.prelazPaper2} aria-hidden="true" />
 
-            {/* ── 4. NAŠE PREPORUKE ── */}
-            <section className={styles.meniSekcija}>
-                <div className={styles.container}>
-                    <Reveal className={styles.sekcijskaGlava}>
-                        <span className={styles.eyebrow}>— Karta</span>
-                        <h2 className={styles.sekcijaNaslov}>Naše preporuke.</h2>
-                    </Reveal>
-
-                    <Reveal>
-                        <ul className={styles.meniLista}>
-                            {preporuke.map(({ proizvod, slika }, idx) => (
-                                <li className={styles.meniRed} key={proizvod.id}>
-                                    <Link
-                                        to="/meni"
-                                        className={styles.meniRedLink}
-                                        aria-label={`${proizvod.naziv} — otvori meni`}
-                                    />
-                                    <span className={styles.meniNum}>{String(idx + 1).padStart(2, '0')}</span>
-                                    <h3 className={styles.meniNaziv}>{proizvod.naziv}</h3>
-                                    <span className={styles.meniCena}>
-                                        {Math.round(proizvod.cena)}<span className={styles.cenaRsd}>RSD</span>
-                                    </span>
-                                    <button
-                                        className={styles.meniDodaj}
-                                        onClick={() => handleDodaj(proizvod)}
-                                        aria-label={`Dodaj ${proizvod.naziv} u korpu`}
-                                    >
-                                        <Plus size={16} strokeWidth={2} />
-                                    </button>
-                                    <div className={styles.meniThumb}>
-                                        <img src={slika} alt="" loading="lazy" />
+            {/* ── Dostava ── */}
+            <section className={`${styles.sec} ${styles.secDost}`}>
+                <svg className={styles.doodle} style={{ top: 48, right: '9%', width: 74, transform: 'rotate(6deg)' }} viewBox="0 0 80 50" fill="none"><path d="M4 38 C 12 12, 30 8, 32 24 C 33 38, 16 42, 15 30 C 14 20, 34 12, 52 16 C 64 19, 72 28, 76 40" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                <div className={styles.split}>
+                    <div>
+                        <span className={styles.eyeb}>Naručite online</span>
+                        <h2 className={styles.h2}>Dostava na<br /><span className={`${styles.rust} ${styles.brushHi}`}>vašu adresu.</span></h2>
+                        <div className={styles.dkarte}>
+                            <Rvl className={styles.dkart}>
+                                <img src={glovoLogo} alt="Glovo" className={styles.dlogo} />
+                                <a href={GLOVO_URL} target="_blank" rel="noopener noreferrer" className={styles.gbtn}>Poruči →</a>
+                            </Rvl>
+                            <Rvl delay={0.15} className={styles.dkR}>
+                                <img src={woltLogo} alt="Wolt" className={styles.dlogo} />
+                                <a href={WOLT_URL} target="_blank" rel="noopener noreferrer" className={styles.wbtn}>Poruči →</a>
+                            </Rvl>
+                        </div>
+                    </div>
+                    <div style={{ paddingLeft: 'clamp(0px, 5vw, 72px)' }}>
+                        <span className={styles.eyeb}>Ili poruči kod nas</span>
+                        <ol className={styles.uspLista}>
+                            <Rvl>
+                                <li className={styles.uspRow}>
+                                    <em className={styles.uspBr}>1.</em>
+                                    <div>
+                                        <h3 className={styles.uspH}>Poruči direktno</h3>
+                                        <p className={styles.uspP}>Online narudžbina kroz sajt — bodovi se automatski pripisuju.</p>
                                     </div>
                                 </li>
+                            </Rvl>
+                            <Rvl delay={0.15}>
+                                <li className={styles.uspRow}>
+                                    <em className={styles.uspBr}>2.</em>
+                                    <div>
+                                        <h3 className={styles.uspH}>Preuzmi uživo</h3>
+                                        <p className={styles.uspP}>Dođi po porudžbinu u lokal — uvek sveža, gotova na vreme.</p>
+                                    </div>
+                                </li>
+                            </Rvl>
+                            <Rvl delay={0.3}>
+                                <li className={styles.uspRow}>
+                                    <em className={styles.uspBr}>3.</em>
+                                    <div>
+                                        <h3 className={styles.uspH}>Skupljaj bodove</h3>
+                                        <p className={styles.uspP}>Svaka porudžbina donosi loyalty bodove i popuste.</p>
+                                    </div>
+                                </li>
+                            </Rvl>
+                        </ol>
+                        <div className={styles.dostCtas}>
+                            <Link to="/meni" className={styles.hbtnPun} style={{ fontSize: 24 }}>Poruči sada →</Link>
+                            <Link to="/loyalty" className={styles.dostLoyLink}>Loyalty program →</Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Preporuke ── */}
+            {preporuke.length > 0 && (
+                <section className={styles.menu}>
+                    <svg className={styles.doodle} style={{ top: 38, left: '4.5%', width: 64, transform: 'rotate(-10deg)' }} viewBox="0 0 80 80" fill="none"><path d="M40 24 L 40 72" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /><path d="M33 8 L 33 20 M40 6 L 40 20 M47 8 L 47 20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /><path d="M33 20 C 33 27, 47 27, 47 20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" /><path d="M24 46 L 8 46 C 6 42, 8 37, 13 37 L 24 37 Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /><path d="M24 41.5 L 72 41.5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                    <div className={styles.mwrap}>
+                        <span className={styles.eyeb}>Karta</span>
+                        <h2 className={styles.h2}>Naše preporuke.</h2>
+                        <svg className={styles.pod} viewBox="0 0 220 12" fill="none"><path d="M3 8 C 50 3, 110 10, 217 5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+                        <p className={styles.mtipHint}>klikni na palačinku za sastojke ☺</p>
+                        <div style={{ marginTop: 16 }}>
+                            {preporuke.map((p, i) => (
+                                <Rvl key={p.id}>
+                                    <div
+                                        className={`${styles.mrow} ${tipOtvoren === i ? styles.mtipOn : ''}`}
+                                        onClick={() => setTipOtvoren(t => t === i ? null : i)}
+                                    >
+                                        {p.opis && <span className={styles.mtip}>{p.opis}</span>}
+                                        <span className={styles.mnum}>{String(i + 1).padStart(2, '0')}</span>
+                                        <h3 className={styles.mnaz}>{p.naziv}</h3>
+                                        <span className={styles.mdots} />
+                                        <span className={styles.mcena}>
+                                            {Math.round(p.cena)}<span className={styles.mrsd}>RSD</span>
+                                        </span>
+                                        <button
+                                            className={styles.mplus}
+                                            onClick={e => { e.stopPropagation(); dodaj(p); }}
+                                            aria-label={`Dodaj ${p.naziv}`}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </Rvl>
                             ))}
-                        </ul>
-                    </Reveal>
+                        </div>
+                        <div className={styles.mfoot}>
+                            <span>Cela karta u meniju — preko 40 vrsta.</span>
+                            <Link to="/meni" className={styles.mfootBtn}>Otvori meni →</Link>
+                        </div>
+                    </div>
+                </section>
+            )}
 
-                    <div className={styles.meniPodnozje}>
-                        <span>Cela karta u meniju — preko 40 vrsta.</span>
-                        <Link to="/meni" className={styles.meniPodnozjeLink}>
-                            Otvori meni →
-                        </Link>
+            {/* ── O nama ── */}
+            <section className={styles.onama}>
+                <svg className={styles.doodle} style={{ top: 64, right: '26%', width: 60, color: 'var(--rust)', opacity: .7 }} viewBox="0 0 70 70" fill="none"><circle cx="35" cy="35" r="13" stroke="currentColor" strokeWidth="2.4" /><path d="M35 6 L 35 14 M35 56 L 35 64 M6 35 L 14 35 M56 35 L 64 35 M14 14 L 20 20 M50 50 L 56 56 M56 14 L 50 20 M20 50 L 14 56" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                <span className={styles.eyeb}>Priča</span>
+                <h2 className={styles.h2}>Novi ambijent, <span className={`${styles.rust} ${styles.brushHi}`}>stari recepti.</span></h2>
+                <div className={styles.onGrid}>
+                    <div className={styles.onLevo}>
+                        <p className={styles.onFirst}>Glumac Plus je mesto gde se palačinka shvata ozbiljno.</p>
+                        <p className={styles.onP}>Nema kompromisa oko kvaliteta — svaka kombinacija se bira pažljivo, svaki detalj se pravi sa ciljem. Naš meni se menjao godinama, ali princip ostaje isti — dobra hrana, brzo, bez gužve.</p>
+                        <p className={styles.onP}>Nalazimo se u srcu Dorćola, u crnom lokalu koji se ne može promašiti.</p>
+                        <div style={{ marginTop: 14 }}>
+                            <p className={styles.onQuote}>„Glamur nije u dekoraciji. U zalogaju je."</p>
+                            <svg className={styles.pod} viewBox="0 0 220 12" fill="none"><path d="M3 8 C 50 3, 110 10, 217 5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+                        </div>
+                        <div className={styles.stats}>
+                            <Rvl className={styles.stat}><span className={styles.statV}>2000</span><span className={styles.statL}>godina otvaranja</span></Rvl>
+                            <Rvl delay={0.15} className={styles.statB}><span className={styles.statV}>40+</span><span className={styles.statL}>vrsta u ponudi</span></Rvl>
+                            <Rvl delay={0.15} className={styles.stat}><span className={`${styles.statV} ${styles.rust}`}>Dorćol</span><span className={styles.statL}>naša četvrt</span></Rvl>
+                            <Rvl delay={0.3} className={styles.statB}><span className={styles.statV}>7/7</span><span className={styles.statL}>dana otvoreni</span></Rvl>
+                        </div>
+                    </div>
+                    <div className={`${styles.polaTri} ${styles.onGridPolaTri}`}>
+                        <Rvl className={styles.pola} style={{ transform: 'rotate(2deg)' }}>
+                            <span className={styles.tape} />
+                            <div className={styles.polaSlot}><img src={bg} alt="Prva lokacija" /></div>
+                            <span className={styles.polaCap}>prva lokacija</span>
+                        </Rvl>
+                        <Rvl delay={0.15} className={`${styles.pola} ${styles.pol2}`} style={{ transform: 'rotate(-2.4deg)' }}>
+                            <span className={styles.tape} />
+                            <div className={styles.polaSlot}><img src={bg1} alt="Druga lokacija" /></div>
+                            <span className={styles.polaCap}>druga lokacija</span>
+                        </Rvl>
+                        <Rvl delay={0.3} className={`${styles.pola} ${styles.pol3}`} style={{ transform: 'rotate(1.8deg)' }}>
+                            <span className={styles.tape} />
+                            <div className={styles.polaSlot}><img src={bg} alt="Dorćol danas" /></div>
+                            <span className={styles.polaCap}>Dorćol, danas ♥</span>
+                        </Rvl>
                     </div>
                 </div>
+                <img src={maskota} alt="" className={styles.maskota} />
             </section>
 
-            {/* ── 5. O NAMA ── */}
-            <section className={styles.oNamaSekcija}>
-                <img src={gpBlackLogo} className={styles.oNamaDecorLogo} aria-hidden="true" alt="" />
-                <div className={styles.container}>
-                    <Reveal className={styles.sekcijskaGlava}>
-                        <span className={styles.eyebrow}>— Priča</span>
-                        <h2 className={styles.sekcijaNaslov}>
-                            Novi ambijent,{' '}
-                            <em className={styles.rustItalic}>stari recepti.</em>
-                        </h2>
-                    </Reveal>
-
-                    <div className={styles.oNamaGrid}>
-                        <Reveal className={styles.oNamaTekst}>
-                            <p>
-                                Glumac Plus je mesto gde se palačinka shvata ozbiljno. Nema
-                                kompromisa oko kvaliteta — svaka kombinacija se bira pažljivo,
-                                svaki detalj se pravi sa ciljem.
-                            </p>
-                            <p>
-                                Naš meni se menjao godinama, ali princip ostaje isti — dobra
-                                hrana, brzo, bez gužve. Nalazimo se u srcu Dorćola, u crnom
-                                lokalu koji se ne može promašiti.
-                            </p>
-                            <p>Glamur nije u dekoraciji. U zalogaju je.</p>
-                        </Reveal>
-
-                        <Reveal className={styles.oNamaSlika}>
-                            <div className={styles.oNamaSlikaFrame}>
-                                <img
-                                    src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&auto=format&fit=crop"
-                                    alt="Enterijer palačinkarnice"
-                                />
-                                <p className={styles.oNamaSlikaCaption}>Sala, jutarnji sat</p>
-                            </div>
-                        </Reveal>
-                    </div>
-
-                    <Reveal className={styles.statsGrid}>
-                        {STATS.map((s) => (
-                            <div className={styles.statBlok} key={s.l}>
-                                <span className={styles.statVrednost}>{s.v}</span>
-                                <span className={styles.statLabel}>{s.l}</span>
-                            </div>
-                        ))}
-                    </Reveal>
-                </div>
-            </section>
-
-            {/* ── 6. LOYALTY ── */}
-            <section className={styles.loyaltySekcija} id="loyalty">
-                <img src={gpWhiteLogo} className={styles.loyaltyDecorLogo} aria-hidden="true" alt="" />
-                <div className={styles.loyaltyLevo}>
-                    <Reveal>
-                        <p className={styles.sekcijskiLabelSvetli}>— Loyalty program</p>
-                        <h2 className={styles.loyaltyNaslov}>
-                            Nagrađujemo<br />
-                            <em className={styles.loyaltyAkcent}>vernost.</em>
-                        </h2>
-                        <p className={styles.loyaltyOpis}>
+            {/* ── Loyalty tabla ── */}
+            <section className={styles.tabla}>
+                <svg className={styles.doodle} style={{ top: 44, right: '7%', width: 58, color: '#FFC244', opacity: .85, transform: 'rotate(8deg)' }} viewBox="0 0 60 60" fill="none"><path d="M8 8 C 20 3, 40 3, 52 8 C 54 22, 50 42, 30 52 C 10 42, 6 22, 8 8 Z" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M16 22 C 19 19, 23 19, 26 22 M34 22 C 37 19, 41 19, 44 22" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /><path d="M20 35 C 25 41, 35 41, 40 35" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
+                <div className={styles.split}>
+                    <div>
+                        <span className={styles.eyeb}>Loyalty program</span>
+                        <h2 className={styles.h2}>Nagrađujemo<br /><span className={`${styles.rust} ${styles.brushHi}`}>vernost.</span></h2>
+                        <p className={styles.tablaOpis}>
                             Svaka porudžbina donosi bodove. Više bodova — veći popust.
                             Naš najviši nivo nosi naziv koji zaslužuje.
                         </p>
-                        <Link to="/loyalty" className={styles.paperDugme}>
-                            Pogledaj svoj status →
+                        <Link to="/loyalty" className={styles.tbtn}>
+                            {korisnik ? 'Pogledaj svoj status →' : 'Saznaj više →'}
                         </Link>
-                    </Reveal>
-                </div>
-
-                <div className={styles.loyaltyDesno}>
-                    {NIVOI.map((nivo) => (
-                        <Reveal key={nivo.naziv}>
-                            <div className={styles.loyaltyRed}>
-                                <div>
-                                    <p className={styles.loyaltyRedNaziv}>{nivo.naziv}</p>
-                                    <p className={styles.loyaltyRedPrag}>{nivo.prag}</p>
+                    </div>
+                    <div>
+                        <Rvl>
+                            <div className={styles.loyKart}>
+                                <span className={styles.tapeZ} style={{ left: '26%' }} />
+                                <div className={styles.loyKHRed}>
+                                    <span className={styles.loyKH}>Loyalty kartica</span>
+                                    <span className={styles.loyBr}>
+                                        {korisnik ? `br. ${String(korisnik.id).padStart(4, '0')}` : 'tvoja buduća kartica'}
+                                    </span>
                                 </div>
-                                <span className={styles.loyaltyRedPopust}>{nivo.popust}</span>
+                                <div className={styles.loyBod}>
+                                    <span className={styles.loyBodV}>{korisnik?.brojBodova ?? 0}</span>
+                                    <span className={styles.loyBodL}>bodova</span>
+                                    {korisnik?.loyaltyNivo && (
+                                        <span className={styles.loyBodNiv}>· {korisnik.loyaltyNivo}</span>
+                                    )}
+                                </div>
+                                <div className={styles.loyProg}>
+                                    <div className={styles.loyProgFill} style={{ width: `${korisnik ? progresDo : 0}%` }} />
+                                </div>
+                                <p className={styles.loyProgTxt}>
+                                    {korisnik && sledeciNivo
+                                        ? <>još {sledeciNivo.pragBodova - korisnik.brojBodova} bodova do — <b>{sledeciNivo.nivo}</b></>
+                                        : korisnik
+                                            ? <>na najvišem si nivou ♥</>
+                                            : <>registruj se i počni da skupljaš</>}
+                                </p>
+                                <p className={styles.loyKF}>svaka porudžbina donosi bodove</p>
+                                {popust > 0 && (
+                                    <div className={styles.loyPecat}><b>−{popust}%</b><span>popusta</span></div>
+                                )}
                             </div>
-                        </Reveal>
-                    ))}
+                        </Rvl>
+                        {nivoi.length > 0 && (
+                            <div className={styles.loyNivRow}>
+                                {nivoi.map((n, i) => (
+                                    <Rvl key={n.id} delay={i * 0.1} className={`${styles.loyNiv} ${i === nivoi.length - 1 ? styles.kZut : ''}`}>
+                                        <span className={styles.loyNivKrug}>
+                                            <svg viewBox="0 0 80 80" fill="none"><path d="M40 6 C 62 4, 76 18, 74 40 C 72 62, 58 75, 38 74 C 16 73, 5 58, 6 38 C 7 18, 22 8, 44 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+                                            <em>{n.popust}%</em>
+                                        </span>
+                                        <p className={styles.loyNivN}>{n.nivo}</p>
+                                        <p className={styles.loyNivB}>{n.pragBodova.toLocaleString('sr-RS')} bodova</p>
+                                    </Rvl>
+                                ))}
+                            </div>
+                        )}
+                        <p className={styles.loyPS}>p.s. glavna uloga se zaslužuje ♥</p>
+                    </div>
                 </div>
             </section>
 
-            {/* ── 7. GALERIJA ── */}
-            <section className={styles.galerijaSekcija}>
-                <Reveal className={styles.galerijaGlava}>
-                    <p className={styles.sekcijskiLabel}>— Naš lokal</p>
-                    <h2 className={styles.galerija_naslov}>
-                        Dođi, vidi, <em className={styles.rustItalic}>ostani.</em>
-                    </h2>
-                </Reveal>
-
-                <div className={styles.galerijaGrid}>
-                    {GALERIJA.map((stavka, i) => (
-                        <div
-                            key={stavka.alt}
-                            className={`${styles.galerijaStavka} ${stavka.velika ? styles.galerijaVelika : ''}`}
+            {/* ── Galerija ── */}
+            <section>
+                <div className={styles.galIntro}>
+                    <span className={styles.eyeb}>Naš lokal</span>
+                    <h2 className={styles.h2}>Dođi, vidi, <span className={`${styles.rust} ${styles.brushHi}`}>ostani.</span></h2>
+                    <svg className={styles.doodle} style={{ top: 64, right: '16%', width: 90, color: 'var(--rust)' }} viewBox="0 0 100 70" fill="none"><path d="M90 8 C 70 18, 56 36, 50 60" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M42 52 L 50 62 L 58 54" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <p className={styles.galZaviri}>— zaviri unutra ↓</p>
+                </div>
+                <div className={styles.gal}>
+                    {[
+                        { slika: bg, cap: '01 · ambijent', rot: -2.5, tape: styles.tape, top: 0 },
+                        { slika: bg1, cap: '02 · slatke', rot: 1.8, tape: styles.tapeZ, top: 28 },
+                        { slika: bg, cap: '03 · sveže', rot: -1.4, tape: styles.tapeP, top: 0 },
+                        { slika: bg1, cap: '04 · detalji', rot: 2.2, tape: styles.tape, top: 36 },
+                    ].map((g, i) => (
+                        <Rvl
+                            key={i}
+                            delay={i * 0.1}
+                            className={styles.galIt}
+                            style={{ transform: `rotate(${g.rot}deg)`, marginTop: g.top }}
                         >
-                            <img src={stavka.src} alt={stavka.alt} />
-                            <span className={styles.galerijaLabel}>
-                                <em>{String(i + 1).padStart(2, '0')}</em> {stavka.label}
-                            </span>
-                        </div>
+                            <span className={g.tape} />
+                            <div className={styles.galSlot}><img src={g.slika} alt={g.cap} /></div>
+                            <span className={styles.galCap}>{g.cap}</span>
+                        </Rvl>
                     ))}
+                </div>
+                <p className={styles.galNote}>p.s. dođi gladan ♥</p>
+            </section>
+
+            {/* ── Recenzije ── */}
+            <section className={styles.rec}>
+                <div className={styles.recHead}>
+                    <div>
+                        <span className={styles.eyeb}>Google recenzije</span>
+                        <h2 className={styles.h2}>Šta kažu <span className={`${styles.rust} ${styles.brushHi}`}>gosti.</span></h2>
+                    </div>
+                    <div className={styles.recOc}>
+                        <span className={styles.recBr}>4.5</span>
+                        <div>
+                            <div className={styles.zvez}>
+                                <ZvezdaPuna /><ZvezdaPuna /><ZvezdaPuna /><ZvezdaPuna />
+                                <svg viewBox="0 0 24 24">
+                                    <defs><clipPath id="polaZv"><rect x="0" y="0" width="12" height="24" /></clipPath></defs>
+                                    <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                                    <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" fill="currentColor" clipPath="url(#polaZv)" />
+                                </svg>
+                            </div>
+                            <p className={styles.recSub}>na Google mapi</p>
+                        </div>
+                    </div>
+                </div>
+                <div className={styles.recGrid}>
+                    {RECENZIJE.map((r, i) => (
+                        <Rvl key={i} delay={i * 0.12} className={r.varijantaB ? styles.recB : styles.recKart}>
+                            <div className={styles.zvez}>
+                                <ZvezdaPuna /><ZvezdaPuna /><ZvezdaPuna /><ZvezdaPuna /><ZvezdaPuna />
+                            </div>
+                            <p className={styles.recTxt}>„{r.tekst}"</p>
+                            <div className={styles.recIme}>
+                                <span className={styles.recKo}>{r.ime}</span>
+                                <span className={styles.recKad}>{r.kad}</span>
+                            </div>
+                        </Rvl>
+                    ))}
+                </div>
+                <div className={styles.recFoot}>
+                    <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" className={styles.hbtn}>
+                        Ostavi i ti recenziju ↗
+                    </a>
                 </div>
             </section>
 
-            {/* ── 8. KONTAKT ── */}
-            <section className={styles.kontaktSekcija} id="kontakt">
-                <div className={styles.kontaktWrap}>
+            <hr className={styles.dash} />
 
-                    <Reveal>
-                        <p className={styles.sekcijskiLabel}>— Kontakt</p>
-                        <h2 className={styles.kontaktNaslov}>
-                            Mirisom ćete <em className={styles.rustItalic}>prepoznati.</em>
-                        </h2>
-                    </Reveal>
-
-                    <div className={styles.kontaktHrLine} />
-
-                    <div className={styles.kontaktLayout}>
-
-                        <Reveal>
-                            <div className={styles.contactBlock}>
-                                <span className={styles.kontaktKolLabel}>Kontakt</span>
-                                <a href="tel:+381658178476" className={styles.contactTel}>
-                                    +381 65 817 8476
-                                </a>
-                                <a href="mailto:glumacplus@gmail.com" className={styles.contactMail}>
-                                    glumacplus@gmail.com
-                                </a>
-                            </div>
-
-                            <div className={styles.contactBlock}>
-                                <span className={styles.kontaktKolLabel}>Radno vreme</span>
-                                <ul className={styles.radnoVremeList}>
-                                    {raspored.map((d) => (
-                                        <li key={d.dan}>
-                                            <span>{d.skracenica}</span>
-                                            <span>{d.vreme ?? 'Zatvoreno'}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                        </Reveal>
-
-                        <Reveal className={styles.mapWrap}>
-                            <div className={`${styles.mapFrame} ${styles.clipStamp}`}>
+            {/* ── Kontakt ── */}
+            <section className={styles.sec} id="kontakt">
+                <svg className={styles.doodle} style={{ top: 70, right: '9%', width: 50, color: 'var(--rust)', transform: 'rotate(10deg)' }} viewBox="0 0 60 54" fill="none"><path d="M30 48 C 8 32, 4 16, 14 9 C 22 4, 29 10, 30 16 C 31 10, 38 4, 46 9 C 56 16, 52 32, 30 48 Z" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>
+                <span className={styles.eyeb}>Kontakt</span>
+                <h2 className={styles.h2}>Mirisom ćete <span className={`${styles.rust} ${styles.brushHi}`}>prepoznati.</span></h2>
+                <div className={styles.kont}>
+                    <div>
+                        <div className={styles.kBlok}>
+                            <span className={styles.kLbl}>Pozovi nas</span>
+                            <a href="tel:+381658178476" className={styles.kTel}>+381 65 817 8476</a>
+                        </div>
+                        <div className={styles.kBlok}>
+                            <span className={styles.kLbl}>Piši nam</span>
+                            <a href="mailto:glumacplus@gmail.com" className={styles.kMejl}>glumacplus@gmail.com</a>
+                        </div>
+                        <div className={styles.kBlok}>
+                            <span className={styles.kLbl}>Radno vreme</span>
+                            <RadnoVreme />
+                        </div>
+                        <div className={styles.kBlok}>
+                            <span className={styles.kLbl}>Prati nas</span>
+                            <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" className={styles.kSoc}>Instagram ↗</a>
+                            <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer" className={styles.kSoc}>TikTok ↗</a>
+                        </div>
+                    </div>
+                    <div>
+                        <Rvl>
+                            <div className={styles.mapa}>
                                 <iframe
                                     title="Mapa Glumac Plus"
                                     src="https://maps.google.com/maps?q=44.8172559,20.4607985&output=embed&z=17"
                                     loading="lazy"
                                 />
-                                <span className={styles.mapPin} aria-hidden="true" />
                             </div>
-                            <div className={styles.mapCaption}>
-                                <span className={styles.contactAdresa}>Dositejeva 1a · Dorćol · Beograd</span>
-                                <a
-                                    href="https://www.google.com/maps/place/Glumac+plus/data=!4m2!3m1!1s0x0:0xb7899385a5114972?sa=X&ved=1t:2428&ictx=111"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={styles.mapLink}
-                                >
-                                    ↗ Otvori u mapi
-                                </a>
-                            </div>
-                        </Reveal>
-
+                        </Rvl>
+                        <div className={styles.mapCap}>
+                            <span>Dositejeva 1a · Dorćol · Beograd</span>
+                            <a href={MAPS_URL} target="_blank" rel="noopener noreferrer">↗ otvori u mapi</a>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* ── FOOTER ── */}
-            <footer className={styles.footer}>
-                <div className={styles.footerWordmark}>
-                    <img src={gpWhiteLogo} alt="Glumac Plus" className={styles.footerLogo} />
-                </div>
-
-                <div className={styles.footerDivider} />
-
-                <div className={styles.footerInfo}>
-                    <div className={styles.footerKontakt}>
-                        <span className={styles.footerKontaktRed}>
-                            <MapPin size={13} strokeWidth={1.5} /> Dorćol, Beograd
-                        </span>
-                        <span className={styles.footerKontaktRed}>
-                            <Clock size={13} strokeWidth={1.5} /> Danas: {danas?.vreme ?? 'Zatvoreno'}
-                        </span>
-                        <span className={styles.footerKontaktRed}>
-                            <Phone size={13} strokeWidth={1.5} /> +381 65 817 8476
-                        </span>
-                    </div>
-
-                    <nav className={styles.footerNav}>
-                        <Link to="/meni">Meni</Link>
-                        <Link to="/loyalty">Loyalty</Link>
-                        <Link to="/istorija">Porudžbine</Link>
-                        <Link to="/login">Prijava</Link>
+            {/* ── Footer ── */}
+            <footer className={styles.foot}>
+                <div className={styles.footTop}>
+                    <img src={gpWhite} alt="Glumac Plus" className={styles.footLogo} />
+                    <nav className={styles.footNav}>
+                        <Link to="/meni" className={styles.footL}>Meni</Link>
+                        <Link to="/loyalty" className={styles.footL}>Loyalty</Link>
+                        {korisnik ? (
+                            <Link to="/istorija" className={styles.footL}>Porudžbine</Link>
+                        ) : (
+                            <Link to="/login" className={styles.footL}>Prijava</Link>
+                        )}
                     </nav>
                 </div>
-
-                <div className={styles.footerCopy}>
-                    <span>© 2026 Glumac Plus · Sva prava zadržana</span>
-                    <span>Est. 2000 · Dorćol, Beograd</span>
+                <p className={styles.footPozz}>— vidimo se na palačinkama ♥ —</p>
+                <div className={styles.footInfo}>
+                    <span>
+                        Dorćol, Beograd{danasVreme ? ` · Danas: ${danasVreme}` : ''} · +381 65 817 8476
+                    </span>
+                    <span>© {new Date().getFullYear()} Glumac Plus · Est. 2000</span>
                 </div>
+                <button
+                    className={styles.footVrh}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    aria-label="Nazad na vrh"
+                >
+                    <svg viewBox="0 0 24 30" fill="none"><path d="M12 26 C 13 18, 11 10, 12 4" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /><path d="M5 11 C 8 8, 10 5, 12 3 C 14 5, 16 8, 19 11" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
             </footer>
-
-            <Toast poruka={toastPoruka} />
-
         </div>
     );
 }

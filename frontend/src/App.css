@@ -4,18 +4,3 @@
   padding: 0;
   text-align: left;
 }
-
-body {
-  margin: 0;
-  padding: 0;
-  background-color: var(--krem);
-  color: var(--tekst);
-  font-family: 'Lato', sans-serif;
-  min-height: 100vh;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}

@@ -14,11 +14,11 @@
     justify-content: space-between;
     gap: 24px;
     padding: 22px 0;
-    border-bottom: 1px solid var(--ink-12);
+    border-bottom: 1px solid var(--ink12);
 }
 
 .red:first-child {
-    border-top: 1px solid var(--ink-12);
+    border-top: 1px solid var(--ink12);
 }
 
 .levo {
@@ -41,9 +41,9 @@
 .cena,
 .dugme {
     background: linear-gradient(90deg,
-        var(--ink-12) 25%,
-        var(--ink-20) 50%,
-        var(--ink-12) 75%);
+        var(--ink12) 25%,
+        var(--ink20) 50%,
+        var(--ink12) 75%);
     background-size: 800px 100%;
     animation: shimmer 1.4s infinite linear;
 }

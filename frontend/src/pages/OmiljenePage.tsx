@@ -1,17 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-    Bookmark, Trash2, RotateCcw, X, AlertCircle,
-    ChevronRight, CheckCircle,
-} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
 import type { Proizvod } from '../types/proizvod';
+import { Kanta, Srce } from '../components/Doodle';
 import styles from './OmiljenePage.module.css';
-
-/* ─── Tipovi ─────────────────────────────────────────────── */
 
 interface OmiljenaStavka {
     proizvodId: number;
@@ -27,20 +22,29 @@ interface Omiljena {
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
-/* ─── Modal "Ponovi porudžbinu" ───────────────────────────── */
+// Boje čioda po redosledu (rust · zelena · žuta), pa ciklično.
+const PIN_BOJE = [
+    { background: 'var(--rust)', boxShadow: 'inset -2px -3px 0 hsl(14 65% 30%), 0 3px 6px hsl(22 30% 14% / .3)' },
+    { background: 'hsl(150 35% 40%)', boxShadow: 'inset -2px -3px 0 hsl(150 35% 26%), 0 3px 6px hsl(22 30% 14% / .3)' },
+    { background: 'hsl(48 85% 55%)', boxShadow: 'inset -2px -3px 0 hsl(45 80% 40%), 0 3px 6px hsl(22 30% 14% / .3)' },
+];
 
-interface PonoviModalProps {
+/* ─── Modal "ponovi porudžbinu" ──────────────────────────── */
+
+function PonoviModal({ omiljena, token, popust, ukupno, onZatvori, onUspeh }: {
     omiljena: Omiljena;
     token: string;
+    popust: number;
+    ukupno: number;
     onZatvori: () => void;
     onUspeh: (porudzbinaId: number | null) => void;
-}
-
-function PonoviModal({ omiljena, token, onZatvori, onUspeh }: PonoviModalProps) {
+}) {
     const [tip, setTip] = useState<TipPorudzbine>('U_LOKALU');
     const [napomena, setNapomena] = useState('');
     const [loading, setLoading] = useState(false);
     const [greska, setGreska] = useState('');
+
+    const zaPlacanje = popust > 0 ? Math.round(ukupno * (1 - popust / 100)) : ukupno;
 
     const ponovi = async () => {
         setLoading(true);
@@ -57,7 +61,7 @@ function PonoviModal({ omiljena, token, onZatvori, onUspeh }: PonoviModalProps) 
                 onUspeh(data?.porudzbinaId ?? null);
             } else {
                 const err = await res.json().catch(() => ({}));
-                setGreska(err.message ?? 'Nije moguće poručiti. Možda je restoran zatvoren.');
+                setGreska(err.message ?? 'Nije moguće poručiti. Možda je lokal zatvoren.');
             }
         } catch {
             setGreska('Greška u mreži.');
@@ -69,69 +73,70 @@ function PonoviModal({ omiljena, token, onZatvori, onUspeh }: PonoviModalProps) 
     return (
         <motion.div
             className={styles.modalOverlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onZatvori}
         >
             <motion.div
                 className={styles.modal}
-                initial={{ opacity: 0, scale: 0.94, y: 16 }}
+                initial={{ opacity: 0, scale: 0.95, y: 16 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, y: 16 }}
-                transition={{ duration: 0.25 }}
-                onClick={(e) => e.stopPropagation()}
+                exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                onClick={e => e.stopPropagation()}
             >
-                <div className={styles.modalGlava}>
-                    <div className={styles.modalIkonaWrap}>
-                        <RotateCcw size={18} strokeWidth={1.8} />
-                    </div>
-                    <div>
-                        <h3 className={styles.modalNaslov}>Ponovi porudžbinu</h3>
-                        <p className={styles.modalPodNaslov}>{omiljena.naziv}</p>
-                    </div>
-                    <button className={styles.modalZatvori} onClick={onZatvori} aria-label="Zatvori">
-                        <X size={16} />
-                    </button>
-                </div>
+                <span className={styles.modalTape} />
+                <button className={styles.modalZatvori} onClick={onZatvori} aria-label="Zatvori">✕</button>
 
-                <div className={styles.modalTelo}>
-                    <span className={styles.modalLabel}>Tip porudžbine</span>
+                <span className={styles.modalEyeb}>ponovi porudžbinu</span>
+                <h2 className={styles.modalNaslov}>„{omiljena.naziv}"</h2>
+                <p className={styles.modalStavke}>
+                    {omiljena.stavke.map(s => `${s.kolicina}× ${s.nazivProizvoda}`).join(', ')}
+                </p>
+
+                <div style={{ marginTop: 20 }}>
+                    <span className={styles.tipLab}>tip porudžbine</span>
                     <div className={styles.tipBiraci}>
-                        {(Object.keys(TIP_LABELE) as TipPorudzbine[]).map((t) => (
+                        {(Object.keys(TIP_LABELE) as TipPorudzbine[]).map(t => (
                             <button
                                 key={t}
-                                className={`${styles.tipBirac} ${tip === t ? styles.tipAktivan : ''}`}
+                                className={tip === t ? styles.tipPilAktivan : styles.tipPil}
                                 onClick={() => setTip(t)}
                             >
                                 {TIP_LABELE[t]}
                             </button>
                         ))}
                     </div>
+                </div>
 
-                    <span className={`${styles.modalLabel} ${styles.modalLabelRazmak}`}>Napomena (opciono)</span>
+                <div style={{ marginTop: 16 }}>
+                    <span className={styles.tipLab}>napomena (opciono)</span>
                     <textarea
-                        className={styles.napomenaInput}
+                        className={styles.napomena}
                         value={napomena}
-                        onChange={(e) => setNapomena(e.target.value)}
+                        onChange={e => setNapomena(e.target.value)}
                         placeholder="npr. bez oraha..."
                         maxLength={1000}
                         rows={2}
                     />
-
-                    {greska && (
-                        <span className={styles.modalGreska}>
-                            <AlertCircle size={13} /> {greska}
-                        </span>
-                    )}
                 </div>
 
+                <div className={styles.modalCena}>
+                    {popust > 0 && <span className={styles.modalPopust}>sa popustom −{popust}%</span>}
+                    <span>
+                        {popust > 0 && <span className={styles.cenaS}>{ukupno.toLocaleString('sr-RS')} </span>}
+                        <span className={styles.cenaV} style={{ fontSize: 34 }}>
+                            {zaPlacanje.toLocaleString('sr-RS')}<span className={styles.rsd}>RSD</span>
+                        </span>
+                    </span>
+                </div>
+
+                {greska && <span className={styles.modalGreska}>{greska}</span>}
+
                 <div className={styles.modalDugmad}>
-                    <button className={styles.modalDugmeSekundarno} onClick={onZatvori} disabled={loading}>
+                    <button className={styles.modalOdustani} onClick={onZatvori} disabled={loading}>
                         Odustani
                     </button>
-                    <button className={styles.modalDugmeGlavno} onClick={ponovi} disabled={loading}>
-                        {loading ? 'Šaljem...' : 'Naruči'}
+                    <button className={styles.modalNaruci} onClick={ponovi} disabled={loading}>
+                        {loading ? 'Šaljem…' : 'Naruči →'}
                     </button>
                 </div>
             </motion.div>
@@ -139,102 +144,108 @@ function PonoviModal({ omiljena, token, onZatvori, onUspeh }: PonoviModalProps) 
     );
 }
 
-/* ─── Kartica omiljene ────────────────────────────────────── */
+/* ─── Papirić omiljene ───────────────────────────────────── */
 
-interface KarticaProps {
+function Papiric({ o, proizvodiMap, popust, pinIndex, onPonovi, onObrisi, brisanje }: {
     o: Omiljena;
     proizvodiMap: Map<number, Proizvod>;
     popust: number;
-    onPonovi: (o: Omiljena) => void;
+    pinIndex: number;
+    onPonovi: (o: Omiljena, ukupno: number) => void;
     onObrisi: (id: number) => void;
     brisanje: number | null;
-}
-
-function OmiljenaKartica({ o, proizvodiMap, popust, onPonovi, onObrisi, brisanje }: KarticaProps) {
-    const stavkeSaCenom = o.stavke.map((s) => {
+}) {
+    const stavkeSaCenom = o.stavke.map(s => {
         const proizvod = proizvodiMap.get(s.proizvodId);
         return { ...s, cena: proizvod?.cena ?? null, dostupno: !!proizvod };
     });
-    const ukupno = Math.round(
-        stavkeSaCenom.reduce((sum, s) => sum + (s.cena ?? 0) * s.kolicina, 0)
-    );
-    // Zaokruživanje finalne cene (isto pravilo kao na meniju i u korpi).
+    const ukupno = Math.round(stavkeSaCenom.reduce((sum, s) => sum + (s.cena ?? 0) * s.kolicina, 0));
     const zaPlacanje = popust > 0 ? Math.round(ukupno * (1 - popust / 100)) : ukupno;
-    const imaNedostupnih = stavkeSaCenom.some((s) => !s.dostupno);
+    const imaNedostupnih = stavkeSaCenom.some(s => !s.dostupno);
+    const rot = (o.id % 3) - 1; // -1, 0, 1 → blaga rotacija
 
     return (
         <motion.div
-            className={styles.kartica}
             layout
+            className={styles.papiric}
+            style={{ transform: `rotate(${rot * 0.6}deg)` }}
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.32 }}
         >
-            <div className={styles.karticaGlava}>
-                <h3 className={styles.karticaNaziv}>{o.naziv}</h3>
+            <span className={styles.pin} style={PIN_BOJE[pinIndex % PIN_BOJE.length]} />
+
+            <div className={styles.papiricGlava}>
+                <h3 className={styles.papiricNaziv}>„{o.naziv}"</h3>
                 <button
-                    className={styles.obrisiBtn}
+                    className={styles.obrisi}
                     onClick={() => onObrisi(o.id)}
                     disabled={brisanje === o.id}
                     title="Obriši omiljenu"
                 >
-                    <Trash2 size={15} strokeWidth={1.8} />
+                    <Kanta size={20} strokeWidth={2} />
                 </button>
             </div>
 
-            <ul className={styles.stavkeLista}>
+            <div className={styles.stavke}>
                 {stavkeSaCenom.map((s, i) => (
-                    <li key={i} className={`${styles.stavkaRed} ${!s.dostupno ? styles.stavkaNedostupna : ''}`}>
-                        <span className={styles.stavkaKolicina}>{s.kolicina}×</span>
-                        <span className={styles.stavkaNaziv}>{s.nazivProizvoda}</span>
-                        <span className={styles.stavkaCena}>
-                            {s.dostupno
-                                ? `${Math.round((s.cena ?? 0) * s.kolicina).toLocaleString('sr-RS')} RSD`
-                                : 'nedostupno'}
+                    <div key={i} className={s.dostupno ? styles.stavR : styles.stavRNedostupna}>
+                        <span className={styles.stavK}>{s.kolicina}×</span>
+                        <span className={s.dostupno ? undefined : styles.stavNazivPrecrtan}>
+                            {s.nazivProizvoda}
                         </span>
-                    </li>
+                        <span className={styles.stavDots} />
+                        {s.dostupno ? (
+                            <span>{Math.round((s.cena ?? 0) * s.kolicina).toLocaleString('sr-RS')} RSD</span>
+                        ) : (
+                            <span className={styles.stavNedostupno}>nedostupno</span>
+                        )}
+                    </div>
                 ))}
-            </ul>
-
-            <div className={styles.karticaDno}>
-                <div className={styles.cenaBlok}>
-                    {popust > 0 && (
-                        <span className={styles.cenaOriginalna}>{ukupno.toLocaleString('sr-RS')} RSD</span>
-                    )}
-                    <span className={styles.cenaUkupna}>{zaPlacanje.toLocaleString('sr-RS')} RSD</span>
-                </div>
-                <button
-                    className={styles.ponoviBtn}
-                    onClick={() => onPonovi(o)}
-                    disabled={brisanje === o.id}
-                >
-                    <RotateCcw size={14} strokeWidth={1.8} /> Ponovi
-                </button>
             </div>
 
             {imaNedostupnih && (
-                <div className={styles.napomenaNedostupno}>
-                    <AlertCircle size={13} /> Neki proizvodi više nisu na meniju.
-                </div>
+                <span className={styles.nedost}>! neki proizvodi više nisu na meniju</span>
             )}
+
+            <div className={styles.papiricDno}>
+                <span>
+                    {popust > 0 && <span className={styles.cenaS}>{ukupno.toLocaleString('sr-RS')} </span>}
+                    <span className={styles.cenaV}>
+                        {zaPlacanje.toLocaleString('sr-RS')}<span className={styles.rsd}>RSD</span>
+                    </span>
+                </span>
+                <button
+                    className={styles.ponovi}
+                    onClick={() => onPonovi(o, ukupno)}
+                    disabled={brisanje === o.id}
+                >
+                    ↻ Ponovi
+                </button>
+            </div>
         </motion.div>
     );
 }
 
-/* ─── Glavni page ─────────────────────────────────────────── */
+/* ─── Glavni page ────────────────────────────────────────── */
 
 export default function OmiljenePage() {
     const { korisnik, token, popust } = useAuth();
-    const { otvoriStatus } = useAktivnaPorudzbina();
+    const { postaviAktivnu } = useAktivnaPorudzbina();
 
     const [omiljene, setOmiljene] = useState<Omiljena[]>([]);
     const [proizvodiMap, setProizvodiMap] = useState<Map<number, Proizvod>>(new Map());
     const [loading, setLoading] = useState(true);
     const [greska, setGreska] = useState('');
     const [brisanje, setBrisanje] = useState<number | null>(null);
-    const [ponoviModal, setPonoviModal] = useState<Omiljena | null>(null);
-    const [uspehPoruka, setUspehPoruka] = useState('');
+    const [ponoviModal, setPonoviModal] = useState<{ o: Omiljena; ukupno: number } | null>(null);
+    const [toast, setToast] = useState('');
+
+    const prikaziToast = (poruka: string) => {
+        setToast(poruka);
+        setTimeout(() => setToast(''), 3000);
+    };
 
     const ucitaj = useCallback(async () => {
         if (!token) return;
@@ -251,22 +262,15 @@ export default function OmiljenePage() {
             const omiljeneData: Omiljena[] = await omiljeneRes.json();
             const proizvodiData: Proizvod[] = proizvodiRes.ok ? await proizvodiRes.json() : [];
             setOmiljene(omiljeneData);
-            setProizvodiMap(new Map(proizvodiData.map((p) => [p.id, p])));
+            setProizvodiMap(new Map(proizvodiData.map(p => [p.id, p])));
         } catch {
-            setGreska('Nije moguće učitati omiljene. Pokušajte ponovo.');
+            setGreska('Nije moguće učitati omiljene. Pokušaj ponovo.');
         } finally {
             setLoading(false);
         }
     }, [token]);
 
-    useEffect(() => {
-        ucitaj();
-    }, [ucitaj]);
-
-    const prikaziUspeh = (poruka: string) => {
-        setUspehPoruka(poruka);
-        setTimeout(() => setUspehPoruka(''), 3200);
-    };
+    useEffect(() => { ucitaj(); }, [ucitaj]);
 
     const obrisi = async (id: number) => {
         if (!token) return;
@@ -277,120 +281,80 @@ export default function OmiljenePage() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
-                setOmiljene((prev) => prev.filter((o) => o.id !== id));
-                prikaziUspeh('Omiljena je obrisana.');
-            } else {
-                prikaziUspeh('Nije moguće obrisati.');
-            }
+                setOmiljene(prev => prev.filter(o => o.id !== id));
+                prikaziToast('Omiljena je obrisana.');
+            } else prikaziToast('Nije moguće obrisati.');
         } catch {
-            prikaziUspeh('Greška u mreži.');
+            prikaziToast('Greška u mreži.');
         } finally {
             setBrisanje(null);
         }
     };
 
-    // PrivateRoute garantuje login — samo type guard
     if (!korisnik || !token) return null;
 
     return (
         <div className={styles.stranica}>
-            {/* ── HEADER ── */}
-            <header className={styles.header}>
-                <div className={styles.headerSadrzaj}>
-                    <motion.span
-                        className={styles.oznaka}
-                        initial={{ opacity: 0, y: 10 }}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div
+                        className={styles.toast}
+                        initial={{ opacity: 0, y: -12 }}
                         animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -12 }}
                     >
-                        Sačuvano
-                    </motion.span>
-                    <motion.h1
-                        className={styles.naslov}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.07 }}
-                    >
-                        Omiljene
-                    </motion.h1>
+                        {toast}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <div className={styles.wrap}>
+                <span className={styles.eyeb}>sačuvane kombinacije</span>
+                <div className={styles.glava}>
+                    <h1 className={styles.naslov}>Omiljene</h1>
                     {omiljene.length > 0 && (
-                        <motion.p
-                            className={styles.podNaslov}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.14 }}
-                        >
-                            {omiljene.length} {omiljene.length === 1 ? 'sačuvana kombinacija' : 'sačuvanih kombinacija'}
-                        </motion.p>
+                        <span className={styles.brojac}>
+                            {omiljene.length} {omiljene.length === 1 ? 'sačuvana' : 'sačuvane'}
+                        </span>
                     )}
                 </div>
-            </header>
 
-            {/* ── SADRŽAJ ── */}
-            <main className={styles.sadrzaj}>
-                {/* Toast */}
-                <AnimatePresence>
-                    {uspehPoruka && (
-                        <motion.div
-                            className={styles.toast}
-                            initial={{ opacity: 0, y: -12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -12 }}
-                        >
-                            <CheckCircle size={15} />
-                            {uspehPoruka}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {greska && <p className={styles.greska}>{greska}</p>}
 
-                {/* Greška */}
-                {greska && (
-                    <div className={styles.greskaBlok}>
-                        <AlertCircle size={16} />
-                        {greska}
-                    </div>
-                )}
-
-                {/* Skeleton */}
                 {loading && (
-                    <div className={styles.lista}>
+                    <div className={styles.tabla}>
                         {Array.from({ length: 3 }).map((_, i) => (
                             <div key={i} className={styles.skeleton} />
                         ))}
                     </div>
                 )}
 
-                {/* Prazno stanje */}
                 {!loading && !greska && omiljene.length === 0 && (
                     <motion.div
                         className={styles.prazno}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                     >
-                        <div className={styles.praznoIkonaWrap}>
-                            <Bookmark size={32} strokeWidth={1.3} />
-                        </div>
-                        <h2 className={styles.praznoNaslov}>Još nemaš omiljenih</h2>
+                        <Srce size={70} strokeWidth={2.6} className={styles.praznoIkona} />
+                        <h2 className={styles.praznoNaslov}>Još nemaš omiljenih.</h2>
                         <p className={styles.praznoTekst}>
-                            Sačuvaj porudžbinu iz istorije pa je poruči ponovo jednim klikom.
+                            Sačuvaj porudžbinu iz istorije, pa je sledeći put poruči jednim klikom.
                         </p>
-                        <Link to="/istorija" className={styles.praznoLink}>
-                            Idi na porudžbine
-                            <ChevronRight size={15} />
-                        </Link>
+                        <Link to="/istorija" className={styles.praznoLink}>Idi na porudžbine →</Link>
                     </motion.div>
                 )}
 
-                {/* Lista */}
                 {!loading && !greska && omiljene.length > 0 && (
-                    <div className={styles.lista}>
+                    <div className={styles.tabla}>
                         <AnimatePresence mode="popLayout">
-                            {omiljene.map((o) => (
-                                <OmiljenaKartica
+                            {omiljene.map((o, i) => (
+                                <Papiric
                                     key={o.id}
                                     o={o}
                                     proizvodiMap={proizvodiMap}
                                     popust={popust}
-                                    onPonovi={(om) => setPonoviModal(om)}
+                                    pinIndex={i}
+                                    onPonovi={(om, ukupno) => setPonoviModal({ o: om, ukupno })}
                                     onObrisi={obrisi}
                                     brisanje={brisanje}
                                 />
@@ -398,18 +362,19 @@ export default function OmiljenePage() {
                         </AnimatePresence>
                     </div>
                 )}
-            </main>
+            </div>
 
-            {/* ── MODAL "PONOVI" ── */}
             <AnimatePresence>
                 {ponoviModal && (
                     <PonoviModal
-                        omiljena={ponoviModal}
+                        omiljena={ponoviModal.o}
                         token={token}
+                        popust={popust}
+                        ukupno={ponoviModal.ukupno}
                         onZatvori={() => setPonoviModal(null)}
                         onUspeh={(porudzbinaId) => {
                             setPonoviModal(null);
-                            if (porudzbinaId) otvoriStatus(porudzbinaId);
+                            if (porudzbinaId) postaviAktivnu(porudzbinaId);
                         }}
                     />
                 )}

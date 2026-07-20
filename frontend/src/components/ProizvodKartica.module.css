@@ -1,159 +1,154 @@
+/* Red proizvoda u meniju — papirnati red sa tačkastim vođicama. */
+
 .red {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 22px 0;
-    border-bottom: 1px solid var(--ink-12);
-}
-
-.red:first-child {
-    border-top: 1px solid var(--ink-12);
+    align-items: baseline;
+    gap: 14px;
+    padding: 16px 6px;
+    border-bottom: 2px dotted var(--ink12);
+    cursor: pointer;
 }
 
 .levo {
-    flex: 1;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
 }
 
 .naziv {
-    font-family: var(--serif);
-    font-size: 1.1rem;
-    font-style: italic;
-    font-weight: 400;
-    color: var(--ink);
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 31px;
+    line-height: 1;
+    letter-spacing: .03em;
     margin: 0;
+}
+
+.opis {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--ink55);
+    margin: 4px 0 0;
     line-height: 1.3;
 }
 
-
-.opis {
-    font-family: var(--sans);
-    font-size: 0.83rem;
-    color: var(--ink-55);
-    line-height: 1.6;
-    margin: 0;
-}
-
-.alergeni {
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    color: var(--ink-40);
-    line-height: 1.5;
-    margin: 0;
-    letter-spacing: 0.02em;
-}
-
-.desno {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
-    flex-shrink: 0;
-}
-
-.cenaWrap {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-}
-
-.cena {
-    font-family: var(--sans);
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--ink);
-    white-space: nowrap;
+.dots {
+    flex: 1;
+    border-bottom: 3px dotted var(--ink20);
+    transform: translateY(-6px);
+    min-width: 30px;
 }
 
 .cenaStara {
-    font-family: var(--sans);
-    font-size: 0.78rem;
-    color: var(--ink-40);
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--ink40);
     text-decoration: line-through;
     white-space: nowrap;
 }
 
-.cenaPopust {
-    font-family: var(--sans);
-    font-size: 0.95rem;
-    font-weight: 600;
+.cena {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 29px;
     color: var(--rust);
     white-space: nowrap;
 }
 
-.dodajBtn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--ink);
-    color: var(--paper);
-    border: none;
-    padding: 7px 14px;
-    border-radius: 0;
-    cursor: pointer;
-    font-family: var(--sans);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    transition: background 0.2s;
-    white-space: nowrap;
+.rsd {
+    font-size: .55em;
+    color: var(--ink55);
+    margin-left: 3px;
+    font-weight: 400;
 }
 
-.dodajBtn:hover {
-    background: var(--rust);
-}
-
-.kontrole {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--ink-20);
-    padding: 4px 8px;
-}
-
-.kontroleBtn {
-    width: 26px;
-    height: 26px;
+.plusBtn {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    align-self: center;
     background: transparent;
     color: var(--ink);
-    border: none;
     cursor: pointer;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s;
-    flex-shrink: 0;
+    border: 2px solid var(--ink40);
+    border-radius: var(--wob);
 }
 
-.kontroleBtn:hover {
-    background: var(--ink-12);
+.qty {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    align-self: center;
+    border: 2px solid var(--ink);
+    border-radius: var(--wob);
+    padding: 2px;
 }
 
-.kolicina {
+.qtyBtn {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    background: transparent;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qtyBroj {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 22px;
     min-width: 20px;
     text-align: center;
-    font-weight: 600;
-    font-size: 0.92rem;
-    color: var(--ink);
-    font-family: var(--sans);
+    padding-top: 3px;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 1000px) {
     .red {
-        flex-direction: column;
-        gap: 14px;
+        gap: 10px;
     }
 
-    .desno {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
+    .naziv {
+        font-size: 22px;
+        white-space: normal;
+    }
+
+    .opis {
+        font-size: 16px;
+    }
+
+    .cena {
+        font-size: 23px;
+    }
+
+    .cenaStara {
+        font-size: 15px;
+    }
+
+    .qtyBtn {
+        width: 24px;
+        height: 24px;
+        font-size: 19px;
+    }
+
+    .qtyBroj {
+        font-size: 19px;
+        min-width: 15px;
+    }
+
+    .plusBtn {
+        width: 36px;
+        height: 36px;
+        font-size: 22px;
     }
 }

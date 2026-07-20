@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-    CheckCircle2, XCircle, RefreshCw, ChevronLeft, ChefHat, Bell, BellOff,
-} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { tipLabela, type Porudzbina, type StatusPorudzbine } from '../types/porudzbina';
+import { Zvono, Refresh, Klose } from '../components/Doodle';
+import logoDark from '../assets/logoDark.png';
 import styles from './PanelPorudzbina.module.css';
 
 type Tab = 'PRIPREMA' | 'ZAVRSENE' | 'OTKAZANE';
@@ -112,14 +111,14 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onZavrsi, onOtkazi }: Karti
                                 onClick={() => setBiranjeVremena(true)}
                                 disabled={azurira}
                             >
-                                <ChefHat size={16} /> Prihvati
+                                <Klose size={18} strokeWidth={2.2} /> Prihvati
                             </button>
                             <button
                                 className={`${styles.btn} ${styles.btnOtkazi}`}
                                 onClick={() => onOtkazi(p.porudzbinaId)}
                                 disabled={azurira}
                             >
-                                <XCircle size={16} /> Otkaži
+                                ✕ Otkaži
                             </button>
                         </>
                     )}
@@ -128,7 +127,7 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onZavrsi, onOtkazi }: Karti
                     {p.status === 'U_PRIPREMI' && biranjeVremena && !customMode && (
                         <div className={styles.vremeBiraci}>
                             <button className={styles.vremeNazad} onClick={resetBiranje} title="Nazad">
-                                <ChevronLeft size={16} />
+                                ‹
                             </button>
                             <span className={styles.vremeLabel}>Vreme:</span>
                             {PRESET_VREMENA.map((v) => (
@@ -151,7 +150,7 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onZavrsi, onOtkazi }: Karti
                     {p.status === 'U_PRIPREMI' && biranjeVremena && customMode && (
                         <div className={styles.vremeBiraci}>
                             <button className={styles.vremeNazad} onClick={() => setCustomMode(false)} title="Nazad">
-                                <ChevronLeft size={16} />
+                                ‹
                             </button>
                             <input
                                 type="number"
@@ -182,14 +181,14 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onZavrsi, onOtkazi }: Karti
                                 onClick={() => onZavrsi(p.porudzbinaId)}
                                 disabled={azurira}
                             >
-                                <CheckCircle2 size={16} /> Završi
+                                ✓ Spremna
                             </button>
                             <button
                                 className={`${styles.btn} ${styles.btnOtkazi}`}
                                 onClick={() => onOtkazi(p.porudzbinaId)}
                                 disabled={azurira}
                             >
-                                <XCircle size={16} /> Otkaži
+                                ✕ Otkaži
                             </button>
                         </>
                     )}
@@ -343,7 +342,7 @@ export default function PanelPorudzbina() {
             onClick={toggleZvuk}
             title={zvuk ? 'Isključi zvuk' : 'Uključi zvuk'}
         >
-            {zvuk ? <Bell size={15} /> : <BellOff size={15} />}
+            <Zvono size={17} strokeWidth={2.2} />
             {zvuk ? 'Zvuk' : 'Zvuk isklj.'}
         </button>
     );
@@ -353,16 +352,19 @@ export default function PanelPorudzbina() {
             {/* Header */}
             <header className={styles.header}>
                 <div className={styles.headerLevo}>
-                    <span className={styles.oznaka}>Panel zaposlenog</span>
-                    <h1 className={styles.naslov}>Porudžbine</h1>
+                    <img src={logoDark} alt="Glumac Plus" className={styles.logo} />
+                    <div>
+                        <span className={styles.oznaka}>panel zaposlenog</span>
+                        <h1 className={styles.naslov}>Porudžbine</h1>
+                    </div>
                 </div>
                 <div className={styles.headerDesno}>
                     {ZvukToggle}
                     <span className={styles.zivo}>
-                        <span className={styles.zivoTacka} /> uživo · 8s
+                        <span className={styles.zivoTacka} /> uživo
                     </span>
                     <button className={styles.refreshBtn} onClick={() => fetchPorudzbine(true)} title="Osveži">
-                        <RefreshCw size={16} />
+                        <Refresh size={18} strokeWidth={2.2} />
                     </button>
                 </div>
             </header>
@@ -422,6 +424,9 @@ export default function PanelPorudzbina() {
                             exit={{ opacity: 0, scale: 0.96, y: 20 }}
                             transition={{ type: 'spring', damping: 26, stiffness: 280 }}
                         >
+                            <span className={styles.popupStiker}>
+                                <Zvono size={16} strokeWidth={2.2} /> nova porudžbina!
+                            </span>
                             <div className={styles.popupGlava}>
                                 <span className={styles.popupNaslov}>
                                     <span className={styles.popupTacka} />

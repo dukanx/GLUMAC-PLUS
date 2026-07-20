@@ -1,20 +1,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Minus, Trash2, ShoppingCart, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
+import * as porudzbineApi from '../api/porudzbine';
+import { ApiError } from '../api/client';
 import styles from './MiniKorpa.module.css';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 export default function MiniKorpa() {
     const navigate = useNavigate();
     const { korisnik, token, osvezi, popust } = useAuth();
-    const { otvoriStatus } = useAktivnaPorudzbina();
-    const { korpa, povecaj, smanji, ukloni, isprazni, ukupnaCena } = useCart();
+    const { postaviAktivnu } = useAktivnaPorudzbina();
+    const { korpa, povecaj, smanji, ukloni, isprazni, ukupnaCena, ukupnoStavki } = useCart();
 
     const [tipPorudzbine, setTipPorudzbine] = useState<TipPorudzbine>('U_LOKALU');
     const [napomena, setNapomena] = useState('');
@@ -35,39 +34,27 @@ export default function MiniKorpa() {
         setPorucivanjeUToku(true);
         setGreska('');
         try {
-            const res = await fetch(`${API}/api/porudzbine`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    tipPorudzbine,
-                    napomena: napomena.trim() || null,
-                    stavke: korpa.map(i => ({
-                        proizvodId: i.proizvod.id,
-                        kolicina: i.kolicina,
-                    })),
-                }),
+            const nova = await porudzbineApi.kreiraj({
+                tipPorudzbine,
+                napomena: napomena.trim() || null,
+                stavke: korpa.map(i => ({
+                    proizvodId: i.proizvod.id,
+                    kolicina: i.kolicina,
+                })),
             });
-
-            if (res.ok) {
-                const responseData = await res.json().catch(() => null);
-                const novaPorudzbinaId: number | null = responseData?.porudzbinaId ?? null;
-                isprazni();
-                setNapomena('');
-                setUspesno(true);
-                await osvezi();
-                setTimeout(() => {
-                    setUspesno(false);
-                    if (novaPorudzbinaId) otvoriStatus(novaPorudzbinaId);
-                }, 2000);
-            } else {
-                const data = await res.json().catch(() => null);
-                setGreska(data?.message ?? 'Greška prilikom naručivanja.');
-            }
-        } catch {
-            setGreska('Server ne odgovara.');
+            const novaPorudzbinaId: number | null = nova?.porudzbinaId ?? null;
+            isprazni();
+            setNapomena('');
+            setUspesno(true);
+            await osvezi();
+            setTimeout(() => {
+                setUspesno(false);
+                if (novaPorudzbinaId) postaviAktivnu(novaPorudzbinaId);
+            }, 2000);
+        } catch (e) {
+            setGreska(e instanceof ApiError
+                ? (e.body?.message ?? 'Greška prilikom naručivanja.')
+                : 'Server ne odgovara.');
         } finally {
             setPorucivanjeUToku(false);
         }
@@ -75,88 +62,86 @@ export default function MiniKorpa() {
 
     return (
         <div className={styles.panel}>
+            <span className={styles.tape} />
+
             <div className={styles.header}>
                 <h2 className={styles.naslov}>Korpa</h2>
-            </div>
-
-            <div className={styles.sadrzaj}>
-                {uspesno ? (
-                    <motion.div
-                        className={styles.uspesno}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                    >
-                        <CheckCircle2 size={44} className={styles.uspesnoIkona} />
-                        <p className={styles.uspesnoNaslov}>Porudžbina poslata!</p>
-                        <p className={styles.uspesnoSub}>Otvaramo praćenje...</p>
-                    </motion.div>
-
-                ) : korpa.length === 0 ? (
-                    <div className={styles.prazna}>
-                        <ShoppingCart size={36} className={styles.praznaIkona} />
-                        <p className={styles.praznaTekst}>Korpa je prazna</p>
-                        <p className={styles.praznaSub}>Dodaj palačinke iz menija</p>
-                    </div>
-
-                ) : (
-                    <div className={styles.stavke}>
-                        <AnimatePresence initial={false}>
-                            {korpa.map(item => (
-                                <motion.div
-                                    key={item.proizvod.id}
-                                    layout
-                                    initial={{ opacity: 0, x: 10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
-                                    className={styles.stavka}
-                                >
-                                    <div className={styles.stavkaGore}>
-                                        <span className={styles.stavkaNaziv}>{item.proizvod.naziv}</span>
-                                        <button
-                                            className={styles.ukloniBtn}
-                                            onClick={() => ukloni(item.proizvod.id)}
-                                        >
-                                            <Trash2 size={13} />
-                                        </button>
-                                    </div>
-                                    <div className={styles.stavkaDole}>
-                                        <div className={styles.kontrole}>
-                                            <button
-                                                className={styles.kontroleBtn}
-                                                onClick={() => smanji(item.proizvod.id)}
-                                            >
-                                                <Minus size={11} />
-                                            </button>
-                                            <span className={styles.kolicina}>{item.kolicina}</span>
-                                            <button
-                                                className={styles.kontroleBtn}
-                                                onClick={() => povecaj(item.proizvod.id)}
-                                            >
-                                                <Plus size={11} />
-                                            </button>
-                                        </div>
-                                        <span className={styles.cena}>
-                                            {Math.round(item.proizvod.cena * item.kolicina)} RSD
-                                        </span>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    </div>
+                {ukupnoStavki > 0 && (
+                    <span className={styles.brojStavki}>
+                        {ukupnoStavki} {ukupnoStavki === 1 ? 'stavka' : 'stavke'}
+                    </span>
                 )}
             </div>
 
-            {korpa.length > 0 && !uspesno && (
-                <div className={styles.footer}>
+            {uspesno ? (
+                <motion.div
+                    className={styles.uspesno}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                >
+                    <p className={styles.uspesnoNaslov}>Porudžbina poslata!</p>
+                    <p className={styles.uspesnoSub}>otvaramo praćenje…</p>
+                </motion.div>
 
-                    {/* Tip porudžbine */}
-                    <div className={styles.tipSekcija}>
-                        <span className={styles.tipLabel}>Tip porudžbine</span>
+            ) : korpa.length === 0 ? (
+                <div className={styles.prazna}>
+                    <p className={styles.praznaTekst}>korpa je prazna — dodaj nešto iz menija ←</p>
+                </div>
+
+            ) : (
+                <>
+                    <AnimatePresence initial={false}>
+                        {korpa.map(item => (
+                            <motion.div
+                                key={item.proizvod.id}
+                                layout
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className={styles.stavka}
+                            >
+                                <div className={styles.stavkaRed}>
+                                    <span className={styles.stavkaNaziv}>{item.proizvod.naziv}</span>
+                                    <button
+                                        className={styles.ukloniBtn}
+                                        onClick={() => ukloni(item.proizvod.id)}
+                                        aria-label={`Ukloni ${item.proizvod.naziv}`}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                                <div className={styles.stavkaRed}>
+                                    <div className={styles.qty}>
+                                        <button
+                                            className={styles.qtyBtn}
+                                            onClick={() => smanji(item.proizvod.id)}
+                                        >
+                                            −
+                                        </button>
+                                        <span className={styles.qtyBroj}>{item.kolicina}</span>
+                                        <button
+                                            className={styles.qtyBtn}
+                                            onClick={() => povecaj(item.proizvod.id)}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                    <span className={styles.stavkaCena}>
+                                        {Math.round(item.proizvod.cena * item.kolicina)}
+                                        <span className={styles.rsd}>RSD</span>
+                                    </span>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+
+                    <div className={styles.sekcija}>
+                        <span className={styles.sekcLab}>tip porudžbine</span>
                         <div className={styles.tipBiraci}>
                             {(Object.keys(TIP_LABELE) as TipPorudzbine[]).map(tip => (
                                 <button
                                     key={tip}
-                                    className={`${styles.tipBirac} ${tipPorudzbine === tip ? styles.tipAktivan : ''}`}
+                                    className={tipPorudzbine === tip ? styles.tipPilAktivan : styles.tipPil}
                                     onClick={() => setTipPorudzbine(tip)}
                                 >
                                     {TIP_LABELE[tip]}
@@ -165,11 +150,10 @@ export default function MiniKorpa() {
                         </div>
                     </div>
 
-                    {/* Napomena */}
-                    <div className={styles.napomenaSekcija}>
-                        <span className={styles.tipLabel}>Napomena (opciono)</span>
+                    <div className={styles.sekcija}>
+                        <span className={styles.sekcLab}>napomena (opciono)</span>
                         <textarea
-                            className={styles.napomenaInput}
+                            className={styles.napomena}
                             value={napomena}
                             onChange={e => setNapomena(e.target.value)}
                             placeholder="npr. bez šećera..."
@@ -180,16 +164,18 @@ export default function MiniKorpa() {
 
                     {popust > 0 && (
                         <div className={styles.popustRed}>
-                            <span className={styles.popustLabel}>Loyalty popust ({popust}%)</span>
-                            <span className={styles.popustIznos}>−{popustIznos} RSD</span>
+                            <span>loyalty popust ({popust}%)</span>
+                            <span>−{popustIznos} RSD</span>
                         </div>
                     )}
 
-                    <div className={styles.ukupno}>
-                        <span className={styles.ukupnoLabel}>Ukupno</span>
-                        <span className={styles.ukupnoVrednost}>
+                    <div className={styles.ukupnoRed}>
+                        <span className={styles.ukupnoLab}>UKUPNO</span>
+                        <span>
                             {popust > 0 && <span className={styles.ukupnoStaro}>{ukupnaCena}</span>}
-                            {zaPlacanje} RSD
+                            <span className={styles.ukupnoVrednost}>
+                                {zaPlacanje}<span className={styles.rsd}>RSD</span>
+                            </span>
                         </span>
                     </div>
 
@@ -200,13 +186,13 @@ export default function MiniKorpa() {
                         onClick={handleNaruci}
                         disabled={porucivanjeUToku}
                     >
-                        {porucivanjeUToku ? 'Šaljem...' : 'Naruči'}
+                        {porucivanjeUToku ? 'Šaljem…' : 'Naruči →'}
                     </button>
 
                     <button className={styles.isprazniBtn} onClick={isprazni}>
-                        Isprazni korpu
+                        isprazni korpu
                     </button>
-                </div>
+                </>
             )}
         </div>
     );

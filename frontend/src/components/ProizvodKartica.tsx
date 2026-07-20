@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Minus } from 'lucide-react';
 import styles from './ProizvodKartica.module.css';
 import React from 'react';
 import type { Proizvod } from '../types/proizvod';
@@ -11,9 +10,14 @@ interface Props {
     onDodaj: (proizvod: Proizvod) => void;
     onPovecaj: (id: number) => void;
     onSmanji: (id: number) => void;
+    onOtvoriDetalj: (proizvod: Proizvod) => void;
 }
 
-function ProizvodKartica({ proizvod, kolicina, popust, onDodaj, onPovecaj, onSmanji }: Props) {
+// Red u meniju ostaje čist (bez alergena) — klik na red otvara detalj proizvoda.
+function ProizvodKartica({
+    proizvod, kolicina, popust,
+    onDodaj, onPovecaj, onSmanji, onOtvoriDetalj,
+}: Props) {
     const cena = Math.round(proizvod.cena);
     const cenaSaPopustom = popust > 0 ? Math.round(cena * (1 - popust / 100)) : null;
 
@@ -24,70 +28,65 @@ function ProizvodKartica({ proizvod, kolicina, popust, onDodaj, onPovecaj, onSma
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
             layout
+            onClick={() => onOtvoriDetalj(proizvod)}
         >
             <div className={styles.levo}>
                 <h3 className={styles.naziv}>{proizvod.naziv}</h3>
                 {proizvod.opis && <p className={styles.opis}>{proizvod.opis}</p>}
-                {proizvod.alergeniNazivi && proizvod.alergeniNazivi.length > 0 && (
-                    <p className={styles.alergeni}>Alergeni: {proizvod.alergeniNazivi.join(', ')}</p>
-                )}
             </div>
 
-            <div className={styles.desno}>
-                <div className={styles.cenaWrap}>
-                    {cenaSaPopustom ? (
-                        <>
-                            <span className={styles.cenaStara}>{cena} RSD</span>
-                            <span className={styles.cenaPopust}>{cenaSaPopustom} RSD</span>
-                        </>
-                    ) : (
-                        <span className={styles.cena}>{cena} RSD</span>
-                    )}
-                </div>
+            <span className={styles.dots} />
 
-                <AnimatePresence mode="wait">
-                    {kolicina === 0 ? (
+            {cenaSaPopustom !== null && (
+                <span className={styles.cenaStara}>{cena}</span>
+            )}
+            <span className={styles.cena}>
+                {cenaSaPopustom ?? cena}<span className={styles.rsd}>RSD</span>
+            </span>
+
+            <AnimatePresence mode="wait">
+                {kolicina === 0 ? (
+                    <motion.button
+                        key="dodaj"
+                        className={styles.plusBtn}
+                        onClick={e => { e.stopPropagation(); onDodaj(proizvod); }}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ duration: 0.15 }}
+                        aria-label={`Dodaj ${proizvod.naziv}`}
+                    >
+                        +
+                    </motion.button>
+                ) : (
+                    <motion.div
+                        key="kontrole"
+                        className={styles.qty}
+                        onClick={e => e.stopPropagation()}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.15 }}
+                    >
                         <motion.button
-                            key="dodaj"
-                            className={styles.dodajBtn}
-                            onClick={() => onDodaj(proizvod)}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ duration: 0.15 }}
+                            className={styles.qtyBtn}
+                            onClick={() => onSmanji(proizvod.id)}
+                            whileTap={{ scale: 0.85 }}
                         >
-                            <Plus size={13} />
-                            Dodaj
+                            −
                         </motion.button>
-                    ) : (
-                        <motion.div
-                            key="kontrole"
-                            className={styles.kontrole}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            transition={{ duration: 0.15 }}
+                        <span className={styles.qtyBroj}>{kolicina}</span>
+                        <motion.button
+                            className={styles.qtyBtn}
+                            onClick={() => onPovecaj(proizvod.id)}
+                            whileTap={{ scale: 0.85 }}
                         >
-                            <motion.button
-                                className={styles.kontroleBtn}
-                                onClick={() => onSmanji(proizvod.id)}
-                                whileTap={{ scale: 0.85 }}
-                            >
-                                <Minus size={12} />
-                            </motion.button>
-                            <span className={styles.kolicina}>{kolicina}</span>
-                            <motion.button
-                                className={styles.kontroleBtn}
-                                onClick={() => onPovecaj(proizvod.id)}
-                                whileTap={{ scale: 0.85 }}
-                            >
-                                <Plus size={12} />
-                            </motion.button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                            +
+                        </motion.button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }

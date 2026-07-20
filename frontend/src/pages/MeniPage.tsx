@@ -1,21 +1,23 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Phone, Clock, Star, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import styles from './MeniPage.module.css';
 import ProizvodKartica from '../components/ProizvodKartica';
 import MeniSkeleton from '../components/MeniSkeleton';
 import MiniKorpa from '../components/MiniKorpa';
-import Toast from '../components/Toast';
+import DetaljProizvoda from '../components/DetaljProizvoda';
+import { Zvezda } from '../components/Doodle';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
 import type { Proizvod } from '../types/proizvod';
 import * as proizvodiApi from '../api/proizvodi';
 
 // ── Konstante ──────────────────────────────────────────────────────────────
 const TELEFON = '+381 65 817 8476';
-const ADRESA = 'Dositejeva 1a, Dorćol, Beograd';
+const ADRESA = 'Dositejeva 1a, Dorćol';
 const MAPS_URL = 'https://www.google.com/maps/place/glumac+plus/data=!4m2!3m1!1s0x475a7bc2e551cbab:0xb7899385a5114972?sa=X&ved=1t:242&ictx=111';
+const WOLT_URL = 'https://wolt.com/en/srb/belgrade/restaurant/palainkarnica-glumac-plus';
+const GLOVO_URL = 'https://glovoapp.com/en/rs/belgrade/stores/glumac-plus-beg';
 
 // Normalizacija teksta za pretragu (uklanjanje dijakritičkih znakova, mala slova)
 function normalizuj(tekst: string): string {
@@ -30,14 +32,14 @@ function normalizuj(tekst: string): string {
 export default function MeniPage() {
     const { korpa, dodaj, povecaj, smanji } = useCart();
     const { korisnik, popust } = useAuth();
-    const { raspored, danas, danasKljuc, loading: radnoVremeLoading, imaPodataka } = useRadnoVreme();
+    const { raspored, danasKljuc, loading: radnoVremeLoading, imaPodataka } = useRadnoVreme();
 
     const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
     const [greska, setGreska] = useState('');
     const [ucitava, setUcitava] = useState(true);
     const [pretraga, setPretraga] = useState('');
     const [aktivniTab, setAktivniTab] = useState('Sve');
-    const [toastPoruka, setToastPoruka] = useState<string | null>(null);
+    const [detalj, setDetalj] = useState<Proizvod | null>(null);
 
     useEffect(() => {
         proizvodiApi.getSvi()
@@ -69,186 +71,187 @@ export default function MeniPage() {
             .filter(g => g.stavke.length > 0);
     }, [aktivniTab, filtrirani, kategorije]);
 
-    const handleDodaj = useCallback((p: Proizvod) => {
-        dodaj(p);
-        setToastPoruka(`${p.naziv} dodata u korpu`);
-        setTimeout(() => setToastPoruka(null), 2500);
-    }, [dodaj]);
+    const handleDodaj = useCallback((p: Proizvod) => dodaj(p), [dodaj]);
 
     return (
         <div className={styles.stranica}>
 
-            {/* ── HEADER ── */}
-            <header className={styles.pageHeader}>
-                <div className={styles.pageHeaderSadrzaj}>
-                    <span className={styles.oznaka}>Poručivanje</span>
-                    <div className={styles.linija} />
-                    <h1 className={styles.naslov}>Meni</h1>
-                    <div className={styles.infoTagovi}>
-                        <div className={styles.infoTag}>
-                            <Star size={11} strokeWidth={1.5} />
-                            Skupljaj loyalty bodove uz svaku porudžbinu
-                        </div>
-                        <div className={styles.infoTag}>
-                            <ShoppingBag size={11} strokeWidth={1.5} />
-                            Bez dostave — porudžbinu preuzimaš lično
-                        </div>
-                    </div>
-                    {korisnik && popust > 0 && (
-                        <div className={styles.loyaltyBaner}>
-                            <Star size={12} strokeWidth={1.5} />
-                            {korisnik.loyaltyNivo} — popust: <strong>{popust}%</strong>
-                        </div>
-                    )}
+            {/* ── Header ── */}
+            <header className={styles.mhead}>
+                <span className={styles.eyeb}>poručivanje — preuzimaš lično</span>
+                <h1 className={styles.naslov}>Meni</h1>
+                <div className={styles.infoTagovi}>
+                    <span className={styles.infoTag}>
+                        <Zvezda size={15} strokeWidth={2.6} />
+                        skupljaš bodove uz svaku porudžbinu
+                    </span>
+                    <span className={styles.dostavaPitanje}>radije dostavu?</span>
+                    <a
+                        href={GLOVO_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.infoTagGlovo}
+                    >
+                        Glovo ↗
+                    </a>
+                    <a
+                        href={WOLT_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.infoTagWolt}
+                    >
+                        Wolt ↗
+                    </a>
                 </div>
+                {korisnik && popust > 0 && (
+                    <div>
+                        <span className={styles.loyBan}>
+                            <Zvezda size={15} strokeWidth={2.6} style={{ color: 'var(--rust)' }} />
+                            <span>
+                                <b>{korisnik.loyaltyNivo}</b> — tvoj popust:{' '}
+                                <b style={{ color: 'var(--rust)' }}>{popust}%</b>{' '}
+                                <span className={styles.loyBanSivo}>· cene ispod su već preračunate</span>
+                            </span>
+                        </span>
+                    </div>
+                )}
             </header>
 
-            {/* ── INFO SEKCIJA (lokacija, telefon, radno vreme) ── */}
-            <section className={styles.infoSekcija}>
-                <a
-                    href={MAPS_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.infoLink}
-                >
-                    <MapPin size={12} strokeWidth={1.5} className={styles.infoIkona} />
-                    <span>{ADRESA}</span>
-                </a>
+            {/* ── Info traka: adresa · telefon · radno vreme ── */}
+            <section className={styles.infoStrip}>
+                <div className={styles.infoBl}>
+                    <span className={styles.infoBlH}>gde smo</span>
+                    <a
+                        href={MAPS_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.infoBlLink}
+                    >
+                        {ADRESA} ↗
+                    </a>
+                </div>
 
-                <a href={`tel:${TELEFON.replace(/\s/g, '')}`} className={styles.infoLink}>
-                    <Phone size={12} strokeWidth={1.5} className={styles.infoIkona} />
-                    <span>{TELEFON}</span>
-                </a>
+                <div className={styles.infoBl}>
+                    <span className={styles.infoBlH}>pozovi nas</span>
+                    <a href={`tel:${TELEFON.replace(/\s/g, '')}`} className={styles.infoBlV}>
+                        {TELEFON}
+                    </a>
+                </div>
 
-                <div className={styles.rasporedBlok}>
-                    <div className={styles.rasporedGlava}>
-                        <Clock size={12} strokeWidth={1.5} className={styles.infoIkona} />
-                        <span>Radno vreme</span>
-                    </div>
+                <div className={styles.infoBl}>
+                    <span className={styles.infoBlH}>radno vreme</span>
                     {radnoVremeLoading ? (
-                        <p className={styles.rasporedFallback}>Učitavam...</p>
+                        <span className={styles.rvFallback}>učitavam…</span>
                     ) : !imaPodataka ? (
-                        <p className={styles.rasporedFallback}>Radno vreme privremeno nedostupno.</p>
+                        <span className={styles.rvFallback}>privremeno nedostupno</span>
                     ) : (
-                        <>
-                            {/* Pun raspored — desktop/tablet */}
-                            <div className={styles.rasporedGrid}>
-                                {raspored.map(({ dan, skracenica, vreme }) => (
-                                    <div
-                                        key={dan}
-                                        className={`${styles.rasporedDan} ${dan === danasKljuc ? styles.danasnji : ''}`}
-                                    >
-                                        <span className={styles.rasporedSkracenica}>{skracenica}</span>
-                                        <span className={styles.rasporedVreme}>{vreme ?? 'zatv.'}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            {/* Samo današnji dan — mobilni */}
-                            {danas && (
-                                <div className={styles.rasporedDanas}>
-                                    <span className={styles.rasporedDanasDan}>Danas · {danas.skracenica}</span>
-                                    <span className={styles.rasporedDanasVreme}>
-                                        {danas.vreme ?? 'zatvoreno'}
-                                    </span>
+                        <div className={styles.rvGrid}>
+                            {raspored.map(({ dan, skracenica, vreme }) => (
+                                <div
+                                    key={dan}
+                                    className={dan === danasKljuc ? styles.rvDanas : styles.rvDan}
+                                >
+                                    <span className={styles.rvSkr}>{skracenica.toLowerCase()}</span>
+                                    <span className={styles.rvVr}>{vreme ?? 'zatv.'}</span>
                                 </div>
-                            )}
-                        </>
+                            ))}
+                        </div>
                     )}
                 </div>
             </section>
 
-            {/* ── KONTROLE (tabovi, sticky) ── */}
-            <div className={styles.kontrole}>
-                <div className={styles.tabovi}>
-                    {kategorije.map(kat => (
-                        <button
-                            key={kat}
-                            className={`${styles.tab} ${aktivniTab === kat ? styles.tabAktivan : ''}`}
-                            onClick={() => setAktivniTab(kat)}
-                        >
-                            {kat}
-                        </button>
-                    ))}
-                </div>
+            {/* ── Tabovi ── */}
+            <div className={styles.tabRow}>
+                {kategorije.map(kat => (
+                    <button
+                        key={kat}
+                        className={aktivniTab === kat ? styles.tabAktivan : styles.tab}
+                        onClick={() => setAktivniTab(kat)}
+                    >
+                        {kat}
+                    </button>
+                ))}
             </div>
 
-            {/* ── SADRŽAJ (dva stuba na desktopu) ── */}
+            {/* ── Sadržaj: lista + sticky korpa ── */}
             <main className={styles.sadrzaj}>
-                <div className={styles.sadrzajInner}>
-
-                    {/* Levo — lista proizvoda */}
-                    <div className={styles.produkti}>
-                        <div className={styles.searchWrap}>
-                            <span className={styles.searchIkona}>⌕</span>
-                            <input
-                                type="text"
-                                placeholder="Pretraži..."
-                                value={pretraga}
-                                onChange={e => setPretraga(e.target.value)}
-                                className={styles.searchInput}
-                            />
-                            {pretraga && (
-                                <button className={styles.searchBrisi} onClick={() => setPretraga('')}>×</button>
-                            )}
-                        </div>
-
-                        {greska && <p className={styles.greska}>{greska}</p>}
-
-                        {ucitava && <MeniSkeleton />}
-
-                        {!ucitava && filtrirani.length === 0 && !greska && (
-                            <div className={styles.praznoStanje}>
-                                <p className={styles.praznoTekst}>Nema rezultata</p>
-                                {pretraga && (
-                                    <p className={styles.praznoHint}>
-                                        Nismo pronašli ništa za „<em>{pretraga}</em>“
-                                    </p>
-                                )}
-                            </div>
+                <div>
+                    <div className={styles.srch}>
+                        <span className={styles.srchIkona}>⌕</span>
+                        <input
+                            type="text"
+                            placeholder="pretraži meni..."
+                            value={pretraga}
+                            onChange={e => setPretraga(e.target.value)}
+                            className={styles.srchInput}
+                        />
+                        {pretraga && (
+                            <button className={styles.srchBrisi} onClick={() => setPretraga('')}>
+                                ×
+                            </button>
                         )}
-
-                        {!ucitava && grupisani.map(({ tip, stavke }) => (
-                            <div key={tip} className={styles.sekcija}>
-                                {aktivniTab === 'Sve' && (
-                                    <div className={styles.sekcijaGlava}>
-                                        <span className={styles.sekcijaNaslov}>{tip}</span>
-                                    </div>
-                                )}
-                                <motion.div
-                                    className={styles.lista}
-                                    initial="hidden"
-                                    animate="visible"
-                                    variants={{
-                                        hidden: {},
-                                        visible: { transition: { staggerChildren: 0.04 } },
-                                    }}
-                                >
-                                    {stavke.map(p => (
-                                        <ProizvodKartica
-                                            key={p.id}
-                                            proizvod={p}
-                                            kolicina={korpa.find(i => i.proizvod.id === p.id)?.kolicina ?? 0}
-                                            popust={popust}
-                                            onDodaj={handleDodaj}
-                                            onPovecaj={povecaj}
-                                            onSmanji={smanji}
-                                        />
-                                    ))}
-                                </motion.div>
-                            </div>
-                        ))}
                     </div>
 
-                    {/* Desno — mini korpa (samo desktop) */}
-                    <aside className={styles.korpaKolona}>
-                        <MiniKorpa />
-                    </aside>
+                    {greska && <p className={styles.greska}>{greska}</p>}
 
+                    {ucitava && <MeniSkeleton />}
+
+                    {!ucitava && filtrirani.length === 0 && !greska && (
+                        <div className={styles.prazno}>
+                            <p className={styles.praznoTekst}>NEMA REZULTATA</p>
+                            {pretraga && (
+                                <p className={styles.praznoHint}>
+                                    nismo pronašli ništa za „{pretraga}“
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {!ucitava && grupisani.map(({ tip, stavke }, gi) => (
+                        <div key={tip}>
+                            {aktivniTab === 'Sve' && (
+                                <p className={gi === 0 ? styles.prviKSekc : styles.kSekc}>
+                                    — {tip.toLowerCase()}
+                                </p>
+                            )}
+                            <motion.div
+                                initial="hidden"
+                                animate="visible"
+                                variants={{
+                                    hidden: {},
+                                    visible: { transition: { staggerChildren: 0.04 } },
+                                }}
+                            >
+                                {stavke.map(p => (
+                                    <ProizvodKartica
+                                        key={p.id}
+                                        proizvod={p}
+                                        kolicina={korpa.find(i => i.proizvod.id === p.id)?.kolicina ?? 0}
+                                        popust={popust}
+                                        onDodaj={handleDodaj}
+                                        onPovecaj={povecaj}
+                                        onSmanji={smanji}
+                                        onOtvoriDetalj={setDetalj}
+                                    />
+                                ))}
+                            </motion.div>
+                        </div>
+                    ))}
                 </div>
+
+                {/* Desno — sticky korpa (samo desktop) */}
+                <aside className={styles.korpaKolona}>
+                    <MiniKorpa />
+                </aside>
             </main>
 
-            <Toast poruka={toastPoruka} />
-
+            {/* Detalj proizvoda — popup / bottom sheet */}
+            <DetaljProizvoda
+                proizvod={detalj}
+                popust={popust}
+                onDodaj={(p, kolicina) => dodaj(p, kolicina)}
+                onZatvori={() => setDetalj(null)}
+            />
         </div>
     );
 }

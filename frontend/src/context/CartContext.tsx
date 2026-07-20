@@ -3,7 +3,7 @@ import type { Proizvod, StavkaKorpe } from '../types/proizvod';
 
 interface CartContextTip {
     korpa: StavkaKorpe[];
-    dodaj: (p: Proizvod) => void;
+    dodaj: (p: Proizvod, kolicina?: number) => void;
     povecaj: (id: number) => void;
     smanji: (id: number) => void;
     ukloni: (id: number) => void;
@@ -34,16 +34,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         } catch { }
     }, [korpa]);
 
-    const dodaj = (noviProizvod: Proizvod) => {
+    const dodaj = (noviProizvod: Proizvod, kolicina = 1) => {
         setKorpa(prev => {
             const postoji = prev.find(i => i.proizvod.id === noviProizvod.id);
             if (postoji) {
                 return prev.map(i =>
                     i.proizvod.id === noviProizvod.id
-                        ? { ...i, kolicina: i.kolicina + 1 } : i
+                        ? { ...i, kolicina: i.kolicina + kolicina } : i
                 );
             }
-            return [...prev, { proizvod: noviProizvod, kolicina: 1 }];
+            return [...prev, { proizvod: noviProizvod, kolicina }];
         });
     };
 

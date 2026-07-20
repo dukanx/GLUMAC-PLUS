@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Plus, Minus, Trash2, ShoppingCart, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +12,7 @@ import { ApiError } from '../api/client';
 export default function CartDrawer() {
     const navigate = useNavigate();
     const { korisnik, token, osvezi, popust } = useAuth();
-    const { otvoriStatus } = useAktivnaPorudzbina();
+    const { postaviAktivnu } = useAktivnaPorudzbina();
     const {
         korpa, povecaj, smanji, ukloni, isprazni,
         ukupnaCena, ukupnoStavki,
@@ -26,7 +25,7 @@ export default function CartDrawer() {
     const [uspesno, setUspesno] = useState(false);
     const [greska, setGreska] = useState('');
 
-    //Zaokruzivanje finalne cene, isto kao na meniju
+    // Zaokruživanje finalne cene, isto kao na meniju
     const zaPlacanje = popust > 0 ? Math.round(ukupnaCena * (1 - popust / 100)) : ukupnaCena;
     const popustIznos = ukupnaCena - zaPlacanje;
 
@@ -56,7 +55,7 @@ export default function CartDrawer() {
             setTimeout(() => {
                 setUspesno(false);
                 zatvoriDrawer();
-                if (novaPorudzbinaId) otvoriStatus(novaPorudzbinaId);
+                if (novaPorudzbinaId) postaviAktivnu(novaPorudzbinaId);
             }, 2000);
         } catch (e) {
             setGreska(e instanceof ApiError
@@ -71,7 +70,6 @@ export default function CartDrawer() {
         <AnimatePresence>
             {drawerOtvoren && (
                 <>
-                    {/* Overlay */}
                     <motion.div
                         className={styles.overlay}
                         initial={{ opacity: 0 }}
@@ -80,7 +78,6 @@ export default function CartDrawer() {
                         onClick={zatvoriDrawer}
                     />
 
-                    {/* Drawer */}
                     <motion.aside
                         className={styles.drawer}
                         initial={{ x: '100%' }}
@@ -88,29 +85,20 @@ export default function CartDrawer() {
                         exit={{ x: '100%', transition: { type: 'tween', duration: 0.2, ease: [0.4, 0, 1, 1] } }}
                         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
                     >
-                        {/* Header */}
                         <div className={styles.header}>
                             <div className={styles.headerLevo}>
                                 <h2 className={styles.naslov}>Korpa</h2>
-                                <AnimatePresence>
-                                    {ukupnoStavki > 0 && (
-                                        <motion.span
-                                            className={styles.badge}
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            exit={{ scale: 0 }}
-                                        >
-                                            {ukupnoStavki}
-                                        </motion.span>
-                                    )}
-                                </AnimatePresence>
+                                {ukupnoStavki > 0 && (
+                                    <span className={styles.brojStavki}>
+                                        {ukupnoStavki} {ukupnoStavki === 1 ? 'stavka' : 'stavke'}
+                                    </span>
+                                )}
                             </div>
-                            <button className={styles.zatvoriBtn} onClick={zatvoriDrawer}>
-                                <X size={20} />
+                            <button className={styles.zatvoriBtn} onClick={zatvoriDrawer} aria-label="Zatvori">
+                                ✕
                             </button>
                         </div>
 
-                        {/* Sadržaj */}
                         <div className={styles.sadrzaj}>
                             {uspesno ? (
                                 <motion.div
@@ -118,88 +106,73 @@ export default function CartDrawer() {
                                     initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                 >
-                                    <CheckCircle2 size={56} className={styles.uspesnoIkona} />
-                                    <p className={styles.uspesnoNaslov}>Porudžbina je poslata!</p>
-                                    <p className={styles.uspesnoSub}>Otvaramo praćenje...</p>
+                                    <p className={styles.uspesnoNaslov}>Porudžbina poslata!</p>
+                                    <p className={styles.uspesnoSub}>otvaramo praćenje…</p>
                                 </motion.div>
 
                             ) : korpa.length === 0 ? (
                                 <div className={styles.prazna}>
-                                    <ShoppingCart size={72} className={styles.praznaIkona} />
-                                    <p className={styles.praznaTekst}>Korpa je prazna</p>
+                                    <p className={styles.praznaTekst}>KORPA JE PRAZNA</p>
                                     <button
                                         className={styles.idNaMeni}
                                         onClick={() => { zatvoriDrawer(); navigate('/meni'); }}
                                     >
-                                        Pogledaj meni →
+                                        pogledaj meni →
                                     </button>
                                 </div>
 
                             ) : (
-                                <div className={styles.stavke}>
-                                    <AnimatePresence initial={false}>
-                                        {korpa.map(item => (
-                                            <motion.div
-                                                key={item.proizvod.id}
-                                                layout
-                                                initial={{ opacity: 0, x: 20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, x: -20 }}
-                                                className={styles.stavka}
-                                            >
-                                                <div className={styles.stavkaGore}>
-                                                    <span className={styles.stavkaNaziv}>
-                                                        {item.proizvod.naziv}
-                                                    </span>
-                                                    <button
-                                                        className={styles.ukloniBtn}
-                                                        onClick={() => ukloni(item.proizvod.id)}
+                                <AnimatePresence initial={false}>
+                                    {korpa.map(item => (
+                                        <motion.div
+                                            key={item.proizvod.id}
+                                            layout
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -20 }}
+                                            className={styles.stavka}
+                                        >
+                                            <div className={styles.stavkaRed}>
+                                                <span className={styles.stavkaNaziv}>
+                                                    {item.proizvod.naziv}
+                                                </span>
+                                                <button
+                                                    className={styles.ukloniBtn}
+                                                    onClick={() => ukloni(item.proizvod.id)}
+                                                    aria-label={`Ukloni ${item.proizvod.naziv}`}
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                            <div className={styles.stavkaRed}>
+                                                <div className={styles.qty}>
+                                                    <motion.button
+                                                        whileTap={{ scale: 0.85 }}
+                                                        className={styles.qtyBtn}
+                                                        onClick={() => smanji(item.proizvod.id)}
                                                     >
-                                                        <Trash2 size={15} />
-                                                    </button>
+                                                        −
+                                                    </motion.button>
+                                                    <span className={styles.qtyBroj}>{item.kolicina}</span>
+                                                    <motion.button
+                                                        whileTap={{ scale: 0.85 }}
+                                                        className={styles.qtyBtn}
+                                                        onClick={() => povecaj(item.proizvod.id)}
+                                                    >
+                                                        +
+                                                    </motion.button>
                                                 </div>
-
-                                                <div className={styles.stavkaDole}>
-                                                    <div className={styles.stavkaKontrole}>
-                                                        <motion.button
-                                                            whileTap={{ scale: 0.85 }}
-                                                            className={styles.kontroleBtn}
-                                                            onClick={() => smanji(item.proizvod.id)}
-                                                        >
-                                                            <Minus size={12} />
-                                                        </motion.button>
-                                                        <span className={styles.stavkaKolicina}>
-                                                            {item.kolicina}
-                                                        </span>
-                                                        <motion.button
-                                                            whileTap={{ scale: 0.85 }}
-                                                            className={styles.kontroleBtn}
-                                                            onClick={() => povecaj(item.proizvod.id)}
-                                                        >
-                                                            <Plus size={12} />
-                                                        </motion.button>
-                                                    </div>
-
-                                                    {item.kolicina > 1 && (
-                                                        <span className={styles.stavkaJedinicna}>
-                                                            {item.kolicina} × {Math.round(item.proizvod.cena)} RSD
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <div className={styles.stavkaUkupnoRed}>
-                                                    <span className={styles.stavkaUkupno}>
-                                                        {Math.round(item.proizvod.cena * item.kolicina)} RSD
-                                                    </span>
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </AnimatePresence>
-                                </div>
+                                                <span className={styles.stavkaCena}>
+                                                    {Math.round(item.proizvod.cena * item.kolicina)}
+                                                    <span className={styles.rsd}>RSD</span>
+                                                </span>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
                             )}
                         </div>
 
-                        {/* Footer */}
                         <AnimatePresence>
                             {!uspesno && korpa.length > 0 && (
                                 <motion.div
@@ -208,14 +181,13 @@ export default function CartDrawer() {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 20 }}
                                 >
-                                    {/* Tip porudžbine */}
-                                    <div className={styles.tipSekcija}>
-                                        <span className={styles.tipLabel}>Tip porudžbine</span>
+                                    <div className={styles.sekcija}>
+                                        <span className={styles.sekcLab}>tip porudžbine</span>
                                         <div className={styles.tipBiraci}>
                                             {(Object.keys(TIP_LABELE) as TipPorudzbine[]).map(tip => (
                                                 <button
                                                     key={tip}
-                                                    className={`${styles.tipBirac} ${tipPorudzbine === tip ? styles.tipAktivan : ''}`}
+                                                    className={tipPorudzbine === tip ? styles.tipPilAktivan : styles.tipPil}
                                                     onClick={() => setTipPorudzbine(tip)}
                                                 >
                                                     {TIP_LABELE[tip]}
@@ -224,11 +196,10 @@ export default function CartDrawer() {
                                         </div>
                                     </div>
 
-                                    {/* Napomena */}
-                                    <div className={styles.napomenaSekcija}>
-                                        <span className={styles.tipLabel}>Napomena (opciono)</span>
+                                    <div className={styles.sekcija}>
+                                        <span className={styles.sekcLab}>napomena (opciono)</span>
                                         <textarea
-                                            className={styles.napomenaInput}
+                                            className={styles.napomena}
                                             value={napomena}
                                             onChange={e => setNapomena(e.target.value)}
                                             placeholder="npr. bez šećera, dodatni preliv..."
@@ -239,16 +210,20 @@ export default function CartDrawer() {
 
                                     {popust > 0 && (
                                         <div className={styles.popustRed}>
-                                            <span className={styles.popustLabel}>Loyalty popust ({popust}%)</span>
-                                            <span className={styles.popustIznos}>−{popustIznos} RSD</span>
+                                            <span>loyalty popust ({popust}%)</span>
+                                            <span>−{popustIznos} RSD</span>
                                         </div>
                                     )}
 
-                                    <div className={styles.ukupno}>
-                                        <span className={styles.ukupnoLabel}>Ukupno</span>
-                                        <span className={styles.ukupnoVrednost}>
-                                            {popust > 0 && <span className={styles.ukupnoStaro}>{ukupnaCena}</span>}
-                                            {zaPlacanje} RSD
+                                    <div className={styles.ukupnoRed}>
+                                        <span className={styles.ukupnoLab}>UKUPNO</span>
+                                        <span>
+                                            {popust > 0 && (
+                                                <span className={styles.ukupnoStaro}>{ukupnaCena}</span>
+                                            )}
+                                            <span className={styles.ukupnoVrednost}>
+                                                {zaPlacanje}<span className={styles.rsd}>RSD</span>
+                                            </span>
                                         </span>
                                     </div>
 
@@ -260,21 +235,18 @@ export default function CartDrawer() {
                                         disabled={porucivanjeUToku}
                                         whileTap={{ scale: 0.98 }}
                                     >
-                                        {porucivanjeUToku ? 'Šaljem...' : 'Naruči'}
+                                        {porucivanjeUToku ? 'Šaljem…' : 'Naruči →'}
                                     </motion.button>
 
                                     <button className={styles.isprazniBtn} onClick={isprazni}>
-                                        Isprazni korpu
+                                        isprazni korpu
                                     </button>
                                 </motion.div>
                             )}
                         </AnimatePresence>
-
                     </motion.aside>
                 </>
             )}
-
-
         </AnimatePresence>
     );
 }

@@ -1,396 +1,328 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, useInView } from 'motion/react';
+import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import { Katanac } from '../components/Doodle';
+import type { Porudzbina } from '../types/porudzbina';
+import * as porudzbineApi from '../api/porudzbine';
 import styles from './LoyaltyPage.module.css';
 
-/* ─── Konstante ──────────────────────────────────────────── */
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
-
-const NIVOI = [
-    {
-        naziv: 'Nova zvezda',
-        prag: 0,
-        popust: 0,
-        opis: 'Ulaz u program. Bodovi se pripisuju automatski od prve porudžbine.',
-    },
-    {
-        naziv: 'Epizodista',
-        prag: 100,
-        popust: 5,
-        opis: 'Prvih 5% popusta. Tvoja vernost počinje da se isplaćuje.',
-    },
-    {
-        naziv: 'Glavna uloga',
-        prag: 500,
-        popust: 10,
-        opis: 'Dupli popust i status koji malo ko dostigne.',
-    },
-    {
-        naziv: 'Oscar za palačinke',
-        prag: 1000,
-        popust: 20,
-        opis: 'Vrhunski nivo. 20% popusta na svaku porudžbinu — trajno.',
-    },
-];
-
-/* ─── Tip za stats fetch ─────────────────────────────────── */
-
-interface PorudzbinaStats {
-    datum: string;
-    status: string;
-    ukupanIznos: number;
-    originalnaCena?: number;
+// Datum aktivnosti — "danas", "juče" ili kratki datum
+function formatirajDatum(iso: string): string {
+    const d = new Date(iso);
+    const danas = new Date();
+    const juce = new Date();
+    juce.setDate(danas.getDate() - 1);
+    if (d.toDateString() === danas.toDateString()) return 'danas';
+    if (d.toDateString() === juce.toDateString()) return 'juče';
+    return d.toLocaleDateString('sr-RS', { day: 'numeric', month: 'long' });
 }
-
-/* ─── FadeIn — helper za scroll-triggered animacije ─────── */
-
-interface FadeInProps {
-    children: React.ReactNode;
-    delay?: number;
-    className?: string;
-}
-
-function FadeIn({ children, delay = 0, className }: FadeInProps) {
-    const ref = useRef<HTMLDivElement>(null);
-    // once: true → animira se samo pri prvom ulasku u viewport
-    const inView = useInView(ref, { once: true, margin: '0px 0px -80px 0px' });
-
-    return (
-        <motion.div
-            ref={ref}
-            className={className}
-            initial={{ opacity: 0, y: 24 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-            transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >
-            {children}
-        </motion.div>
-    );
-}
-
-/* ─── Red u tabeli nivoa ─────────────────────────────────── */
-
-interface NivoRedProps {
-    nivo: typeof NIVOI[0];
-    index: number;
-    aktivan: boolean;
-    dostignut: boolean;
-}
-
-function NivoRed({ nivo, index, aktivan, dostignut }: NivoRedProps) {
-    const ref = useRef<HTMLDivElement>(null);
-    const inView = useInView(ref, { once: true, margin: '0px 0px -40px 0px' });
-
-    return (
-        <motion.div
-            ref={ref}
-            className={`${styles.nivoRed} ${aktivan ? styles.nivoRedAktivan : ''} ${!dostignut && !aktivan ? styles.nivoRedNedostignut : ''}`}
-            initial={{ opacity: 0, x: -16 }}
-            animate={inView ? { opacity: dostignut || aktivan ? 1 : 0.5, x: 0 } : { opacity: 0, x: -16 }}
-            transition={{ duration: 0.7, delay: 0.08 * index, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >
-            <span className={styles.nivoRedBroj}>§ 0{index + 1}</span>
-
-            <div className={styles.nivoRedNazivWrap}>
-                <span className={styles.nivoRedNaziv}>{nivo.naziv}</span>
-                {aktivan && <span className={styles.trenutnoTag}>Trenutno</span>}
-            </div>
-
-            <p className={styles.nivoRedOpis}>{nivo.opis}</p>
-
-            <span className={styles.nivoRedPrag}>
-                {nivo.prag === 0 ? '0 bod.' : `${nivo.prag} bod.`}
-            </span>
-
-            <span className={styles.nivoRedPopust}>{nivo.popust}%</span>
-        </motion.div>
-    );
-}
-
-/* ─── Glavni page ────────────────────────────────────────── */
 
 export default function LoyaltyPage() {
-    const { korisnik, token } = useAuth();
+    const { korisnik, token, loyaltyProgrami, popust } = useAuth();
     const navigate = useNavigate();
 
-    /* Stats state */
+    const [porudzbine, setPorudzbine] = useState<Porudzbina[]>([]);
     const [loadingStats, setLoadingStats] = useState(true);
-    const [porudzbineOvajMesec, setPorudzbineOvajMesec] = useState(0);
-    const [ukupnoUstedeno, setUkupnoUstedeno] = useState(0);
 
-    /* Fetch statistike porudžbina */
+    // Statistika + aktivnosti iz istorije porudžbina
     useEffect(() => {
         if (!korisnik || !token) {
             setLoadingStats(false);
             return;
         }
-        fetch(`${API}/api/porudzbine/moje?page=0&size=100`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then(r => (r.ok ? r.json() : Promise.reject()))
+        porudzbineApi.getMoje(0, 100)
             .then(data => {
-                const lista: PorudzbinaStats[] = Array.isArray(data)
-                    ? data
-                    : (data.content ?? []);
-
-                const sad = new Date();
-                const ovajMesec = lista.filter(p => {
-                    const d = new Date(p.datum);
-                    return (
-                        d.getFullYear() === sad.getFullYear() &&
-                        d.getMonth() === sad.getMonth() &&
-                        p.status === 'REALIZOVANA'
-                    );
-                });
-
-                const ustedeno = lista.reduce((sum, p) => {
-                    if (p.originalnaCena != null && p.originalnaCena > p.ukupanIznos) {
-                        return sum + (p.originalnaCena - p.ukupanIznos);
-                    }
-                    return sum;
-                }, 0);
-
-                setPorudzbineOvajMesec(ovajMesec.length);
-                setUkupnoUstedeno(Math.round(ustedeno));
+                const lista = Array.isArray(data) ? data : (data.content ?? []);
+                setPorudzbine(lista);
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setLoadingStats(false));
-    }, [token, korisnik]);
+    }, [korisnik, token]);
 
-    /* Izračunavanje napretka */
+    // Nivoi sa backenda, sortirani po pragu
+    const nivoi = useMemo(
+        () => [...loyaltyProgrami].sort((a, b) => a.pragBodova - b.pragBodova),
+        [loyaltyProgrami]
+    );
+
     const bodovi = korisnik?.brojBodova ?? 0;
-    const trenutniNivo = [...NIVOI].reverse().find(n => bodovi >= n.prag) ?? NIVOI[0];
-    const sledeciNivo = NIVOI.find(n => n.prag > bodovi);
+    const trenutniNivo = [...nivoi].reverse().find(n => bodovi >= n.pragBodova) ?? nivoi[0];
+    const sledeciNivo = nivoi.find(n => n.pragBodova > bodovi);
 
     let procenat = 100;
     let preostalo = 0;
-    if (sledeciNivo) {
-        const opseg = sledeciNivo.prag - trenutniNivo.prag;
-        const osvoj = bodovi - trenutniNivo.prag;
-        procenat = Math.round((osvoj / opseg) * 100);
-        preostalo = sledeciNivo.prag - bodovi;
+    if (sledeciNivo && trenutniNivo) {
+        const opseg = sledeciNivo.pragBodova - trenutniNivo.pragBodova;
+        const osvojeno = bodovi - trenutniNivo.pragBodova;
+        procenat = opseg > 0 ? Math.round((osvojeno / opseg) * 100) : 100;
+        preostalo = sledeciNivo.pragBodova - bodovi;
     }
+
+    const sad = new Date();
+    const ovajMesec = porudzbine.filter(p => {
+        const d = new Date(p.datum);
+        return d.getFullYear() === sad.getFullYear()
+            && d.getMonth() === sad.getMonth()
+            && p.status === 'REALIZOVANA';
+    }).length;
+
+    const ustedeno = Math.round(porudzbine.reduce((sum, p) => {
+        if (p.originalnaCena != null && p.originalnaCena > p.ukupanIznos) {
+            return sum + (p.originalnaCena - p.ukupanIznos);
+        }
+        return sum;
+    }, 0));
+
+    // Poslednje aktivnosti — realizovane porudžbine donose bodove
+    const aktivnosti = porudzbine
+        .filter(p => p.status === 'REALIZOVANA')
+        .slice(0, 4);
 
     return (
         <div className={styles.stranica}>
 
-            {/* ── HERO ── */}
+            {/* ── Tamni filmski hero ── */}
             <section className={styles.hero}>
-                <div className={`${styles.heroGrid} ${!korisnik ? styles.heroGridGost : ''}`}>
+                <h1 className={styles.heroNaslov}>
+                    {korisnik ? (
+                        <>Tvoji <em className={styles.heroAkcenat}>bodovi.</em></>
+                    ) : (
+                        <>Naruči. Skupi bodove. <em className={styles.heroAkcenat}>Plati manje.</em></>
+                    )}
+                </h1>
+                <p className={styles.heroLede}>
+                    {korisnik
+                        ? '1 dinar = 1 bod · popust se primenjuje automatski pri svakoj porudžbini'
+                        : '1 dinar = 1 bod · popust na svaku porudžbinu · besplatno zauvek'}
+                </p>
+            </section>
 
-                    {/* Levo — tekst */}
-                    <motion.div
-                        className={styles.heroLevo}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    >
-                        <p className={styles.eyebrow}>— Member Edition — Loyalty Program</p>
+            {/* ── Ulaznica ── */}
+            <div className={styles.ulaznicaWrap}>
+                <motion.div
+                    className={styles.ulaznica}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                >
+                    {!korisnik && (
+                        <span className={styles.ulaznicaStiker}>ovako izgleda tvoja kartica</span>
+                    )}
 
-                        <h1 className={styles.heroNaslov}>
-                            {korisnik
-                                ? <>Zdravo,<br /><em className={styles.rustItalic}>{korisnik.ime}.</em></>
-                                : <><span>Vrati se češće.</span><br /><em className={styles.rustItalic}>Plati manje.</em></>
-                            }
-                        </h1>
+                    <div className={styles.ulazLevo}>
+                        <div className={styles.ulazGlava}>
+                            <span className={styles.ulazLabela}>ULAZNICA · LOYALTY</span>
+                        </div>
+                        <div className={styles.ulazImeRed}>
+                            <h2 className={korisnik ? styles.ulazIme : styles.ulazImeGost}>
+                                {korisnik?.ime ?? 'TVOJE IME'}
+                            </h2>
+                            {korisnik && trenutniNivo && (
+                                <span className={styles.tren}>
+                                    {trenutniNivo.nivo.toLowerCase()}{popust > 0 ? ` · −${popust}%` : ''}
+                                </span>
+                            )}
+                        </div>
 
-                        <p className={styles.heroLede}>
+                        <div className={styles.ulazStats}>
                             {korisnik ? (
                                 <>
-                                    Imaš <strong>{bodovi}</strong> bodova. Svaka porudžbina
-                                    te približava sledećem nivou popusta.
+                                    <div className={styles.ulazStat}>
+                                        <div className={styles.statBVeliki}>{bodovi}</div>
+                                        <div className={styles.statL}>bodova na računu</div>
+                                    </div>
+                                    <div className={styles.ulazStat}>
+                                        <div className={styles.statB}>
+                                            {loadingStats ? '—' : ovajMesec}
+                                        </div>
+                                        <div className={styles.statL}>porudžbina ovaj mesec</div>
+                                    </div>
+                                    <div className={styles.ulazStat}>
+                                        <div className={styles.statB}>
+                                            {loadingStats ? '—' : ustedeno.toLocaleString('sr-RS')}
+                                            <span className={styles.statRsd}> RSD</span>
+                                        </div>
+                                        <div className={styles.statL}>ušteđeno do sada</div>
+                                    </div>
                                 </>
                             ) : (
                                 <>
-                                    Svaka porudžbina donosi bodove. Bodovi donose popuste —
-                                    do <strong>20%</strong> na svaku narednu porudžbinu.
+                                    <div className={styles.ulazStat}>
+                                        <div className={styles.statBSivi}>0</div>
+                                        <div className={styles.statL}>bodova — za sada</div>
+                                    </div>
+                                    <div className={styles.ulazStat}>
+                                        <div className={styles.statBVeliki}>+bodovi</div>
+                                        <div className={styles.statL}>već posle prve porudžbine</div>
+                                    </div>
                                 </>
                             )}
-                        </p>
+                        </div>
+                    </div>
 
-                        {!korisnik && (
-                            <div className={styles.heroCta}>
-                                <button
-                                    className={styles.inkDugme}
-                                    onClick={() => navigate('/register')}
-                                >
-                                    Pridruži se besplatno
+                    {/* Perforirani kupon */}
+                    <div className={styles.ulazKupon}>
+                        {korisnik ? (
+                            sledeciNivo ? (
+                                <>
+                                    <div>
+                                        <span className={styles.kuponEyeb}>sledeći nivo</span>
+                                        <span className={styles.kuponNivo}>{sledeciNivo.nivo}</span>
+                                        <span className={styles.kuponPopust}>−{sledeciNivo.popust}% na sve</span>
+                                    </div>
+                                    <div>
+                                        <div className={styles.prTraka}>
+                                            <motion.span
+                                                className={styles.prFill}
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${Math.max(4, procenat)}%` }}
+                                                transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                                            />
+                                        </div>
+                                        <span className={styles.kuponJos}>
+                                            još <b>{preostalo.toLocaleString('sr-RS')} bodova</b>
+                                        </span>
+                                    </div>
+                                </>
+                            ) : (
+                                <div>
+                                    <span className={styles.kuponEyeb}>čestitamo</span>
+                                    <span className={styles.kuponNivo}>najviši nivo</span>
+                                    <span className={styles.kuponPopust}>
+                                        {popust > 0 ? `−${popust}% trajno` : 'dostignut'}
+                                    </span>
+                                </div>
+                            )
+                        ) : (
+                            <>
+                                <span className={styles.kuponTekst}>
+                                    registracija traje minut, bodovi kreću od prve porudžbine
+                                </span>
+                                <button className={styles.naruci} onClick={() => navigate('/register')}>
+                                    Napravi nalog →
                                 </button>
-                                <Link to="/login" className={styles.ghostLink}>
-                                    Već imam nalog →
+                                <Link to="/login" className={styles.kuponLink}>već imam nalog</Link>
+                            </>
+                        )}
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* ── Sadržaj: put nivoa + aktivnosti ── */}
+            <div className={korisnik ? styles.sadrzaj : styles.sadrzajGost}>
+                <div>
+                    <div>
+                        <span className={styles.kSekc}>— nivoi</span>
+                        <span className={styles.kSekcNap}>popust raste sa brojem skupljenih bodova</span>
+                    </div>
+
+                    {nivoi.length > 0 && (
+                        <div
+                            className={styles.nivoi}
+                            style={{ gridTemplateColumns: `repeat(${nivoi.length}, 1fr)` }}
+                        >
+                            <svg className={styles.nivoiLinija} viewBox="0 0 800 20" fill="none" preserveAspectRatio="none">
+                                <path d="M4 12 C 150 6, 300 15, 400 10 C 520 5, 680 14, 796 9"
+                                    stroke="hsl(22 30% 14%/.3)" strokeWidth="3" strokeDasharray="10 8" strokeLinecap="round" />
+                            </svg>
+                            {nivoi.map(n => {
+                                const dostignut = korisnik !== null && bodovi >= n.pragBodova;
+                                const trenutni = korisnik !== null && trenutniNivo?.id === n.id;
+                                return (
+                                    <div key={n.id} className={trenutni ? styles.nivoTi : styles.nivo}>
+                                        <span className={
+                                            trenutni ? styles.zigTi
+                                                : dostignut ? styles.zig
+                                                    : styles.zigBuduci
+                                        }>
+                                            {trenutni ? 'TI'
+                                                : dostignut ? '✓'
+                                                    : <Katanac size={20} strokeWidth={2} />}
+                                        </span>
+                                        <h3 className={
+                                            trenutni ? styles.nivoNazTi
+                                                : dostignut ? styles.nivoNaz
+                                                    : styles.nivoNazBuduci
+                                        }>
+                                            {n.nivo}
+                                        </h3>
+                                        <span className={styles.nivoPrag}>
+                                            {n.pragBodova.toLocaleString('sr-RS')} bod. · {n.popust}%
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    <div className={styles.kakoRadi}>
+                        <span className={styles.kakoRadiNaslov}>KAKO RADI</span>
+                        <span className={styles.kakoRadiTekst}>
+                            1 dinar = 1 bod · bodovi se pripisuju kad porudžbina bude preuzeta ·
+                            nivo se ne gubi — jednom dostignut, ostaje ·
+                            popust važi za porudžbine kroz sajt, ne za Wolt/Glovo
+                        </span>
+                    </div>
+
+                    <div className={styles.dnoCta}>
+                        {korisnik && sledeciNivo ? (
+                            <span className={styles.dnoCtaTekst}>
+                                još {preostalo.toLocaleString('sr-RS')} bodova do sledećeg nivoa —
+                            </span>
+                        ) : !korisnik ? (
+                            <span className={styles.dnoCtaTekst}>bodovi kreću od prve porudžbine —</span>
+                        ) : null}
+                        <Link to="/meni" className={styles.naruci}>Poruči odmah →</Link>
+                    </div>
+                </div>
+
+                {/* Poslednje aktivnosti (samo ulogovan) */}
+                {korisnik && (
+                    <div>
+                        <span className={styles.kSekc}>— poslednje aktivnosti</span>
+                        <div style={{ marginTop: 18 }}>
+                            {loadingStats ? (
+                                <p className={styles.aktPrazno}>učitavam…</p>
+                            ) : aktivnosti.length === 0 ? (
+                                <p className={styles.aktPrazno}>
+                                    još nema aktivnosti — bodovi stižu sa prvom preuzetom porudžbinom
+                                </p>
+                            ) : (
+                                aktivnosti.map(p => (
+                                    <div key={p.porudzbinaId} className={styles.aktRed}>
+                                        <div style={{ minWidth: 0 }}>
+                                            <span className={styles.aktNaziv}>
+                                                Porudžbina #{p.porudzbinaId}
+                                            </span>
+                                            <span className={styles.aktDatum}>
+                                                {formatirajDatum(p.datum)} · {p.ukupanIznos.toLocaleString('sr-RS')} RSD
+                                            </span>
+                                        </div>
+                                        <span className={styles.aktRazmak} />
+                                        <span className={styles.aktBodovi}>
+                                            +{Math.round(p.ukupanIznos)}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <Link to="/istorija" className={styles.aktLink}>sve porudžbine →</Link>
+
+                        {popust > 0 && (
+                            <div className={styles.popustPapiric}>
+                                <span className={styles.popustPapiricEyeb}>tvoj popust te čeka</span>
+                                <span className={styles.popustPapiricNaslov}>
+                                    SLEDEĆA PORUDŽBINA: −{popust}%
+                                </span>
+                                <Link to="/meni" className={styles.naruci} style={{ fontSize: 23, padding: '10px 22px 7px' }}>
+                                    Otvori meni →
                                 </Link>
                             </div>
                         )}
-                    </motion.div>
-
-                    {/* Desno — kartica (samo za ulogovane) */}
-                    {korisnik && (
-                        <motion.div
-                            className={styles.heroKartica}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        >
-                            {/* Dekorativni broj bodova u pozadini */}
-                            <span className={styles.dekorativan} aria-hidden="true">
-                                {bodovi}
-                            </span>
-
-                            {/* Header kartice */}
-                            <div className={styles.kartGlava}>
-                                <span className={styles.eyebrow}>Trenutni nivo</span>
-                                <em className={styles.kartPopust}>
-                                    {trenutniNivo.popust > 0
-                                        ? `${trenutniNivo.popust}% popusta`
-                                        : 'bez popusta'
-                                    }
-                                </em>
-                            </div>
-
-                            <h2 className={styles.kartNivoNaziv}>{trenutniNivo.naziv}</h2>
-
-                            {/* Progress bar */}
-                            <div className={styles.progresBlok}>
-                                <div className={styles.progresBrojevi}>
-                                    <span>{bodovi} bod.</span>
-                                    {sledeciNivo && <span>{sledeciNivo.prag} bod.</span>}
-                                </div>
-                                <div className={styles.progresTraka}>
-                                    <motion.div
-                                        className={styles.progresFill}
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${procenat}%` }}
-                                        transition={{ delay: 0.7, duration: 1.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-                                    />
-                                </div>
-                                {sledeciNivo ? (
-                                    <p className={styles.progresCaption}>
-                                        Još {preostalo} bodova do „{sledeciNivo.naziv}"
-                                    </p>
-                                ) : (
-                                    <p className={styles.progresCaption}>
-                                        Dostigao si maksimalni nivo.
-                                    </p>
-                                )}
-                            </div>
-
-                            <hr className={styles.kartDivider} />
-
-                            {/* Stats */}
-                            <div className={styles.statsGrid}>
-                                <div className={styles.statBlok}>
-                                    <span className={styles.statBroj}>
-                                        {loadingStats ? '—' : porudzbineOvajMesec}
-                                    </span>
-                                    <span className={styles.statLabel}>narudžbina ovaj mesec</span>
-                                </div>
-                                <div className={styles.statBlok}>
-                                    <span className={styles.statBroj}>
-                                        {loadingStats ? '—' : `${ukupnoUstedeno} RSD`}
-                                    </span>
-                                    <span className={styles.statLabel}>ukupno ušteđeno</span>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </div>
-            </section>
-
-            {/* ── TABELA NIVOA ── */}
-            <section className={styles.nivoiSekcija}>
-                <div className={styles.nivoiWrap}>
-                    <FadeIn>
-                        <p className={styles.sekcijskiLabel}>— § 01 — Nivoi</p>
-                        <h2 className={styles.nivoiNaslov}>
-                            Četiri nivoa,{' '}
-                            <em className={styles.rustItalic}>jednostavna mehanika.</em>
-                        </h2>
-                    </FadeIn>
-
-                    {/* Zaglavlje tabele */}
-                    <div className={styles.nivoRedGlava}>
-                        <span />
-                        <span>Nivo</span>
-                        <span>Šta to znači</span>
-                        <span>Prag</span>
-                        <span className={styles.desno}>Popust</span>
                     </div>
-
-                    {/* Redovi */}
-                    {NIVOI.map((nivo, i) => (
-                        <NivoRed
-                            key={nivo.naziv}
-                            nivo={nivo}
-                            index={i}
-                            aktivan={korisnik !== null && nivo.naziv === trenutniNivo.naziv}
-                            dostignut={korisnik !== null && bodovi >= nivo.prag}
-                        />
-                    ))}
-                </div>
-            </section>
-
-            {/* ── KAKO RADI ── */}
-            <section className={styles.kakoRadiSekcija}>
-                <div className={styles.kakoRadiWrap}>
-                    <FadeIn className={styles.kakoRadiGlava}>
-                        <p className={styles.sekcijskiLabel}>— § 02 — Mehanika</p>
-                        <h2 className={styles.kakoRadiNaslov}>
-                            Kako{' '}
-                            <em className={styles.rustItalic}>funkcioniše.</em>
-                        </h2>
-                    </FadeIn>
-
-                    <div className={styles.koraci}>
-                        {[
-                            {
-                                br: '01',
-                                naslov: 'Naruči',
-                                tekst: 'Svaka realizovana porudžbina donosi bodove — 1 bod po 1 RSD.',
-                            },
-                            {
-                                br: '02',
-                                naslov: 'Skupljaj',
-                                tekst: 'Prelaskom pragova od 100, 500 i 1000 bodova otključavaš novi nivo.',
-                            },
-                            {
-                                br: '03',
-                                naslov: 'Uštedi',
-                                tekst: 'Popust se automatski primenjuje pri svakoj sledećoj porudžbini.',
-                            },
-                        ].map((korak, i) => (
-                            <FadeIn key={korak.br} delay={0.1 * i}>
-                                <div className={styles.korak}>
-                                    <div className={styles.korakBorderTop} />
-                                    <em className={styles.korakBroj}>{korak.br}</em>
-                                    <h3 className={styles.korakNaslov}>{korak.naslov}</h3>
-                                    <p className={styles.korakTekst}>{korak.tekst}</p>
-                                </div>
-                            </FadeIn>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ── END CTA (samo za gosta) ── */}
-            {!korisnik && (
-                <FadeIn>
-                    <section className={styles.endCta}>
-                        <h2 className={styles.endCtaNaslov}>
-                            Počni danas.{' '}
-                            <em className={styles.rustItalic}>Uštedi sutra.</em>
-                        </h2>
-                        <button
-                            className={styles.inkDugme}
-                            onClick={() => navigate('/register')}
-                        >
-                            Kreiraj besplatan nalog
-                        </button>
-                    </section>
-                </FadeIn>
-            )}
-
+                )}
+            </div>
         </div>
     );
 }

@@ -1,186 +1,159 @@
-import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, Clock, ChefHat, XCircle, X } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
+import { tipLabela } from '../types/porudzbina';
+import { Klose } from './Doodle';
 import styles from './StatusPorudzbine.module.css';
-import type { StatusPorudzbine } from '../types/porudzbina';
-import * as porudzbineApi from '../api/porudzbine';
-import { ApiError } from '../api/client';
 
-interface Props {
-    porudzbinaId: number;
-    onZatvori: () => void;
-    onZavrseno: () => void;
-}
+// Koraci mini-priznanice: backend status → indeks aktivnog koraka.
+const KORACI = ['PRIMLJENO', 'U PRIPREMI', 'SPREMNA'];
 
-const KORACI = [
-    { status: 'U_PRIPREMI', labela: 'Primljeno', ikona: Clock },
-    { status: 'SPREMNA', labela: 'U pripremi', ikona: ChefHat },
-    { status: 'REALIZOVANA', labela: 'Gotovo!', ikona: CheckCircle2 },
-];
-
-function getKorakIndex(status: StatusPorudzbine): number {
+function korakIndex(status?: string): number {
     if (status === 'U_PRIPREMI') return 0;
     if (status === 'SPREMNA') return 1;
     if (status === 'REALIZOVANA') return 2;
-    return -1;
+    return 0;
 }
 
-export default function StatusPorudzbine({ porudzbinaId, onZatvori, onZavrseno }: Props) {
-    const { token } = useAuth();
-    const [status, setStatus] = useState<StatusPorudzbine>('U_PRIPREMI');
-    const [procenjenoVreme, setProcenjenoVreme] = useState<number | null>(null);
-    const [greska, setGreska] = useState(false);
+function stikerTekst(status?: string): string {
+    if (status === 'U_PRIPREMI') return 'čekamo potvrdu kuhinje…';
+    if (status === 'SPREMNA') return 'upravo se sprema';
+    if (status === 'REALIZOVANA') return 'spremna je — dođi po nju!';
+    if (status === 'OTKAZANA') return 'otkazana';
+    return 'učitavanje…';
+}
 
-    const zavrseno = status === 'REALIZOVANA' || status === 'OTKAZANA';
+function gotovoOko(preostaloMin: number): string {
+    const t = new Date(Date.now() + preostaloMin * 60000);
+    return `${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}`;
+}
 
-    useEffect(() => {
-        const fetchStatus = async () => {
-            try {
-                const data = await porudzbineApi.getJedan(porudzbinaId);
-                setStatus(data.status);
-                setProcenjenoVreme(data.procenjenoVreme ?? null);
-            } catch (e) {
-                // HTTP greške (npr. povremeni 500) ignorišemo tokom polling-a; samo mrežne prijavljujemo.
-                if (!(e instanceof ApiError)) setGreska(true);
-            }
-        };
+/**
+ * Praćenje aktivne porudžbine — otvara se klikom na floating dugme:
+ * popover iznad njega na desktopu, bottom sheet na mobilnom.
+ * Ne vodi nigde — ostaješ na strani; minuti se osvežavaju sami.
+ */
+export default function StatusPorudzbine() {
+    const {
+        aktivnaId, porudzbina, preostaloMin,
+        pracenjeOtvoreno, zatvoriPracenje,
+    } = useAktivnaPorudzbina();
 
-        fetchStatus(); // odmah jednom
-
-        if (zavrseno) return; // ne pokrecemo interval ako je završeno
-
-        const interval = setInterval(fetchStatus, 8000); // svakih 8s
-        return () => clearInterval(interval); 
-    }, [porudzbinaId, token, zavrseno]);
-
-    const aktivniKorak = getKorakIndex(status);
+    const prikazano = aktivnaId !== null && pracenjeOtvoreno;
+    const status = porudzbina?.status;
+    const otkazana = status === 'OTKAZANA';
+    const spremna = status === 'REALIZOVANA';
+    const aktivniKorak = korakIndex(status);
 
     return (
         <AnimatePresence>
-            <motion.div
-                className={styles.overlay}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onZatvori}
-            >
-                <motion.div
-                    className={styles.modal}
-                    initial={{ opacity: 0, y: 40, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 40 }}
-                    transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                    onClick={e => e.stopPropagation()}
-                >
-                    {/* Header */}
-                    <div className={styles.header}>
-                        <div>
-                            <h2 className={styles.naslov}>Porudžbina #{porudzbinaId}</h2>
-                            <p className={styles.podnaslov}>
-                                {zavrseno ? 'Završeno' : 'Pratimo status...'}
+            {prikazano && (
+                <>
+                    <motion.div
+                        className={styles.overlay}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={zatvoriPracenje}
+                    />
+                    <motion.div
+                        className={styles.kartica}
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 40 }}
+                        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                        drag="y"
+                        dragConstraints={{ top: 0, bottom: 0 }}
+                        dragElastic={{ top: 0, bottom: 0.6 }}
+                        onDragEnd={(_, info) => {
+                            if (info.offset.y > 90) zatvoriPracenje();
+                        }}
+                    >
+                        <div className={styles.rucka} />
+                        <span className={styles.stiker}>{stikerTekst(status)}</span>
+
+                        <div className={styles.zaglavlje}>
+                            <span className={styles.naslov}>Porudžbina #{aktivnaId}</span>
+                            <div className={styles.vreme}>
+                                {spremna ? (
+                                    <span className={styles.vremeMinZel}>sad!</span>
+                                ) : preostaloMin !== null && preostaloMin > 0 ? (
+                                    <>
+                                        <span className={styles.vremeMin}>~{preostaloMin} min</span>
+                                        <span className={styles.vremeOko}>
+                                            gotovo oko {gotovoOko(preostaloMin)}
+                                        </span>
+                                    </>
+                                ) : preostaloMin !== null ? (
+                                    <span className={styles.vremeMin}>još malo…</span>
+                                ) : null}
+                            </div>
+                        </div>
+
+                        {otkazana ? (
+                            <p className={styles.porukaRust}>
+                                Porudžbina je otkazana. Zatvori ovu karticu — vidimo se sledeći put!
                             </p>
-                        </div>
-                        {zavrseno && (
-                            <button className={styles.zatvoriBtn} onClick={onZatvori}>
-                                <X size={20} />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* OTKAZANA state */}
-                    {status === 'OTKAZANA' ? (
-                        <div className={styles.otkazano}>
-                            <XCircle size={56} className={styles.otkazanoIkona} />
-                            <p className={styles.otkazanoTekst}>Porudžbina je otkazana</p>
-                            <button className={styles.dugme} onClick={() => {
-                                onZavrseno();
-                                onZatvori();
-                            }}>
-                                Zatvori
-                            </button>
-                        </div>
-
-                    ) : (
-                        <>
-                            {/* Progress koraci */}
+                        ) : (
                             <div className={styles.koraci}>
-                                {KORACI.map((korak, i) => {
-                                    const prosao = i <= aktivniKorak;
-                                    const aktivan = i === aktivniKorak;
-                                    const Ikona = korak.ikona;
-
+                                <div className={styles.korakLinija} />
+                                {KORACI.map((labela, i) => {
+                                    const proslo = i < aktivniKorak
+                                        || (i === aktivniKorak && spremna);
+                                    const aktivan = i === aktivniKorak && !spremna;
                                     return (
-                                        <div key={korak.status} className={styles.korakWrap}>
-                                            {/* Linija između koraka */}
-                                            {i > 0 && (
-                                                <div className={styles.linija}>
-                                                    <motion.div
-                                                        className={styles.linijaPopunjena}
-                                                        initial={{ scaleX: 0 }}
-                                                        animate={{ scaleX: i <= aktivniKorak ? 1 : 0 }}
-                                                        transition={{ duration: 0.5, delay: 0.2 }}
-                                                        style={{ transformOrigin: 'left' }}
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {/* Krug */}
-                                            <motion.div
-                                                className={`${styles.korak} ${prosao ? styles.korakProsao : ''} ${aktivan ? styles.korakAktivan : ''}`}
-                                                animate={aktivan ? { scale: [1, 1.12, 1] } : {}}
-                                                transition={{ duration: 1.2, repeat: Infinity }}
-                                            >
-                                                <Ikona size={22} />
-                                            </motion.div>
-
-                                            <span className={`${styles.korakLabela} ${prosao ? styles.korakLabelaProsao : ''}`}>
-                                                {korak.labela}
+                                        <div key={labela} className={styles.korak}>
+                                            <span className={
+                                                proslo ? styles.tackaProslo
+                                                    : aktivan ? styles.tackaAktivna
+                                                        : styles.tackaBuduca
+                                            }>
+                                                {proslo
+                                                    ? '✓'
+                                                    : aktivan && i === 1
+                                                        ? <Klose size={14} strokeWidth={2.4} />
+                                                        : null}
+                                            </span>
+                                            <span className={
+                                                aktivan ? styles.korakLabelaAktivna
+                                                    : proslo ? styles.korakLabela
+                                                        : styles.korakLabelaBuduca
+                                            }>
+                                                {labela}
                                             </span>
                                         </div>
                                     );
                                 })}
                             </div>
+                        )}
 
-                            {/* Poruka */}
-                            <div className={styles.poruka}>
-                                <AnimatePresence mode="wait">
-                                    <motion.p
-                                        key={status}
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -8 }}
-                                        className={styles.porukaText}
-                                    >
-                                        {status === 'U_PRIPREMI' && 'Vaša porudžbina je primljena! Čekamo potvrdu kuhinje...'}
-                                        {status === 'SPREMNA' && (
-                                            procenjenoVreme
-                                                ? `Vaša porudžbina je prihvaćena i procenjeno vreme čekanja je ${procenjenoVreme} minuta.`
-                                                : 'Palačinke se prave! Uskoro su gotove.'
-                                        )}
-                                        {status === 'REALIZOVANA' && 'Gotovo! Dođite po svoju porudžbinu na kasu.'}
-                                    </motion.p>
-                                </AnimatePresence>
+                        {porudzbina && porudzbina.stavke.length > 0 && !otkazana && (
+                            <div className={styles.stavke}>
+                                {porudzbina.stavke.map((s, i) => (
+                                    <div key={i} className={styles.stavka}>
+                                        <span className={styles.stavkaKol}>{s.kolicina}×</span>
+                                        <span>{s.nazivProizvoda}</span>
+                                    </div>
+                                ))}
                             </div>
+                        )}
 
-                            {zavrseno && (
-                                <button className={styles.dugme} onClick={() => {
-                                    onZavrseno();
-                                    onZatvori();
-                                }}>
-                                    Zatvori
-                                </button>
-                            )}
-                        </>
-                    )}
-
-                    {greska && (
-                        <p className={styles.greska}>
-                            Problem sa konekcijom. Status možda nije ažuran.
-                        </p>
-                    )}
-                </motion.div>
-            </motion.div>
+                        <div className={styles.dno}>
+                            <span className={styles.iznos}>
+                                {porudzbina ? (
+                                    <>
+                                        <b>{porudzbina.ukupanIznos.toLocaleString('sr-RS')} RSD</b>
+                                        {porudzbina.tipPorudzbine ? ` · ${tipLabela(porudzbina.tipPorudzbine)}` : ''}
+                                    </>
+                                ) : 'učitavanje…'}
+                            </span>
+                            <Link to="/istorija" className={styles.sveLink} onClick={zatvoriPracenje}>
+                                sve porudžbine →
+                            </Link>
+                        </div>
+                    </motion.div>
+                </>
+            )}
         </AnimatePresence>
     );
 }

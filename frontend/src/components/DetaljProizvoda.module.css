@@ -1,0 +1,265 @@
+/* Detalj proizvoda — papirić preko zatamnjenog menija (desktop) / bottom sheet (mobilni). */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: hsl(22 30% 14% / .45);
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.kartica {
+    background: #fff;
+    box-shadow: 0 14px 40px hsl(22 30% 14% / .16);
+    padding: 28px;
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    transform: rotate(-.5deg);
+    max-height: 86vh;
+    overflow-y: auto;
+}
+
+.tape {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    width: 110px;
+    height: 26px;
+    background: hsl(48 90% 68% / .55);
+    transform: translateX(-50%) rotate(-2deg);
+}
+
+.zatvori {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-family: var(--font-cav);
+    font-size: 24px;
+    color: var(--ink55);
+    cursor: pointer;
+    background: none;
+    border: 0;
+    line-height: 1;
+}
+
+.rucka {
+    display: none;
+}
+
+.eyeb {
+    font-family: var(--font-cav);
+    font-size: 24px;
+    color: var(--rust);
+    display: block;
+    margin-bottom: 2px;
+    transform: rotate(-1.2deg);
+}
+
+.naslov {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 44px;
+    letter-spacing: .04em;
+    margin: 0;
+    line-height: 1;
+    display: inline-block;
+}
+
+.opis {
+    margin: 14px 0 0;
+    font-family: var(--font-cav);
+    font-size: 22px;
+    color: var(--ink70);
+    line-height: 1.35;
+}
+
+.sekcLab {
+    font-family: var(--font-cav);
+    font-size: 20px;
+    color: var(--rust);
+    display: block;
+    margin: 14px 0 6px;
+}
+
+.alergeni {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.alPil {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    border: 2px dashed var(--ink20);
+    border-radius: 999px;
+    padding: 1px 12px 3px;
+    color: var(--ink70);
+    white-space: nowrap;
+}
+
+.dno {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px dashed var(--ink12);
+    padding-top: 16px;
+    margin-top: 18px;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.cenaStara {
+    font-family: var(--font-cav);
+    font-size: 20px;
+    color: var(--ink40);
+    text-decoration: line-through;
+    margin-right: 6px;
+}
+
+.cena {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 38px;
+    color: var(--rust);
+    white-space: nowrap;
+}
+
+.rsd {
+    font-size: .55em;
+    color: var(--ink55);
+    margin-left: 3px;
+    font-weight: 400;
+}
+
+.popustNapomena {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--rust);
+    display: block;
+    margin-top: -2px;
+}
+
+.akcije {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.qty {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    border: 2px solid var(--ink);
+    border-radius: var(--wob);
+    padding: 2px;
+}
+
+.qtyBtn {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qtyBroj {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 24px;
+    min-width: 24px;
+    text-align: center;
+    padding-top: 3px;
+}
+
+.dodaj {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: .06em;
+    padding: 12px 28px 8px;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: var(--wob);
+    cursor: pointer;
+    text-align: center;
+    line-height: 1;
+}
+
+/* Mobilni — bottom sheet */
+@media (max-width: 700px) {
+    .overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .kartica {
+        max-width: none;
+        transform: none;
+        box-shadow: 0 -14px 40px hsl(22 30% 14% / .3);
+        padding: 0 20px 20px;
+        max-height: 88vh;
+    }
+
+    .tape {
+        display: none;
+    }
+
+    .rucka {
+        display: block;
+        width: 46px;
+        height: 5px;
+        border-radius: 3px;
+        background: var(--ink20);
+        margin: 10px auto 14px;
+    }
+
+    .naslov {
+        font-size: 34px;
+    }
+
+    .eyeb {
+        font-size: 20px;
+        margin-bottom: 0;
+    }
+
+    .opis {
+        font-size: 19px;
+        margin-top: 11px;
+    }
+
+    .cena {
+        font-size: 32px;
+    }
+
+    .cenaStara {
+        font-size: 17px;
+    }
+
+    .dno {
+        padding-top: 12px;
+    }
+
+    .qtyBtn {
+        width: 32px;
+        height: 32px;
+        font-size: 22px;
+    }
+
+    .dodaj {
+        display: block;
+        width: 100%;
+        margin-top: 14px;
+    }
+}

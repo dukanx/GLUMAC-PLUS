@@ -1,235 +1,251 @@
-/* ── OVERLAY ── */
+/* Praćenje porudžbine — mini-priznanica: popover (desktop) / bottom sheet (mobilni). */
+
 .overlay {
     position: fixed;
     inset: 0;
-    background: hsl(22 30% 14% / 0.5);
-    z-index: 300;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    z-index: 58;
+    background: transparent;
 }
 
-/* ── MODAL ── */
-.modal {
-    background: var(--paper);
-    border: 1px solid var(--ink-20);
-    padding: 32px;
-    width: 100%;
-    max-width: 480px;
-    box-shadow: 0 8px 40px hsl(22 30% 14% / 0.12);
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
+.kartica {
+    position: fixed;
+    z-index: 59;
+    background: #fff;
+    box-shadow: var(--sen-modal);
 }
 
-/* ── HEADER ── */
-.header {
+/* Desktop — popover iznad floating dugmeta */
+@media (min-width: 901px) {
+    .kartica {
+        bottom: 104px;
+        right: 36px;
+        width: 400px;
+        padding: 22px 26px 20px;
+        transform: rotate(-.4deg);
+    }
+
+    .rucka {
+        display: none;
+    }
+}
+
+/* Mobilni — bottom sheet */
+@media (max-width: 900px) {
+    .overlay {
+        background: hsl(22 30% 14% / .3);
+    }
+
+    .kartica {
+        bottom: 0;
+        left: 0;
+        right: 0;
+        box-shadow: 0 -18px 44px hsl(22 30% 14% / .3);
+        padding: 14px 22px 24px;
+    }
+
+    .rucka {
+        width: 46px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--ink20);
+        margin: 0 auto 14px;
+    }
+
+    .stiker {
+        position: static !important;
+        display: inline-block;
+        background: none !important;
+        color: var(--rust);
+        padding: 0 !important;
+        transform: rotate(-1deg);
+        line-height: 1;
+    }
+}
+
+/* Žuti "selotejp" stiker */
+.stiker {
+    position: absolute;
+    top: -13px;
+    left: 22px;
+    background: hsl(48 90% 68% / .95);
+    padding: 2px 14px 4px;
+    font-family: var(--font-cav);
+    font-size: 18px;
+    transform: rotate(-2deg);
+}
+
+.zaglavlje {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    margin-top: 4px;
 }
 
 .naslov {
-    font-family: var(--serif);
-    font-size: 1.5rem;
-    font-style: italic;
-    font-weight: 400;
-    color: var(--ink);
-    margin: 0 0 4px;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: .03em;
 }
 
-.podnaslov {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--ink-40);
-    margin: 0;
+.vreme {
+    text-align: right;
 }
 
-.zatvoriBtn {
-    background: transparent;
-    border: 1px solid var(--ink-20);
-    width: 34px;
-    height: 34px;
-    cursor: pointer;
-    color: var(--ink-55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s, color 0.2s;
-    flex-shrink: 0;
+.vremeMin {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 36px;
+    line-height: 1;
+    display: block;
+    white-space: nowrap;
+    color: var(--rust);
 }
 
-.zatvoriBtn:hover {
-    background: var(--ink-12);
-    color: var(--ink);
+.vremeMinZel {
+    composes: vremeMin;
+    color: var(--zel);
 }
 
-/* ── KORACI ── */
+.vremeOko {
+    font-family: var(--font-cav);
+    font-size: 15px;
+    color: var(--ink55);
+}
+
+/* Statusni koraci */
 .koraci {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    margin: 20px 0 4px;
     position: relative;
-    padding: 8px 0;
 }
 
-.korakWrap {
+.korakLinija {
+    position: absolute;
+    top: 15px;
+    left: 14%;
+    right: 14%;
+    border-top: 3px dashed var(--ink20);
+}
+
+.korak {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    flex: 1;
+    gap: 6px;
     position: relative;
+    flex: 1;
 }
 
-/* Linija između koraka */
-.linija {
-    position: absolute;
-    top: 21px;
-    right: 50%;
-    width: 100%;
-    height: 1px;
-    background: var(--ink-12);
-    overflow: hidden;
-}
-
-.linijaPopunjena {
-    height: 100%;
-    background: var(--ink);
-    width: 100%;
-}
-
-/* Krug koraka */
-.korak {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
+.tacka {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--ink);
+    border-radius: var(--wob);
     background: var(--paper);
-    border: 1px solid var(--ink-12);
-    color: var(--ink-20);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    z-index: 1;
-    transition: background 0.3s, border-color 0.3s, color 0.3s;
+    z-index: 2;
+    font-size: 14px;
 }
 
-.korakProsao {
-    border-color: var(--ink-20);
-    color: var(--ink-40);
-}
-
-.korakAktivan {
+.tackaProslo {
+    composes: tacka;
     background: var(--ink);
-    border-color: var(--ink);
     color: var(--paper);
+}
+
+.tackaAktivna {
+    composes: tacka;
+    background: var(--rust);
+    border-color: var(--rust);
+    color: #fff;
+}
+
+.tackaBuduca {
+    composes: tacka;
+    border-color: var(--ink40);
 }
 
 .korakLabela {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink-40);
-    text-align: center;
-    transition: color 0.3s;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: .04em;
 }
 
-.korakLabelaProsao {
-    color: var(--ink-70);
-}
-
-/* ── PORUKA ── */
-.poruka {
-    border: 1px solid var(--ink-12);
-    padding: 16px 20px;
-    min-height: 60px;
-    display: flex;
-    align-items: center;
-}
-
-.porukaText {
-    font-family: var(--sans);
-    font-size: 0.9rem;
-    color: var(--ink-70);
-    line-height: 1.6;
-    margin: 0;
-    text-align: center;
-    width: 100%;
-}
-
-
-/* ── OTKAZANO ── */
-.otkazano {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    padding: 8px 0;
-    text-align: center;
-}
-
-.otkazanoIkona {
+.korakLabelaAktivna {
+    composes: korakLabela;
     color: var(--rust);
 }
 
-.otkazanoTekst {
-    font-family: var(--serif);
-    font-size: 1.1rem;
-    font-style: italic;
-    font-weight: 400;
-    color: var(--ink);
-    margin: 0;
+.korakLabelaBuduca {
+    composes: korakLabela;
+    color: var(--ink40);
 }
 
-/* ── DUGME ── */
-.dugme {
-    width: 100%;
-    padding: 13px;
-    background: var(--ink);
-    color: var(--paper);
-    border: none;
-    font-family: var(--sans);
-    font-size: 0.78rem;
+/* Stavke */
+.stavke {
+    border-top: 2px dotted var(--ink12);
+    margin-top: 14px;
+    padding-top: 8px;
+}
+
+.stavka {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 6px 2px;
+    border-bottom: 2px dotted var(--ink12);
+    font-family: var(--font-cav);
+    font-size: 20px;
+}
+
+.stavka:last-child {
+    border-bottom: 0;
+}
+
+.stavkaKol {
+    color: var(--rust);
     font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    min-width: 32px;
+}
+
+/* Dno */
+.dno {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px dashed var(--ink12);
+    margin-top: 10px;
+    padding-top: 12px;
+}
+
+.iznos {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--ink70);
+}
+
+.sveLink {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    text-decoration: underline;
+    color: var(--ink70);
     cursor: pointer;
-    transition: background 0.2s;
 }
 
-.dugme:hover {
-    background: var(--rust);
+/* Otkazana / poruke */
+.poruka {
+    font-family: var(--font-cav);
+    font-size: 19px;
+    color: var(--ink70);
+    margin-top: 12px;
 }
 
-/* ── GREŠKA ── */
-.greska {
-    font-family: var(--sans);
-    font-size: 0.78rem;
+.porukaRust {
+    composes: poruka;
     color: var(--rust);
-    border-left: 2px solid var(--rust);
-    padding: 6px 10px;
-    background: hsl(14 65% 44% / 0.06);
-    margin: 0;
-}
-
-/* ── RESPONSIVE ── */
-@media (max-width: 480px) {
-    .modal {
-        padding: 24px 20px;
-        gap: 22px;
-    }
-
-    .korak {
-        width: 38px;
-        height: 38px;
-    }
-
-    .linija {
-        top: 18px;
-    }
 }
