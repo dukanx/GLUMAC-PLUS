@@ -33,7 +33,7 @@ export default function FloatingBubble() {
     const isDesktop = useIsDesktop();
 
     const aktivna = aktivnaId !== null;
-    const spremna = porudzbina?.status === 'REALIZOVANA';
+    const spremna = porudzbina?.status === 'SPREMNA' || porudzbina?.status === 'REALIZOVANA';
 
     // Na Meniju (desktop) korpa već stoji desno — dugme se krije dok nema aktivne porudžbine.
     if (!aktivna && isDesktop && pathname === '/meni') return null;

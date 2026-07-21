@@ -182,8 +182,9 @@
 .korakLinija {
     position: absolute;
     top: 19px;
-    left: 12%;
-    right: 12%;
+    /* počinje/završava na centru krajnjih tačaka (3 koraka → 1/6 širine) */
+    left: calc(100% / 6);
+    right: calc(100% / 6);
     border-top: 3px dashed var(--ink20);
 }
 
@@ -267,6 +268,13 @@
     font-family: var(--font-cav);
     font-size: 19px;
     color: var(--ink70);
+}
+
+.aktivnaNapomena {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    color: var(--ink40);
+    white-space: nowrap;
 }
 
 .akc {

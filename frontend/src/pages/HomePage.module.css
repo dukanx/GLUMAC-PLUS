@@ -172,7 +172,8 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: calc(100svh - 88px);
+    /* navbar je ~76px (12+50+12+2); hero popuni ostatak da marquee ne proviri */
+    min-height: calc(100svh - 76px);
 }
 
 .heroLogo {
@@ -341,9 +342,14 @@
     filter: contrast(1.05) saturate(.92);
 }
 
+.heroFoto {
+    transition: transform .35s cubic-bezier(.22, 1, .36, 1), box-shadow .35s;
+}
+
 .heroFoto:hover {
-    transform: rotate(0) !important;
-    transition: transform .3s;
+    transform: rotate(4deg) scale(1.05) translateY(-6px) !important;
+    box-shadow: 0 20px 40px hsl(22 30% 14% / .26);
+    z-index: 3;
 }
 
 .hfL {
@@ -479,8 +485,7 @@
     background: var(--paper);
     transform: rotate(-1deg);
     transition: transform .25s;
-    border: 2px solid var(--ink);
-    border-radius: var(--wob);
+    position: relative;
 }
 
 .dkart:hover {
@@ -490,7 +495,6 @@
 .dkR {
     composes: dkart;
     transform: rotate(1.2deg);
-    border-radius: 15px 255px 15px 225px / 225px 15px 255px 15px;
 }
 
 .dlogo {
@@ -692,6 +696,51 @@
     transform: rotate(-6deg);
 }
 
+/* Slika proizvoda — iskoči na hover reda (placeholder dok backend ne doda slike) */
+.mpop {
+    position: absolute;
+    right: 76px;
+    top: 50%;
+    transform: translateY(-46%) rotate(6deg) scale(.5);
+    opacity: 0;
+    pointer-events: none;
+    background: #fff;
+    padding: 8px;
+    box-shadow: 0 14px 34px hsl(22 30% 14% / .28);
+    transition: opacity .25s, transform .25s;
+    z-index: 5;
+    width: 148px;
+}
+
+.mpopImg {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper2);
+    color: var(--ink40);
+    overflow: hidden;
+}
+
+.mpopImg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.mrow:hover .mpop {
+    opacity: 1;
+    transform: translateY(-52%) rotate(-4deg) scale(1);
+}
+
+@media (max-width: 700px) {
+    .mpop {
+        display: none;
+    }
+}
+
 .mtip {
     position: absolute;
     left: 44px;
@@ -866,8 +915,13 @@
     width: 74%;
 }
 
+.pola {
+    transition: transform .35s cubic-bezier(.22, 1, .36, 1), box-shadow .35s;
+}
+
 .pola:hover {
-    transform: rotate(0) scale(1.02);
+    transform: rotate(-3deg) scale(1.06) translateY(-8px);
+    box-shadow: 0 20px 40px hsl(22 30% 14% / .24);
     z-index: 6;
 }
 
@@ -905,6 +959,37 @@
     left: 0;
     right: 0;
     text-align: center;
+}
+
+/* Rukopisna oznaka lokacije sa doodle strelicom — pored polaroida, statična */
+.polaOznaka {
+    position: absolute;
+    z-index: 4;
+    font-family: var(--font-cav);
+    font-size: 21px;
+    color: var(--rust);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.polaOznakaL {
+    top: -20px;
+    left: 10px;
+    transform: rotate(-4deg);
+}
+
+.polaOznakaD {
+    top: -20px;
+    right: 10px;
+    transform: rotate(4deg);
+}
+
+.strelicaObrnuta {
+    display: inline-flex;
+    transform: scaleX(-1);
 }
 
 .maskota {
@@ -1187,8 +1272,14 @@
     transition: transform .3s;
 }
 
+.galIt {
+    transition: transform .35s cubic-bezier(.22, 1, .36, 1), box-shadow .35s;
+}
+
 .galIt:hover {
-    transform: scale(1.04) rotate(0) !important;
+    transform: scale(1.06) rotate(2deg) translateY(-6px) !important;
+    box-shadow: 0 18px 38px hsl(22 30% 14% / .2);
+    z-index: 4;
 }
 
 .galSlot {
@@ -1288,19 +1379,25 @@
     flex-direction: column;
     gap: 14px;
     transform: rotate(-.8deg);
-    transition: transform .25s;
+    transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s, border-color .3s;
     border: 2px solid var(--ink);
     border-radius: var(--wob);
 }
 
 .recKart:hover {
-    transform: rotate(0) translateY(-4px);
+    transform: rotate(-1.5deg) translateY(-6px) scale(1.025);
+    box-shadow: 0 16px 34px hsl(22 30% 14% / .16);
+    border-color: var(--rust);
 }
 
 .recB {
     composes: recKart;
     transform: rotate(.9deg);
     border-radius: 15px 255px 15px 225px / 225px 15px 255px 15px;
+}
+
+.recB:hover {
+    transform: rotate(1.6deg) translateY(-6px) scale(1.025);
 }
 
 .recTxt {
@@ -1426,7 +1523,6 @@
     width: 100%;
     height: 100%;
     border: 0;
-    filter: grayscale(.85) contrast(1.05);
 }
 
 .mapCap {

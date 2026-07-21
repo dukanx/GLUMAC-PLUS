@@ -51,6 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('korisnik');
         localStorage.removeItem('token');
         sessionStorage.removeItem('mojaKorpa');
+        // Očisti i trag aktivne porudžbine (uklj. stari ključ iz ranije verzije)
+        localStorage.removeItem('aktivna_porudzbina_id');
+        localStorage.removeItem('aktivna_porudzbina_start');
         setKorisnik(null);
         setToken(null);
     };

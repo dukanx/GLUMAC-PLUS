@@ -40,6 +40,12 @@ export function getJedan(id: number) {
     return apiFetch<Porudzbina>(`/api/porudzbine/${id}`, { auth: true });
 }
 
+// Aktivna porudžbina ulogovanog kupca (backend vraća 204/undefined ako je nema).
+// Samo za ulogu KORISNIK — autoritativan izvor za floating dugme i praćenje.
+export function getAktivna() {
+    return apiFetch<Porudzbina | undefined>('/api/porudzbine/aktivna', { auth: true });
+}
+
 export function otkazi(id: number) {
     return apiFetch<void>(`/api/porudzbine/${id}/otkazi`, {
         method: 'POST',

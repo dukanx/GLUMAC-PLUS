@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import styles from './ProizvodKartica.module.css';
 import React from 'react';
 import type { Proizvod } from '../types/proizvod';
+import { Klose } from './Doodle';
 
 interface Props {
     proizvod: Proizvod;
@@ -30,6 +31,9 @@ function ProizvodKartica({
             layout
             onClick={() => onOtvoriDetalj(proizvod)}
         >
+            <div className={styles.thumb} aria-hidden="true">
+                <Klose size={30} strokeWidth={1.8} />
+            </div>
             <div className={styles.levo}>
                 <h3 className={styles.naziv}>{proizvod.naziv}</h3>
                 {proizvod.opis && <p className={styles.opis}>{proizvod.opis}</p>}

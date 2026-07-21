@@ -101,24 +101,24 @@ public class Porudzbina {
 
     /**
      * Kreira porudžbinu sa zadatim ukupnim iznosom. Status se postavlja na
-     * {@link StatusPorudzbine#U_PRIPREMI}, a tip na
+     * {@link StatusPorudzbine#NOVA}, a tip na
      * {@link TipPorudzbine#ZA_PONETI}.
      *
      * @param ukupanIznos ukupan iznos porudžbine
      */
     public Porudzbina(BigDecimal ukupanIznos) {
         setUkupanIznos(ukupanIznos);
-        this.status = StatusPorudzbine.U_PRIPREMI;
+        this.status = StatusPorudzbine.NOVA;
         this.tipPorudzbine = TipPorudzbine.ZA_PONETI;
     }
 
     /**
      * Podrazumevani konstruktor. Postavlja status na
-     * {@link StatusPorudzbine#U_PRIPREMI}, iznos i originalnu cenu na 0.00,
+     * {@link StatusPorudzbine#NOVA}, iznos i originalnu cenu na 0.00,
      * a tip na {@link TipPorudzbine#ZA_PONETI}.
      */
     public Porudzbina() {
-        this.status = StatusPorudzbine.U_PRIPREMI;
+        this.status = StatusPorudzbine.NOVA;
         this.ukupanIznos = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         this.originalnaCena = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         this.tipPorudzbine = TipPorudzbine.ZA_PONETI;

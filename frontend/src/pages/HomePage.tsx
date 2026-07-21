@@ -10,6 +10,9 @@ import woltLogo from '../assets/wolt.png';
 import maskota from '../assets/maskota.png';
 import bg from '../assets/bg.png';
 import bg1 from '../assets/bg1.png';
+import CrtaniOkvir from '../components/CrtaniOkvir';
+import { Klose } from '../components/Doodle';
+import { flyToCart } from '../utils/flyToCart';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
@@ -27,9 +30,9 @@ const MARQUEE = [
 ];
 
 const RECENZIJE = [
-    { tekst: 'Najbolje palačinke u gradu, bez konkurencije. Glumac palačinka je obavezna.', ime: 'Marko J.', kad: 'pre 2 nedelje', varijantaB: false },
-    { tekst: 'Uvek sveže, uvek brzo. Osoblje super ljubazno, a lokal ima dušu.', ime: 'Jelena P.', kad: 'pre mesec dana', varijantaB: true },
-    { tekst: 'Dolazim godinama, još od stare lokacije. Kvalitet nikad nije pao.', ime: 'Nikola S.', kad: 'pre 3 meseca', varijantaB: false },
+    { tekst: 'Najbolje palačinke u gradu, bez konkurencije. Glumac palačinka je obavezna.', ime: 'Marko J.', varijantaB: false },
+    { tekst: 'Uvek sveže, uvek brzo. Osoblje super ljubazno, a lokal ima dušu.', ime: 'Jelena P.', varijantaB: true },
+    { tekst: 'Dolazim godinama, još od stare lokacije. Kvalitet nikad nije pao.', ime: 'Nikola S.', varijantaB: false },
 ];
 
 // Scroll-reveal omotač (dizajnov .rvl efekat)
@@ -56,6 +59,16 @@ function MarqX() {
         <svg className={styles.marqX} viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M2 12 C 5 6, 8 16, 11 9 C 13 5, 16 13, 18 9"
                 stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        </svg>
+    );
+}
+
+// Mala rukom-crtana strelica koja pokazuje ka slici (uz oznake lokacija)
+function StrelicaKaSlici() {
+    return (
+        <svg width="26" height="22" viewBox="0 0 30 24" fill="none" aria-hidden="true">
+            <path d="M4 5 C 11 9, 18 14, 25 19" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+            <path d="M17 19 L 26 20 L 23 12" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     );
 }
@@ -113,9 +126,9 @@ export default function HomePage() {
             .catch(() => setProizvodi([]));
     }, []);
 
-    // Preporuke — prvih 5 proizvoda sa opisom
+    // Preporuke — prvih 5 proizvoda iz kataloga (opis je opcion, ide u hover tooltip)
     const preporuke = useMemo(
-        () => proizvodi.filter(p => p.opis).slice(0, 5),
+        () => proizvodi.slice(0, 5),
         [proizvodi]
     );
 
@@ -289,10 +302,12 @@ export default function HomePage() {
                         <h2 className={styles.h2}>Dostava na<br /><span className={`${styles.rust} ${styles.brushHi}`}>vašu adresu.</span></h2>
                         <div className={styles.dkarte}>
                             <Rvl className={styles.dkart}>
+                                <CrtaniOkvir kasnjenje={0.1} />
                                 <img src={glovoLogo} alt="Glovo" className={styles.dlogo} />
                                 <a href={GLOVO_URL} target="_blank" rel="noopener noreferrer" className={styles.gbtn}>Poruči →</a>
                             </Rvl>
                             <Rvl delay={0.15} className={styles.dkR}>
+                                <CrtaniOkvir kasnjenje={0.25} />
                                 <img src={woltLogo} alt="Wolt" className={styles.dlogo} />
                                 <a href={WOLT_URL} target="_blank" rel="noopener noreferrer" className={styles.wbtn}>Poruči →</a>
                             </Rvl>
@@ -362,11 +377,14 @@ export default function HomePage() {
                                         </span>
                                         <button
                                             className={styles.mplus}
-                                            onClick={e => { e.stopPropagation(); dodaj(p); }}
+                                            onClick={e => { e.stopPropagation(); dodaj(p); flyToCart(e.currentTarget); }}
                                             aria-label={`Dodaj ${p.naziv}`}
                                         >
                                             +
                                         </button>
+                                        <span className={styles.mpop} aria-hidden="true">
+                                            <span className={styles.mpopImg}><Klose size={44} strokeWidth={1.5} /></span>
+                                        </span>
                                     </div>
                                 </Rvl>
                             ))}
@@ -402,19 +420,25 @@ export default function HomePage() {
                     </div>
                     <div className={`${styles.polaTri} ${styles.onGridPolaTri}`}>
                         <Rvl className={styles.pola} style={{ transform: 'rotate(2deg)' }}>
+                            <span className={`${styles.polaOznaka} ${styles.polaOznakaL}`}>
+                                prva lokacija <StrelicaKaSlici />
+                            </span>
                             <span className={styles.tape} />
                             <div className={styles.polaSlot}><img src={bg} alt="Prva lokacija" /></div>
-                            <span className={styles.polaCap}>prva lokacija</span>
                         </Rvl>
                         <Rvl delay={0.15} className={`${styles.pola} ${styles.pol2}`} style={{ transform: 'rotate(-2.4deg)' }}>
+                            <span className={`${styles.polaOznaka} ${styles.polaOznakaD}`}>
+                                <span className={styles.strelicaObrnuta}><StrelicaKaSlici /></span> druga lokacija
+                            </span>
                             <span className={styles.tape} />
                             <div className={styles.polaSlot}><img src={bg1} alt="Druga lokacija" /></div>
-                            <span className={styles.polaCap}>druga lokacija</span>
                         </Rvl>
                         <Rvl delay={0.3} className={`${styles.pola} ${styles.pol3}`} style={{ transform: 'rotate(1.8deg)' }}>
+                            <span className={`${styles.polaOznaka} ${styles.polaOznakaL}`}>
+                                Dorćol, danas ♥ <StrelicaKaSlici />
+                            </span>
                             <span className={styles.tape} />
                             <div className={styles.polaSlot}><img src={bg} alt="Dorćol danas" /></div>
-                            <span className={styles.polaCap}>Dorćol, danas ♥</span>
                         </Rvl>
                     </div>
                 </div>
@@ -549,7 +573,6 @@ export default function HomePage() {
                             <p className={styles.recTxt}>„{r.tekst}"</p>
                             <div className={styles.recIme}>
                                 <span className={styles.recKo}>{r.ime}</span>
-                                <span className={styles.recKad}>{r.kad}</span>
                             </div>
                         </Rvl>
                     ))}

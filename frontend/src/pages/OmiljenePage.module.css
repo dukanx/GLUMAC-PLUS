@@ -49,6 +49,20 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 34px;
     margin-top: 44px;
+    /* svaki papirić svoje visine — jedan dugačak ne rasteže ceo red */
+    align-items: start;
+}
+
+.stavkeToggle {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--rust);
+    text-decoration: underline;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 8px 2px 0;
+    align-self: flex-start;
 }
 
 .papiric {

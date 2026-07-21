@@ -1,6 +1,8 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import { motion } from 'motion/react';
 import logoDark from '../assets/logoDark.png';
+import gpBlack from '../assets/GPblackNOBG.png';
 import styles from './Navbar.module.css';
 import { useAuth } from '../context/AuthContext';
 import { Srce, Odjava, Hamburger } from './Doodle';
@@ -9,8 +11,23 @@ const SLOGAN = '— sveže, brzo, u srcu Dorćola —';
 
 export default function Navbar() {
     const { korisnik, popust, logout } = useAuth();
+    const { pathname } = useLocation();
+    const jeHome = pathname === '/';
+    const [scrolled, setScrolled] = useState(false);
     const [menuOtvoren, setMenuOtvoren] = useState(false);
     const [dropOtvoren, setDropOtvoren] = useState(false);
+
+    // Prati skrol na home da bismo znali koji logo prikazati.
+    useEffect(() => {
+        if (!jeHome) { setScrolled(false); return; }
+        const onScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.4);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, [jeHome]);
+
+    // Home vrh → GP monogram; skrol ili druga strana → logoDark. Crossfade između njih.
+    const prikaziBlack = jeHome && !scrolled;
     const desnoRef = useRef<HTMLDivElement>(null);
     const uloga = korisnik?.uloga;
     const jeZaposleni = uloga === 'ADMIN' || uloga === 'ZAPOSLENI';
@@ -51,9 +68,23 @@ export default function Navbar() {
         <>
             <nav className={styles.navbar}>
 
-                {/* Logo */}
-                <Link to="/" className={styles.logo}>
-                    <img src={logoDark} alt="Glumac Plus" className={styles.logoImg} />
+                {/* Logo — crossfade: GP monogram na home vrhu ↔ logoDark pri skrolu/drugoj strani */}
+                <Link to="/" className={styles.logo} aria-label="Glumac Plus — početna">
+                    <motion.img
+                        src={logoDark}
+                        alt="Glumac Plus"
+                        className={styles.logoImg}
+                        animate={{ opacity: prikaziBlack ? 0 : 1, y: prikaziBlack ? 12 : 0 }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                    <motion.img
+                        src={gpBlack}
+                        alt=""
+                        aria-hidden="true"
+                        className={styles.logoImgHome}
+                        animate={{ opacity: prikaziBlack ? 1 : 0, y: prikaziBlack ? 0 : -12 }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    />
                 </Link>
 
                 {/* Centar — navigacija (desktop) */}

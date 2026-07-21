@@ -8,7 +8,7 @@
 /* ── Header ── */
 .mhead {
     text-align: center;
-    padding: 40px 5% 0;
+    padding: 48px 5% 0;
 }
 
 .eyeb {
@@ -31,10 +31,10 @@
 
 .infoTagovi {
     display: flex;
-    gap: 12px;
+    gap: 14px;
     justify-content: center;
     flex-wrap: wrap;
-    margin-top: 16px;
+    margin-top: 24px;
     align-items: center;
 }
 
@@ -72,15 +72,14 @@
 .loyBan {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-family: var(--font-cav);
-    font-size: 21px;
+    font-size: 20px;
     color: var(--ink);
     background: #fff;
-    box-shadow: 0 8px 20px hsl(22 30% 14% / .12);
-    padding: 6px 20px 8px;
+    box-shadow: 0 6px 16px hsl(22 30% 14% / .1);
+    padding: 5px 16px 7px;
     transform: rotate(-1deg);
-    margin-top: 18px;
 }
 
 .loyBanSivo {
@@ -92,17 +91,18 @@
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    gap: 44px;
-    padding: 20px 5% 18px;
+    gap: 64px;
+    padding: 26px 5% 24px;
     flex-wrap: wrap;
+    border-top: 2px dashed var(--ink12);
     border-bottom: 2px dashed var(--ink12);
-    margin-top: 20px;
+    margin-top: 34px;
 }
 
 .infoBl {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
     align-items: center;
     padding-bottom: 5px;
 }

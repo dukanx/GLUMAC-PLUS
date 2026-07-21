@@ -155,6 +155,9 @@ function Papiric({ o, proizvodiMap, popust, pinIndex, onPonovi, onObrisi, brisan
     onObrisi: (id: number) => void;
     brisanje: number | null;
 }) {
+    const [prosireno, setProsireno] = useState(false);
+    const PRIKAZI = 3;
+
     const stavkeSaCenom = o.stavke.map(s => {
         const proizvod = proizvodiMap.get(s.proizvodId);
         return { ...s, cena: proizvod?.cena ?? null, dostupno: !!proizvod };
@@ -163,6 +166,9 @@ function Papiric({ o, proizvodiMap, popust, pinIndex, onPonovi, onObrisi, brisan
     const zaPlacanje = popust > 0 ? Math.round(ukupno * (1 - popust / 100)) : ukupno;
     const imaNedostupnih = stavkeSaCenom.some(s => !s.dostupno);
     const rot = (o.id % 3) - 1; // -1, 0, 1 → blaga rotacija
+
+    const vidljiveStavke = prosireno ? stavkeSaCenom : stavkeSaCenom.slice(0, PRIKAZI);
+    const skriveno = stavkeSaCenom.length - PRIKAZI;
 
     return (
         <motion.div
@@ -189,7 +195,7 @@ function Papiric({ o, proizvodiMap, popust, pinIndex, onPonovi, onObrisi, brisan
             </div>
 
             <div className={styles.stavke}>
-                {stavkeSaCenom.map((s, i) => (
+                {vidljiveStavke.map((s, i) => (
                     <div key={i} className={s.dostupno ? styles.stavR : styles.stavRNedostupna}>
                         <span className={styles.stavK}>{s.kolicina}×</span>
                         <span className={s.dostupno ? undefined : styles.stavNazivPrecrtan}>
@@ -204,6 +210,12 @@ function Papiric({ o, proizvodiMap, popust, pinIndex, onPonovi, onObrisi, brisan
                     </div>
                 ))}
             </div>
+
+            {skriveno > 0 && (
+                <button className={styles.stavkeToggle} onClick={() => setProsireno(v => !v)}>
+                    {prosireno ? 'prikaži manje' : `+ još ${skriveno}…`}
+                </button>
+            )}
 
             {imaNedostupnih && (
                 <span className={styles.nedost}>! neki proizvodi više nisu na meniju</span>

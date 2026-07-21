@@ -3,7 +3,8 @@
 export type TipPorudzbine = 'ZA_PONETI' | 'USPUT' | 'U_LOKALU';
 
 // Status porudžbine — životni ciklus (isti kod u istoriji, statusu i panelu).
-export type StatusPorudzbine = 'U_PRIPREMI' | 'SPREMNA' | 'REALIZOVANA' | 'OTKAZANA';
+// NOVA → U_PRIPREMI (prihvaćena) → SPREMNA (čeka preuzimanje) → REALIZOVANA (preuzeta).
+export type StatusPorudzbine = 'NOVA' | 'U_PRIPREMI' | 'SPREMNA' | 'REALIZOVANA' | 'OTKAZANA';
 
 export const TIP_LABELE: Record<TipPorudzbine, string> = {
     ZA_PONETI: 'Za poneti',

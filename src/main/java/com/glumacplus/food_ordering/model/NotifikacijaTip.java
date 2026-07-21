@@ -16,7 +16,9 @@ public enum NotifikacijaTip {
     PORUDZBINA_VREME_PROMENJENO,
     /** Porudžbina je otkazana. */
     PORUDZBINA_OTKAZANA,
-    /** Porudžbina je završena i spremna za preuzimanje. */
+    /** Porudžbina je spremna i čeka preuzimanje. */
+    PORUDZBINA_SPREMNA,
+    /** Porudžbina je preuzeta i realizovana. */
     PORUDZBINA_ZAVRSENA,
     /** Korisnik je prešao u viši loyalty nivo. */
     LOYALTY_LEVEL_UP,

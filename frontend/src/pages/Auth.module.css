@@ -67,43 +67,52 @@
 }
 
 .lab {
-    font-family: var(--font-cav);
-    font-size: 21px;
-    color: var(--rust);
-    margin-bottom: 4px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink55);
+    margin-bottom: 7px;
 }
 
 .inp {
-    border: 0;
-    border-bottom: 2px dashed var(--ink40);
-    background: transparent;
     width: 100%;
-    padding: 6px 2px 8px;
-    font-family: var(--font-cav);
-    font-size: 23px;
+    border: 1.5px solid var(--ink20);
+    border-radius: 10px;
+    background: var(--paper);
+    padding: 12px 14px;
+    font-family: var(--font-body);
+    font-size: 16px;
     color: var(--ink);
     outline: none;
+    transition: border-color .15s, box-shadow .15s;
 }
 
 .inp::placeholder {
     color: var(--ink40);
+    font-family: var(--font-body);
 }
 
 .inp:focus {
-    border-bottom-color: var(--ink);
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px hsl(22 30% 14% / .07);
 }
 
 .inpErr {
-    border-bottom-color: hsl(14 65% 44% / .7);
+    border-color: var(--rust);
+}
+
+.inpErr:focus {
+    box-shadow: 0 0 0 3px hsl(14 65% 44% / .1);
 }
 
 .err {
-    font-family: var(--font-cav);
-    font-size: 18px;
+    font-family: var(--font-body);
+    font-size: 13px;
     color: var(--rust);
     display: block;
-    margin-top: 4px;
-    transform: rotate(-1deg);
+    margin-top: 6px;
 }
 
 .dugme {

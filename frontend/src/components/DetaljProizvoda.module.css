@@ -50,6 +50,38 @@
     display: none;
 }
 
+/* Telo: velika slika + info kolona */
+.telo {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 26px;
+    align-items: start;
+    margin-top: 4px;
+}
+
+.slikaOkvir {
+    border: 2px solid var(--ink);
+    border-radius: var(--wob);
+    background: var(--paper2);
+    aspect-ratio: 4 / 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink40);
+    overflow: hidden;
+}
+
+.slikaOkvir img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.info {
+    min-width: 0;
+}
+
 .eyeb {
     font-family: var(--font-cav);
     font-size: 24px;
@@ -223,6 +255,15 @@
         border-radius: 3px;
         background: var(--ink20);
         margin: 10px auto 14px;
+    }
+
+    .telo {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .slikaOkvir {
+        aspect-ratio: 16 / 10;
     }
 
     .naslov {

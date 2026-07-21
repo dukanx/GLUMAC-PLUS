@@ -9,7 +9,6 @@ import type { Proizvod } from '../types/proizvod';
 import { Klose, Sat, ChevronDole } from '../components/Doodle';
 import * as porudzbineApi from '../api/porudzbine';
 import * as proizvodiApi from '../api/proizvodi';
-import { ApiError } from '../api/client';
 import styles from './IstorijaPage.module.css';
 
 const PAGE_SIZE = 8;
@@ -19,8 +18,9 @@ const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 const KORACI = ['PRIMLJENO', 'U PRIPREMI', 'SPREMNA'];
 
 function korakIndex(status: string): number {
-    if (status === 'U_PRIPREMI') return 0;
-    if (status === 'SPREMNA') return 1;
+    if (status === 'NOVA') return 0;
+    if (status === 'U_PRIPREMI') return 1;
+    if (status === 'SPREMNA') return 2;
     if (status === 'REALIZOVANA') return 2;
     return 0;
 }
@@ -141,7 +141,7 @@ function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
                 </div>
                 <div className={styles.istGlavaDesno}>
                     <span className={otkazana ? styles.stOtk : styles.stReal}>
-                        {otkazana ? 'otkazana' : '✓ realizovana'}
+                        {otkazana ? 'otkazana' : '✓ preuzeta'}
                     </span>
                     <span>
                         {imaPopust && <span className={styles.cenaS}>{p.originalnaCena!.toLocaleString('sr-RS')} </span>}
@@ -197,7 +197,7 @@ function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
                             <div className={styles.popustRed}>
                                 <span>{imaPopust ? `popust −${popust}%: −${popustIznos.toLocaleString('sr-RS')} RSD` : ''}</span>
                                 {realizovana && (
-                                    <span>+{Math.round(p.ukupanIznos).toLocaleString('sr-RS')} bodova</span>
+                                    <span>+{Math.floor(p.ukupanIznos / 100).toLocaleString('sr-RS')} bodova</span>
                                 )}
                             </div>
                         )}
@@ -250,7 +250,6 @@ export default function IstorijaPage() {
     const [stranica, setStranica] = useState(0);
     const [loading, setLoading] = useState(true);
     const [greska, setGreska] = useState('');
-    const [otkazivanje, setOtkazivanje] = useState<number | null>(null);
     const [omiljenaModal, setOmiljenaModal] = useState<number | null>(null);
     const [sacuvane, setSacuvane] = useState<number[]>([]);
     const [toast, setToast] = useState('');
@@ -307,25 +306,10 @@ export default function IstorijaPage() {
         if (preskoceno > 0) prikaziToast(`${preskoceno} proizvod(a) više nije na meniju — dodato ostalo.`);
     };
 
-    const otkazi = async (id: number) => {
-        if (!token) return;
-        setOtkazivanje(id);
-        try {
-            await porudzbineApi.otkazi(id);
-            setPorudzbine(prev => prev.map(p =>
-                p.porudzbinaId === id ? { ...p, status: 'OTKAZANA' } : p
-            ));
-            prikaziToast('Porudžbina je otkazana.');
-        } catch (e) {
-            prikaziToast(e instanceof ApiError ? (e.body?.message ?? 'Nije moguće otkazati.') : 'Greška u mreži.');
-        } finally {
-            setOtkazivanje(null);
-        }
-    };
 
-    // Aktivna porudžbina (U_PRIPREMI/SPREMNA) — velika narudžbenica na vrhu.
+    // Aktivna porudžbina (NOVA/U_PRIPREMI/SPREMNA) — velika narudžbenica na vrhu.
     const aktivna = useMemo(
-        () => porudzbine.find(p => p.status === 'U_PRIPREMI' || p.status === 'SPREMNA') ?? null,
+        () => porudzbine.find(p => p.status === 'NOVA' || p.status === 'U_PRIPREMI' || p.status === 'SPREMNA') ?? null,
         [porudzbine]
     );
     const istorija = aktivna
@@ -385,7 +369,9 @@ export default function IstorijaPage() {
                         style={{ cursor: 'pointer' }}
                     >
                         <span className={styles.aktivnaStiker}>
-                            {aktivna.status === 'SPREMNA' ? 'skoro gotovo' : 'upravo se sprema'}
+                            {aktivna.status === 'SPREMNA' ? 'spremna — dođi po nju!'
+                                : aktivna.status === 'U_PRIPREMI' ? 'upravo se sprema'
+                                    : 'čekamo potvrdu kuhinje'}
                         </span>
                         <div className={styles.aktivnaGlava}>
                             <div className={styles.aktivnaLevo}>
@@ -397,7 +383,8 @@ export default function IstorijaPage() {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <span className={styles.minBig}>
-                                    {aktivniMin !== null && aktivniMin > 0 ? `~${aktivniMin} min` : 'uskoro'}
+                                    {aktivna.status === 'SPREMNA' ? 'sad!'
+                                        : aktivniMin !== null && aktivniMin > 0 ? `~${aktivniMin} min` : 'uskoro'}
                                 </span>
                                 <span className={styles.minNap}>do preuzimanja · osvežava se samo</span>
                             </div>
@@ -433,15 +420,7 @@ export default function IstorijaPage() {
                             <span className={styles.aktivnaStavke}>
                                 {sazetakStavki(aktivna)} · <b>{aktivna.ukupanIznos.toLocaleString('sr-RS')} RSD</b>
                             </span>
-                            {aktivna.status === 'U_PRIPREMI' && (
-                                <button
-                                    className={styles.akc}
-                                    onClick={e => { e.stopPropagation(); otkazi(aktivna.porudzbinaId); }}
-                                    disabled={otkazivanje === aktivna.porudzbinaId}
-                                >
-                                    {otkazivanje === aktivna.porudzbinaId ? 'otkazujem…' : 'otkaži porudžbinu'}
-                                </button>
-                            )}
+                            <span className={styles.aktivnaNapomena}>otkazivanje je moguće samo na kasi</span>
                         </div>
                     </motion.div>
                 )}

@@ -119,7 +119,7 @@ public class PorudzbinaService {
 
         boolean imaAktivnu = porudzbinaRepo.existsByKorisnik_IdAndStatusIn(
                 trenutniKorisnik.getId(),
-                List.of(StatusPorudzbine.U_PRIPREMI, StatusPorudzbine.SPREMNA)
+                List.of(StatusPorudzbine.NOVA, StatusPorudzbine.U_PRIPREMI, StatusPorudzbine.SPREMNA)
         );
         if (imaAktivnu) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -132,7 +132,7 @@ public class PorudzbinaService {
         por.setTipPorudzbine(dto.getTipPorudzbine() != null ? dto.getTipPorudzbine() : TipPorudzbine.ZA_PONETI);
 
         por.setDatum(LocalDateTime.now(appClock));
-        por.setStatus(StatusPorudzbine.U_PRIPREMI);
+        por.setStatus(StatusPorudzbine.NOVA);
 
         BigDecimal ukIznos = BigDecimal.ZERO;
 
@@ -226,6 +226,7 @@ public class PorudzbinaService {
 
         boolean loyaltyLevelUp = false;
         String noviNivoNaziv = null;
+        int dodeljeniBodovi = 0;
 
         if (p.getStatus() != StatusPorudzbine.REALIZOVANA && noviStatus == StatusPorudzbine.REALIZOVANA) {
 
@@ -236,6 +237,7 @@ public class PorudzbinaService {
                     .divide(BigDecimal.valueOf(100), 0, RoundingMode.DOWN)
                     .intValue();
             k.setBrojBodova(k.getBrojBodova() + noviBodovi);
+            dodeljeniBodovi = noviBodovi;
 
             List<LoyaltyProgram> sviNivoi = loyaltyRepo.findAll();
 
@@ -260,8 +262,14 @@ public class PorudzbinaService {
         p.setStatus(noviStatus);
         porudzbinaRepo.save(p);
 
-        if (noviStatus == StatusPorudzbine.SPREMNA && p.getProcenjenoVreme() != null) {
+        if (noviStatus == StatusPorudzbine.U_PRIPREMI && p.getProcenjenoVreme() != null) {
             sendAcceptedWithEstimatedTimeNotification(p.getKorisnikId(), p.getId(), p.getProcenjenoVreme());
+        } else if (noviStatus == StatusPorudzbine.SPREMNA) {
+            notifikacijaService.createForUser(
+                    p.getKorisnikId(),
+                    NotifikacijaTip.PORUDZBINA_SPREMNA,
+                    String.format("Vaša porudžbina #%d je spremna. Možete je preuzeti.", p.getId())
+            );
         } else if (noviStatus == StatusPorudzbine.OTKAZANA) {
             notifikacijaService.createForUser(
                     p.getKorisnikId(),
@@ -269,10 +277,13 @@ public class PorudzbinaService {
                     String.format("Vaša porudžbina #%d je otkazana.", p.getId())
             );
         } else if (noviStatus == StatusPorudzbine.REALIZOVANA) {
+            String poruka = dodeljeniBodovi > 0
+                    ? String.format("Vaša porudžbina #%d je preuzeta. Hvala! Osvojili ste %d bodova.", p.getId(), dodeljeniBodovi)
+                    : String.format("Vaša porudžbina #%d je preuzeta. Hvala!", p.getId());
             notifikacijaService.createForUser(
                     p.getKorisnikId(),
                     NotifikacijaTip.PORUDZBINA_ZAVRSENA,
-                    String.format("Vaša porudžbina #%d je gotova. Možete je preuzeti.", p.getId())
+                    poruka
             );
         }
 
@@ -286,14 +297,16 @@ public class PorudzbinaService {
     }
 
     /**
-     * Postavlja procenjeno vreme pripreme porudžbine i šalje odgovarajuću
-     * notifikaciju ako je porudžbina u statusu {@link StatusPorudzbine#SPREMNA}.
+     * Postavlja procenjeno vreme pripreme porudžbine. Vreme se postavlja pri
+     * prihvatanju (status {@link StatusPorudzbine#NOVA}) ili menja tokom
+     * pripreme (status {@link StatusPorudzbine#U_PRIPREMI}); u drugom slučaju
+     * korisniku se šalje notifikacija o promeni vremena.
      *
      * @param id identifikator porudžbine
      * @param procenjenoVreme procenjeno vreme u minutima (1–120)
      * @return ažurirana porudžbina
      * @throws ResponseStatusException sa statusom 400 ako je vreme van opsega
-     *         ili status nije U_PRIPREMI/SPREMNA, odnosno 404 ako porudžbina
+     *         ili status nije NOVA/U_PRIPREMI, odnosno 404 ako porudžbina
      *         ne postoji
      */
     public PorudzbinaViewDto setEstimatedTime(Long id, Integer procenjenoVreme) {
@@ -307,10 +320,10 @@ public class PorudzbinaService {
         Porudzbina p = porudzbinaRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Porudzbina sa ID-em " + id + " ne postoji"));
 
-        if (p.getStatus() != StatusPorudzbine.U_PRIPREMI && p.getStatus() != StatusPorudzbine.SPREMNA) {
+        if (p.getStatus() != StatusPorudzbine.NOVA && p.getStatus() != StatusPorudzbine.U_PRIPREMI) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Procenjeno vreme može da se postavi samo za porudžbine u statusu U_PRIPREMI ili SPREMNA"
+                    "Procenjeno vreme može da se postavi samo za porudžbine u statusu NOVA ili U_PRIPREMI"
             );
         }
 
@@ -318,9 +331,9 @@ public class PorudzbinaService {
         p.setProcenjenoVreme(procenjenoVreme);
         p = porudzbinaRepo.save(p);
 
-        if (p.getStatus() == StatusPorudzbine.SPREMNA && prethodnoProcenjenoVreme == null) {
+        if (p.getStatus() == StatusPorudzbine.U_PRIPREMI && prethodnoProcenjenoVreme == null) {
             sendAcceptedWithEstimatedTimeNotification(p.getKorisnikId(), p.getId(), procenjenoVreme);
-        } else if (p.getStatus() == StatusPorudzbine.SPREMNA && !prethodnoProcenjenoVreme.equals(procenjenoVreme)) {
+        } else if (p.getStatus() == StatusPorudzbine.U_PRIPREMI && !prethodnoProcenjenoVreme.equals(procenjenoVreme)) {
             sendEstimatedTimeChangedNotification(p.getKorisnikId(), p.getId(), prethodnoProcenjenoVreme, procenjenoVreme);
         }
 
@@ -329,7 +342,7 @@ public class PorudzbinaService {
 
     /**
      * Vraća aktivnu porudžbinu trenutno prijavljenog korisnika (u statusu
-     * U_PRIPREMI ili SPREMNA), ako postoji.
+     * NOVA, U_PRIPREMI ili SPREMNA), ako postoji.
      *
      * @return opciona aktivna porudžbina
      * @throws ResponseStatusException sa statusom 401 ako korisnik nije prijavljen
@@ -338,7 +351,7 @@ public class PorudzbinaService {
         Korisnik korisnik = getCurrentUserEntity();
         return porudzbinaRepo.findFirstByKorisnik_IdAndStatusInOrderByIdDesc(
                 korisnik.getId(),
-                List.of(StatusPorudzbine.U_PRIPREMI, StatusPorudzbine.SPREMNA)
+                List.of(StatusPorudzbine.NOVA, StatusPorudzbine.U_PRIPREMI, StatusPorudzbine.SPREMNA)
         ).map(PorudzbinaMapper::toViewDto);
     }
 
@@ -363,11 +376,11 @@ public class PorudzbinaService {
 
     /**
      * Otkazuje porudžbinu trenutno prijavljenog korisnika. Moguće je otkazati
-     * samo sopstvenu porudžbinu koja je još u pripremi.
+     * samo sopstvenu porudžbinu koja još nije spremna (NOVA ili U_PRIPREMI).
      *
      * @param id identifikator porudžbine
      * @throws ResponseStatusException sa statusom 404 ako porudžbina ne postoji,
-     *         403 ako nije korisnikova, ili 400 ako nije u statusu U_PRIPREMI
+     *         403 ako nije korisnikova, ili 400 ako nije u statusu NOVA/U_PRIPREMI
      */
     public void cancelMyOrder(Long id) {
         Korisnik korisnik = getCurrentUserEntity();
@@ -379,8 +392,8 @@ public class PorudzbinaService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Možete otkazati samo svoju porudžbinu");
         }
 
-        if (porudzbina.getStatus() != StatusPorudzbine.U_PRIPREMI) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Porudžbina se može otkazati samo dok je u pripremi");
+        if (porudzbina.getStatus() != StatusPorudzbine.NOVA && porudzbina.getStatus() != StatusPorudzbine.U_PRIPREMI) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Porudžbina se može otkazati samo dok nije spremna");
         }
 
         porudzbina.setStatus(StatusPorudzbine.OTKAZANA);
@@ -530,6 +543,11 @@ public class PorudzbinaService {
      */
     private void validateStatusTransition(StatusPorudzbine stariStatus, StatusPorudzbine noviStatus) {
         switch (stariStatus) {
+            case NOVA -> {
+                if (noviStatus != StatusPorudzbine.U_PRIPREMI && noviStatus != StatusPorudzbine.OTKAZANA) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Iz statusa NOVA možete preći samo u U_PRIPREMI ili OTKAZANA");
+                }
+            }
             case U_PRIPREMI -> {
                 if (noviStatus != StatusPorudzbine.SPREMNA && noviStatus != StatusPorudzbine.OTKAZANA) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Iz statusa U_PRIPREMI možete preći samo u SPREMNA ili OTKAZANA");

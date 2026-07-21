@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Proizvod } from '../types/proizvod';
+import { Klose } from './Doodle';
 import styles from './DetaljProizvoda.module.css';
 
 interface Props {
@@ -62,21 +63,28 @@ export default function DetaljProizvoda({ proizvod, popust, onDodaj, onZatvori }
                         <div className={styles.rucka} />
                         <button className={styles.zatvori} onClick={onZatvori} aria-label="Zatvori">✕</button>
 
-                        <span className={styles.eyeb}>{proizvod.tip.toLowerCase()}</span>
-                        <h2 className={styles.naslov}>{proizvod.naziv}</h2>
+                        <div className={styles.telo}>
+                            <div className={styles.slikaOkvir} aria-hidden="true">
+                                <Klose size={64} strokeWidth={1.6} />
+                            </div>
+                            <div className={styles.info}>
+                                <span className={styles.eyeb}>{proizvod.tip.toLowerCase()}</span>
+                                <h2 className={styles.naslov}>{proizvod.naziv}</h2>
 
-                        {proizvod.opis && <p className={styles.opis}>{proizvod.opis}</p>}
+                                {proizvod.opis && <p className={styles.opis}>{proizvod.opis}</p>}
 
-                        {proizvod.alergeniNazivi && proizvod.alergeniNazivi.length > 0 && (
-                            <>
-                                <span className={styles.sekcLab}>alergeni</span>
-                                <div className={styles.alergeni}>
-                                    {proizvod.alergeniNazivi.map(a => (
-                                        <span key={a} className={styles.alPil}>{a}</span>
-                                    ))}
-                                </div>
-                            </>
-                        )}
+                                {proizvod.alergeniNazivi && proizvod.alergeniNazivi.length > 0 && (
+                                    <>
+                                        <span className={styles.sekcLab}>alergeni</span>
+                                        <div className={styles.alergeni}>
+                                            {proizvod.alergeniNazivi.map(a => (
+                                                <span key={a} className={styles.alPil}>{a}</span>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
 
                         <div className={styles.dno}>
                             <span>

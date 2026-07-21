@@ -78,43 +78,25 @@ export default function MeniPage() {
 
             {/* ── Header ── */}
             <header className={styles.mhead}>
-                <span className={styles.eyeb}>poručivanje — preuzimaš lično</span>
                 <h1 className={styles.naslov}>Meni</h1>
                 <div className={styles.infoTagovi}>
-                    <span className={styles.infoTag}>
-                        <Zvezda size={15} strokeWidth={2.6} />
-                        skupljaš bodove uz svaku porudžbinu
-                    </span>
-                    <span className={styles.dostavaPitanje}>radije dostavu?</span>
-                    <a
-                        href={GLOVO_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.infoTagGlovo}
-                    >
-                        Glovo ↗
-                    </a>
-                    <a
-                        href={WOLT_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.infoTagWolt}
-                    >
-                        Wolt ↗
-                    </a>
-                </div>
-                {korisnik && popust > 0 && (
-                    <div>
+                    {korisnik && popust > 0 && (
                         <span className={styles.loyBan}>
                             <Zvezda size={15} strokeWidth={2.6} style={{ color: 'var(--rust)' }} />
                             <span>
-                                <b>{korisnik.loyaltyNivo}</b> — tvoj popust:{' '}
-                                <b style={{ color: 'var(--rust)' }}>{popust}%</b>{' '}
-                                <span className={styles.loyBanSivo}>· cene ispod su već preračunate</span>
+                                <b>{korisnik.loyaltyNivo}</b> — popust{' '}
+                                <b style={{ color: 'var(--rust)' }}>{popust}%</b>
                             </span>
                         </span>
-                    </div>
-                )}
+                    )}
+                    <span className={styles.dostavaPitanje}>dostava:</span>
+                    <a href={GLOVO_URL} target="_blank" rel="noopener noreferrer" className={styles.infoTagGlovo}>
+                        Glovo ↗
+                    </a>
+                    <a href={WOLT_URL} target="_blank" rel="noopener noreferrer" className={styles.infoTagWolt}>
+                        Wolt ↗
+                    </a>
+                </div>
             </header>
 
             {/* ── Info traka: adresa · telefon · radno vreme ── */}
@@ -133,7 +115,7 @@ export default function MeniPage() {
 
                 <div className={styles.infoBl}>
                     <span className={styles.infoBlH}>pozovi nas</span>
-                    <a href={`tel:${TELEFON.replace(/\s/g, '')}`} className={styles.infoBlV}>
+                    <a href={`tel:${TELEFON.replace(/\s/g, '')}`} className={styles.infoBlLink}>
                         {TELEFON}
                     </a>
                 </div>

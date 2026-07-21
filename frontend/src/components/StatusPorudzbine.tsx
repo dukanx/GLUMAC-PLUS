@@ -9,16 +9,18 @@ import styles from './StatusPorudzbine.module.css';
 const KORACI = ['PRIMLJENO', 'U PRIPREMI', 'SPREMNA'];
 
 function korakIndex(status?: string): number {
-    if (status === 'U_PRIPREMI') return 0;
-    if (status === 'SPREMNA') return 1;
+    if (status === 'NOVA') return 0;
+    if (status === 'U_PRIPREMI') return 1;
+    if (status === 'SPREMNA') return 2;
     if (status === 'REALIZOVANA') return 2;
     return 0;
 }
 
 function stikerTekst(status?: string): string {
-    if (status === 'U_PRIPREMI') return 'čekamo potvrdu kuhinje…';
-    if (status === 'SPREMNA') return 'upravo se sprema';
-    if (status === 'REALIZOVANA') return 'spremna je — dođi po nju!';
+    if (status === 'NOVA') return 'čekamo potvrdu kuhinje…';
+    if (status === 'U_PRIPREMI') return 'upravo se sprema';
+    if (status === 'SPREMNA') return 'spremna je — dođi po nju!';
+    if (status === 'REALIZOVANA') return 'preuzeta — prijatno!';
     if (status === 'OTKAZANA') return 'otkazana';
     return 'učitavanje…';
 }
@@ -42,7 +44,8 @@ export default function StatusPorudzbine() {
     const prikazano = aktivnaId !== null && pracenjeOtvoreno;
     const status = porudzbina?.status;
     const otkazana = status === 'OTKAZANA';
-    const spremna = status === 'REALIZOVANA';
+    const preuzeta = status === 'REALIZOVANA';
+    const spremna = status === 'SPREMNA' || preuzeta;
     const aktivniKorak = korakIndex(status);
 
     return (
@@ -75,7 +78,9 @@ export default function StatusPorudzbine() {
                         <div className={styles.zaglavlje}>
                             <span className={styles.naslov}>Porudžbina #{aktivnaId}</span>
                             <div className={styles.vreme}>
-                                {spremna ? (
+                                {preuzeta ? (
+                                    <span className={styles.vremeMinZel}>✓</span>
+                                ) : spremna ? (
                                     <span className={styles.vremeMinZel}>sad!</span>
                                 ) : preostaloMin !== null && preostaloMin > 0 ? (
                                     <>

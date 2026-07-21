@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { tipLabela, type Porudzbina, type StatusPorudzbine } from '../types/porudzbina';
-import { Zvono, Refresh, Klose } from '../components/Doodle';
-import logoDark from '../assets/logoDark.png';
+import { Zvono, Refresh } from '../components/Doodle';
 import styles from './PanelPorudzbina.module.css';
 
 type Tab = 'PRIPREMA' | 'ZAVRSENE' | 'OTKAZANE';
@@ -14,16 +13,18 @@ const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 const PRESET_VREMENA = [10, 15, 20, 30];
 
 const STATUS_LABELA: Record<StatusPorudzbine, string> = {
-    U_PRIPREMI:  'Nova',
-    SPREMNA:     'U pripremi',
-    REALIZOVANA: 'Završena',
+    NOVA:        'Nova',
+    U_PRIPREMI:  'U pripremi',
+    SPREMNA:     'Spremna',
+    REALIZOVANA: 'Realizovana',
     OTKAZANA:    'Otkazana',
 };
 
-const TABOVI: { kljuc: Tab; labela: string; status: StatusPorudzbine }[] = [
-    { kljuc: 'PRIPREMA', labela: 'U pripremi', status: 'SPREMNA' },
-    { kljuc: 'ZAVRSENE', labela: 'Završene',   status: 'REALIZOVANA' },
-    { kljuc: 'OTKAZANE', labela: 'Otkazane',   status: 'OTKAZANA' },
+// PRIPREMA obuhvata dva statusa (U_PRIPREMI + SPREMNA) — dve kolone.
+const TABOVI: { kljuc: Tab; labela: string; statusi: StatusPorudzbine[] }[] = [
+    { kljuc: 'PRIPREMA', labela: 'U pripremi',  statusi: ['U_PRIPREMI', 'SPREMNA'] },
+    { kljuc: 'ZAVRSENE', labela: 'Realizovane', statusi: ['REALIZOVANA'] },
+    { kljuc: 'OTKAZANE', labela: 'Otkazane',    statusi: ['OTKAZANA'] },
 ];
 
 function formatDatum(datum: string) {
@@ -38,35 +39,36 @@ interface KarticaProps {
     p: Porudzbina;
     azurira: boolean;
     onPrihvati: (id: number, vreme: number) => void;
-    onZavrsi: (id: number) => void;
+    onSpremno: (id: number) => void;
+    onPreuzeto: (id: number) => void;
     onOtkazi: (id: number) => void;
 }
 
-function PorudzbinaKartica({ p, azurira, onPrihvati, onZavrsi, onOtkazi }: KarticaProps) {
-    const [biranjeVremena, setBiranjeVremena] = useState(false);
+function PorudzbinaKartica({ p, azurira, onPrihvati, onSpremno, onPreuzeto, onOtkazi }: KarticaProps) {
     const [customMode, setCustomMode] = useState(false);
     const [customVreme, setCustomVreme] = useState('');
+    const [stavkeProsirene, setStavkeProsirene] = useState(false);
 
-    const resetBiranje = () => {
-        setBiranjeVremena(false);
-        setCustomMode(false);
-        setCustomVreme('');
-    };
+    const PRIKAZI_STAVKI = 3;
+    const sveStavke = p.stavke ?? [];
+    const vidljiveStavke = stavkeProsirene ? sveStavke : sveStavke.slice(0, PRIKAZI_STAVKI);
+    const skrivenoStavki = sveStavke.length - PRIKAZI_STAVKI;
 
     const potvrdiCustom = () => {
         const v = Number(customVreme);
         if (!Number.isInteger(v) || v < 1 || v > 120) return;
         onPrihvati(p.porudzbinaId, v);
-        resetBiranje();
+        setCustomMode(false);
+        setCustomVreme('');
     };
 
     return (
         <motion.div
             className={`${styles.kartica} ${styles[`akcent_${p.status}`]}`}
-            layout
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
         >
             <div className={styles.karticaGlava}>
                 <div className={styles.karticaLevo}>
@@ -78,19 +80,29 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onZavrsi, onOtkazi }: Karti
                 </div>
                 <span className={`${styles.statusBadge} ${styles[`badge_${p.status}`]}`}>
                     {STATUS_LABELA[p.status]}
-                    {p.status === 'SPREMNA' && p.procenjenoVreme != null && ` · ~${p.procenjenoVreme} min`}
+                    {p.status === 'U_PRIPREMI' && p.procenjenoVreme != null && ` · ~${p.procenjenoVreme} min`}
                 </span>
             </div>
 
             {p.korisnikIme && <p className={styles.kupac}>{p.korisnikIme}</p>}
 
             <ul className={styles.stavke}>
-                {p.stavke?.map((s, i) => (
+                {vidljiveStavke.map((s, i) => (
                     <li key={i} className={styles.stavka}>
                         <span className={styles.stavkaKolicina}>{s.kolicina}×</span>
                         <span className={styles.stavkaNaziv}>{s.nazivProizvoda}</span>
                     </li>
                 ))}
+                {skrivenoStavki > 0 && (
+                    <li>
+                        <button
+                            className={styles.stavkeToggle}
+                            onClick={() => setStavkeProsirene(v => !v)}
+                        >
+                            {stavkeProsirene ? 'prikaži manje' : `+ još ${skrivenoStavki}…`}
+                        </button>
+                    </li>
+                )}
             </ul>
 
             {p.napomena && (
@@ -103,51 +115,35 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onZavrsi, onOtkazi }: Karti
                 <span className={styles.ukupno}>{p.ukupanIznos.toLocaleString('sr-RS')} RSD</span>
 
                 <div className={styles.akcije}>
-                    {/* NOVA — prihvati (sa izborom vremena) ili otkaži */}
-                    {p.status === 'U_PRIPREMI' && !biranjeVremena && (
-                        <>
-                            <button
-                                className={`${styles.btn} ${styles.btnPrihvati}`}
-                                onClick={() => setBiranjeVremena(true)}
-                                disabled={azurira}
-                            >
-                                <Klose size={18} strokeWidth={2.2} /> Prihvati
+                    {/* NOVA — izbor vremena JE prihvatanje (bez zasebnog koraka); ili odbij */}
+                    {p.status === 'NOVA' && !customMode && (
+                        <div className={styles.vremeBiraci}>
+                            <span className={styles.vremeLabel}>prihvati za:</span>
+                            {PRESET_VREMENA.map((v) => (
+                                <button
+                                    key={v}
+                                    className={styles.vremeBtn}
+                                    onClick={() => onPrihvati(p.porudzbinaId, v)}
+                                    disabled={azurira}
+                                >
+                                    {v} min
+                                </button>
+                            ))}
+                            <button className={styles.vremeBtn} onClick={() => setCustomMode(true)} disabled={azurira}>
+                                drugo
                             </button>
                             <button
                                 className={`${styles.btn} ${styles.btnOtkazi}`}
                                 onClick={() => onOtkazi(p.porudzbinaId)}
                                 disabled={azurira}
                             >
-                                ✕ Otkaži
-                            </button>
-                        </>
-                    )}
-
-                    {/* Izbor vremena — brza dugmad */}
-                    {p.status === 'U_PRIPREMI' && biranjeVremena && !customMode && (
-                        <div className={styles.vremeBiraci}>
-                            <button className={styles.vremeNazad} onClick={resetBiranje} title="Nazad">
-                                ‹
-                            </button>
-                            <span className={styles.vremeLabel}>Vreme:</span>
-                            {PRESET_VREMENA.map((v) => (
-                                <button
-                                    key={v}
-                                    className={styles.vremeBtn}
-                                    onClick={() => { onPrihvati(p.porudzbinaId, v); resetBiranje(); }}
-                                    disabled={azurira}
-                                >
-                                    {v} min
-                                </button>
-                            ))}
-                            <button className={styles.vremeBtn} onClick={() => setCustomMode(true)}>
-                                Drugo
+                                ✕ Odbij
                             </button>
                         </div>
                     )}
 
                     {/* Custom vreme */}
-                    {p.status === 'U_PRIPREMI' && biranjeVremena && customMode && (
+                    {p.status === 'NOVA' && customMode && (
                         <div className={styles.vremeBiraci}>
                             <button className={styles.vremeNazad} onClick={() => setCustomMode(false)} title="Nazad">
                                 ‹
@@ -173,15 +169,35 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onZavrsi, onOtkazi }: Karti
                         </div>
                     )}
 
-                    {/* U PRIPREMI — završi ili otkaži */}
+                    {/* U PRIPREMI — spremno (čeka preuzimanje) ili otkaži */}
+                    {p.status === 'U_PRIPREMI' && (
+                        <>
+                            <button
+                                className={`${styles.btn} ${styles.btnPrihvati}`}
+                                onClick={() => onSpremno(p.porudzbinaId)}
+                                disabled={azurira}
+                            >
+                                ✓ Spremno
+                            </button>
+                            <button
+                                className={`${styles.btn} ${styles.btnOtkazi}`}
+                                onClick={() => onOtkazi(p.porudzbinaId)}
+                                disabled={azurira}
+                            >
+                                ✕ Otkaži
+                            </button>
+                        </>
+                    )}
+
+                    {/* SPREMNA — kupac je došao i preuzeo, ili otkaži */}
                     {p.status === 'SPREMNA' && (
                         <>
                             <button
                                 className={`${styles.btn} ${styles.btnZavrsi}`}
-                                onClick={() => onZavrsi(p.porudzbinaId)}
+                                onClick={() => onPreuzeto(p.porudzbinaId)}
                                 disabled={azurira}
                             >
-                                ✓ Spremna
+                                ✓ Preuzeto
                             </button>
                             <button
                                 className={`${styles.btn} ${styles.btnOtkazi}`}
@@ -278,31 +294,42 @@ export default function PanelPorudzbina() {
         }
     };
 
+    // Prvo vreme (dok je NOVA — bez notifikacije), pa status — notifikacija
+    // "prihvaćena, ~X min" ide tek na prelazu NOVA → U_PRIPREMI.
     const prihvati = (id: number, vreme: number) =>
-        izvrsi(id, { status: 'SPREMNA', procenjenoVreme: vreme }, async () => {
-            if (!await patchStatus(id, 'SPREMNA')) return false;
+        izvrsi(id, { status: 'U_PRIPREMI', procenjenoVreme: vreme }, async () => {
             const vremeRes = await fetch(
                 `${API}/api/porudzbine/${id}/procenjeno-vreme?procenjenoVreme=${vreme}`,
                 { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } }
             );
-            return vremeRes.ok;
+            if (!vremeRes.ok) return false;
+            return patchStatus(id, 'U_PRIPREMI');
         });
 
-    const zavrsi = (id: number) => izvrsi(id, { status: 'REALIZOVANA' }, () => patchStatus(id, 'REALIZOVANA'));
-    const otkazi = (id: number) => izvrsi(id, { status: 'OTKAZANA' }, () => patchStatus(id, 'OTKAZANA'));
+    const spremno  = (id: number) => izvrsi(id, { status: 'SPREMNA' },     () => patchStatus(id, 'SPREMNA'));
+    const preuzeto = (id: number) => izvrsi(id, { status: 'REALIZOVANA' }, () => patchStatus(id, 'REALIZOVANA'));
+    const otkazi   = (id: number) => izvrsi(id, { status: 'OTKAZANA' },    () => patchStatus(id, 'OTKAZANA'));
 
-    // Nove (neprihvaćene) idu u popup, ne u tab. Tab prikazuje izabrani status.
+    // Nove (neprihvaćene) idu u popup, ne u tab.
     const nove = useMemo(
+        () => porudzbine.filter((p) => p.status === 'NOVA').sort((a, b) => a.porudzbinaId - b.porudzbinaId),
+        [porudzbine]
+    );
+    // Tab "U pripremi" — dve kolone: levo u toku, desno spremne (čekaju preuzimanje). FIFO.
+    const uToku = useMemo(
         () => porudzbine.filter((p) => p.status === 'U_PRIPREMI').sort((a, b) => a.porudzbinaId - b.porudzbinaId),
         [porudzbine]
     );
+    const spremne = useMemo(
+        () => porudzbine.filter((p) => p.status === 'SPREMNA').sort((a, b) => a.porudzbinaId - b.porudzbinaId),
+        [porudzbine]
+    );
+    // Ostali tabovi: najnovije prvo.
     const prikazane = useMemo(() => {
-        const status = TABOVI.find((t) => t.kljuc === tab)!.status;
-        const lista = porudzbine.filter((p) => p.status === status);
-        // U pripremi: FIFO (najstarije prvo); završene/otkazane: najnovije prvo
-        return lista.sort((a, b) =>
-            tab === 'PRIPREMA' ? a.porudzbinaId - b.porudzbinaId : b.porudzbinaId - a.porudzbinaId
-        );
+        const statusi = TABOVI.find((t) => t.kljuc === tab)!.statusi;
+        return porudzbine
+            .filter((p) => statusi.includes(p.status))
+            .sort((a, b) => b.porudzbinaId - a.porudzbinaId);
     }, [porudzbine, tab]);
 
     // Zvučni alarm: pišti dok ima neprihvaćenih porudžbina (i dok je zvuk uključen).
@@ -352,11 +379,8 @@ export default function PanelPorudzbina() {
             {/* Header */}
             <header className={styles.header}>
                 <div className={styles.headerLevo}>
-                    <img src={logoDark} alt="Glumac Plus" className={styles.logo} />
-                    <div>
-                        <span className={styles.oznaka}>panel zaposlenog</span>
-                        <h1 className={styles.naslov}>Porudžbine</h1>
-                    </div>
+                    <span className={styles.oznaka}>panel zaposlenog</span>
+                    <h1 className={styles.naslov}>Porudžbine</h1>
                 </div>
                 <div className={styles.headerDesno}>
                     {ZvukToggle}
@@ -372,7 +396,7 @@ export default function PanelPorudzbina() {
             {/* Tabovi */}
             <div className={styles.tabovi}>
                 {TABOVI.map((t) => {
-                    const broj = porudzbine.filter((p) => p.status === t.status).length;
+                    const broj = porudzbine.filter((p) => t.statusi.includes(p.status)).length;
                     return (
                         <button
                             key={t.kljuc}
@@ -386,9 +410,65 @@ export default function PanelPorudzbina() {
                 })}
             </div>
 
-            {/* Lista izabranog taba */}
+            {/* Sadržaj izabranog taba */}
             {ucitava ? (
                 <div className={styles.poruka}>Učitavam porudžbine...</div>
+            ) : tab === 'PRIPREMA' ? (
+                /* Dve jasno razdvojene kolone: levo u toku, desno spremne za preuzimanje */
+                <div className={styles.kolone}>
+                    <div className={styles.kolona}>
+                        <div className={styles.kolonaGlava}>
+                            <span className={styles.kolonaNaslov}>u toku</span>
+                            <span className={styles.kolonaBroj}>{uToku.length}</span>
+                        </div>
+                        {uToku.length === 0 ? (
+                            <div className={styles.kolonaPrazno}>ništa se trenutno ne sprema</div>
+                        ) : (
+                            <div className={styles.kolonaLista}>
+                                <AnimatePresence initial={false}>
+                                    {uToku.map((p) => (
+                                        <PorudzbinaKartica
+                                            key={p.porudzbinaId}
+                                            p={p}
+                                            azurira={azurira === p.porudzbinaId}
+                                            onPrihvati={prihvati}
+                                            onSpremno={spremno}
+                                            onPreuzeto={preuzeto}
+                                            onOtkazi={otkazi}
+                                        />
+                                    ))}
+                                </AnimatePresence>
+                            </div>
+                        )}
+                    </div>
+                    <div className={`${styles.kolona} ${styles.kolonaSpremne}`}>
+                        <div className={styles.kolonaGlava}>
+                            <span className={`${styles.kolonaNaslov} ${styles.kolonaNaslovZel}`}>
+                                spremne — čekaju preuzimanje
+                            </span>
+                            <span className={`${styles.kolonaBroj} ${styles.kolonaBrojZel}`}>{spremne.length}</span>
+                        </div>
+                        {spremne.length === 0 ? (
+                            <div className={styles.kolonaPrazno}>nijedna ne čeka preuzimanje</div>
+                        ) : (
+                            <div className={styles.kolonaLista}>
+                                <AnimatePresence initial={false}>
+                                    {spremne.map((p) => (
+                                        <PorudzbinaKartica
+                                            key={p.porudzbinaId}
+                                            p={p}
+                                            azurira={azurira === p.porudzbinaId}
+                                            onPrihvati={prihvati}
+                                            onSpremno={spremno}
+                                            onPreuzeto={preuzeto}
+                                            onOtkazi={otkazi}
+                                        />
+                                    ))}
+                                </AnimatePresence>
+                            </div>
+                        )}
+                    </div>
+                </div>
             ) : prikazane.length === 0 ? (
                 <div className={styles.poruka}>Nema porudžbina.</div>
             ) : (
@@ -400,7 +480,8 @@ export default function PanelPorudzbina() {
                                 p={p}
                                 azurira={azurira === p.porudzbinaId}
                                 onPrihvati={prihvati}
-                                onZavrsi={zavrsi}
+                                onSpremno={spremno}
+                                onPreuzeto={preuzeto}
                                 onOtkazi={otkazi}
                             />
                         ))}
@@ -443,7 +524,8 @@ export default function PanelPorudzbina() {
                                             p={p}
                                             azurira={azurira === p.porudzbinaId}
                                             onPrihvati={prihvati}
-                                            onZavrsi={zavrsi}
+                                            onSpremno={spremno}
+                                            onPreuzeto={preuzeto}
                                             onOtkazi={otkazi}
                                         />
                                     ))}

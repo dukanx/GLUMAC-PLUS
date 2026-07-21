@@ -1,11 +1,14 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Porudzbina } from '../types/porudzbina';
+import { useAuth } from './AuthContext';
 import * as porudzbineApi from '../api/porudzbine';
 import { ApiError } from '../api/client';
 
-// Aktivnu porudžbinu dele floating dugme, popover praćenja i strana Porudžbine:
-// kontekst drži id, poslednje stanje sa servera i preostale minute do procene.
+// Aktivnu porudžbinu dele floating dugme, popover praćenja i strana Porudžbine.
+// Autoritativan izvor je backend (/api/porudzbine/aktivna) — vezan za ULOGOVANOG KUPCA.
+// Gost i zaposleni/admin NEMAJU aktivnu porudžbinu (bugfix: ranije je localStorage
+// prikazivao tuđu/staru porudžbinu svima na istom browseru).
 interface AktivnaPorudzbinaCtx {
     aktivnaId: number | null;
     porudzbina: Porudzbina | null;
@@ -21,15 +24,14 @@ interface AktivnaPorudzbinaCtx {
 
 const AktivnaPorudzbinaContext = createContext<AktivnaPorudzbinaCtx>(null!);
 
-const LS_KLJUC = 'aktivna_porudzbina_id';
 const LS_START = 'aktivna_porudzbina_start';
 
 export function AktivnaPorudzbinaProvider({ children }: { children: ReactNode }) {
-    const [aktivnaId, setAktivnaId] = useState<number | null>(() => {
-        const stored = localStorage.getItem(LS_KLJUC);
-        const n = stored ? Number(stored) : NaN;
-        return Number.isInteger(n) ? n : null;
-    });
+    const { korisnik, token } = useAuth();
+    // Samo običan kupac prati aktivnu porudžbinu.
+    const jeKupac = !!korisnik && korisnik.uloga !== 'ADMIN' && korisnik.uloga !== 'ZAPOSLENI';
+
+    const [aktivnaId, setAktivnaId] = useState<number | null>(null);
     const [porudzbina, setPorudzbina] = useState<Porudzbina | null>(null);
     const [preostaloMin, setPreostaloMin] = useState<number | null>(null);
     const [pracenjeOtvoreno, setPracenjeOtvoreno] = useState(false);
@@ -38,21 +40,56 @@ export function AktivnaPorudzbinaProvider({ children }: { children: ReactNode })
 
     const zavrsena = porudzbina?.status === 'REALIZOVANA' || porudzbina?.status === 'OTKAZANA';
 
-    // Polling statusa dok postoji aktivna porudžbina
+    const resetuj = () => {
+        localStorage.removeItem(LS_START);
+        setAktivnaId(null);
+        setPorudzbina(null);
+        setPreostaloMin(null);
+        setPracenjeOtvoreno(false);
+        prethodniStatus.current = null;
+    };
+
+    // Na promenu korisnika: gost/zaposleni → nema aktivne; kupac → pitaj server.
     useEffect(() => {
-        if (aktivnaId === null) return;
+        if (!jeKupac) {
+            resetuj();
+            return;
+        }
+        let otkazano = false;
+        porudzbineApi.getAktivna()
+            .then(data => {
+                if (otkazano) return;
+                if (data && (data.status === 'NOVA' || data.status === 'U_PRIPREMI' || data.status === 'SPREMNA')) {
+                    setAktivnaId(data.porudzbinaId);
+                    setPorudzbina(data);
+                    prethodniStatus.current = data.status;
+                } else {
+                    resetuj();
+                }
+            })
+            .catch(() => { if (!otkazano) resetuj(); });
+        return () => { otkazano = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [jeKupac, korisnik?.id, token]);
+
+    // Polling statusa dok postoji aktivna porudžbina (samo kupac).
+    useEffect(() => {
+        if (aktivnaId === null || !jeKupac) return;
 
         const osvezi = async () => {
             try {
                 const data = await porudzbineApi.getJedan(aktivnaId);
                 setPorudzbina(data);
 
-                // Momenat prihvatanja (pojava procenjenog vremena) — od njega teče odbrojavanje
                 if (data.procenjenoVreme != null && !localStorage.getItem(LS_START)) {
                     localStorage.setItem(LS_START, String(Date.now()));
                 }
 
-                // Kad postane spremna — popover se sam otvori na 5s
+                // Porudžbina je spremna — otvori praćenje da kupac vidi poziv na preuzimanje.
+                if (data.status === 'SPREMNA' && prethodniStatus.current !== 'SPREMNA' && prethodniStatus.current !== null) {
+                    setPracenjeOtvoreno(true);
+                }
+                // Preuzeta — kratko prikaži potvrdu pa zatvori.
                 if (data.status === 'REALIZOVANA' && prethodniStatus.current === 'SPREMNA') {
                     setPracenjeOtvoreno(true);
                     autoZatvaranje.current = window.setTimeout(
@@ -61,7 +98,6 @@ export function AktivnaPorudzbinaProvider({ children }: { children: ReactNode })
                 }
                 prethodniStatus.current = data.status;
             } catch (e) {
-                // HTTP greške tokom polling-a ignorišemo; porudžbina koje nema resetujemo.
                 if (e instanceof ApiError && e.status === 404) resetuj();
             }
         };
@@ -70,9 +106,9 @@ export function AktivnaPorudzbinaProvider({ children }: { children: ReactNode })
         const interval = setInterval(osvezi, 8000);
         return () => clearInterval(interval);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [aktivnaId]);
+    }, [aktivnaId, jeKupac]);
 
-    // Preostali minuti — osvežavaju se sami (na svaki tick i na novu procenu)
+    // Preostali minuti — osvežavaju se sami.
     useEffect(() => {
         if (porudzbina?.procenjenoVreme == null || zavrsena) {
             setPreostaloMin(null);
@@ -92,16 +128,6 @@ export function AktivnaPorudzbinaProvider({ children }: { children: ReactNode })
         if (autoZatvaranje.current) clearTimeout(autoZatvaranje.current);
     }, []);
 
-    const resetuj = () => {
-        localStorage.removeItem(LS_KLJUC);
-        localStorage.removeItem(LS_START);
-        setAktivnaId(null);
-        setPorudzbina(null);
-        setPreostaloMin(null);
-        setPracenjeOtvoreno(false);
-        prethodniStatus.current = null;
-    };
-
     return (
         <AktivnaPorudzbinaContext.Provider value={{
             aktivnaId,
@@ -111,12 +137,10 @@ export function AktivnaPorudzbinaProvider({ children }: { children: ReactNode })
             otvoriPracenje: () => setPracenjeOtvoreno(true),
             zatvoriPracenje: () => {
                 setPracenjeOtvoreno(false);
-                // Završenu porudžbinu zatvaranje praćenja ujedno i briše
                 if (zavrsena) resetuj();
             },
             postaviAktivnu: (id) => {
                 localStorage.removeItem(LS_START);
-                localStorage.setItem(LS_KLJUC, String(id));
                 setAktivnaId(id);
                 setPorudzbina(null);
                 prethodniStatus.current = null;

@@ -93,8 +93,8 @@ export default function LoyaltyPage() {
                 </h1>
                 <p className={styles.heroLede}>
                     {korisnik
-                        ? '1 dinar = 1 bod · popust se primenjuje automatski pri svakoj porudžbini'
-                        : '1 dinar = 1 bod · popust na svaku porudžbinu · besplatno zauvek'}
+                        ? '100 RSD = 1 bod · popust se primenjuje automatski pri svakoj porudžbini'
+                        : '100 RSD = 1 bod · popust na svaku porudžbinu · besplatno zauvek'}
                 </p>
             </section>
 
@@ -130,7 +130,7 @@ export default function LoyaltyPage() {
                                 <>
                                     <div className={styles.ulazStat}>
                                         <div className={styles.statBVeliki}>{bodovi}</div>
-                                        <div className={styles.statL}>bodova na računu</div>
+                                        <div className={styles.statL}><b>bodova</b> na računu</div>
                                     </div>
                                     <div className={styles.ulazStat}>
                                         <div className={styles.statB}>
@@ -259,7 +259,7 @@ export default function LoyaltyPage() {
                     <div className={styles.kakoRadi}>
                         <span className={styles.kakoRadiNaslov}>KAKO RADI</span>
                         <span className={styles.kakoRadiTekst}>
-                            1 dinar = 1 bod · bodovi se pripisuju kad porudžbina bude preuzeta ·
+                            100 RSD = 1 bod · bodovi se pripisuju kad porudžbina bude preuzeta ·
                             nivo se ne gubi — jednom dostignut, ostaje ·
                             popust važi za porudžbine kroz sajt, ne za Wolt/Glovo
                         </span>
@@ -301,7 +301,7 @@ export default function LoyaltyPage() {
                                         </div>
                                         <span className={styles.aktRazmak} />
                                         <span className={styles.aktBodovi}>
-                                            +{Math.round(p.ukupanIznos)}
+                                            +{Math.floor(p.ukupanIznos / 100)}
                                         </span>
                                     </div>
                                 ))
@@ -315,9 +315,6 @@ export default function LoyaltyPage() {
                                 <span className={styles.popustPapiricNaslov}>
                                     SLEDEĆA PORUDŽBINA: −{popust}%
                                 </span>
-                                <Link to="/meni" className={styles.naruci} style={{ fontSize: 23, padding: '10px 22px 7px' }}>
-                                    Otvori meni →
-                                </Link>
                             </div>
                         )}
                     </div>

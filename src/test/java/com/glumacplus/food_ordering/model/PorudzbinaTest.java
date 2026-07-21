@@ -25,7 +25,7 @@ class PorudzbinaTest {
 
     @Test
     void testPodrazumevaniKonstruktor() {
-        assertEquals(StatusPorudzbine.U_PRIPREMI, por.getStatus());
+        assertEquals(StatusPorudzbine.NOVA, por.getStatus());
         assertEquals(TipPorudzbine.ZA_PONETI, por.getTipPorudzbine());
         assertEquals(new BigDecimal("0.00"), por.getUkupanIznos());
         assertEquals(new BigDecimal("0.00"), por.getOriginalnaCena());

@@ -15,12 +15,23 @@
 }
 
 .logo {
-    display: block;
+    display: inline-block;
     line-height: 0;
+    position: relative;
 }
 
 .logoImg {
     height: 50px;
+    width: auto;
+    display: block;
+}
+
+/* GP monogram (home vrh) — apsolutno preko logoDark radi slide/fade prelaza */
+.logoImgHome {
+    position: absolute;
+    left: 0;
+    top: 3px;
+    height: 46px;
     width: auto;
     display: block;
 }
@@ -214,6 +225,10 @@
 
     .logoImg {
         height: 44px;
+    }
+
+    .logoImgHome {
+        height: 40px;
     }
 
     .hamburger {

@@ -5,33 +5,21 @@
     padding: 0 0 60px;
 }
 
-/* ── Header ── */
+/* ── Pod-traka panela (ispod globalnog navbara) ── */
 .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    padding: 14px 4%;
+    padding: 16px 4% 14px;
     border-bottom: 2px dashed var(--ink20);
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: var(--paper);
-    background-image: radial-gradient(circle, hsl(22 30% 14% / .06) .5px, transparent .5px);
-    background-size: 3px 3px;
     flex-wrap: wrap;
 }
 
 .headerLevo {
     display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.logo {
-    height: 46px;
-    width: auto;
-    display: block;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .oznaka {
@@ -184,6 +172,101 @@
     }
 }
 
+/* ── Tab "U pripremi": dve razdvojene kolone ── */
+.kolone {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding: 24px 4% 0;
+    align-items: start;
+}
+
+.kolona {
+    padding: 0 22px;
+    min-height: 240px;
+}
+
+.kolona:first-child {
+    border-right: 3px dashed var(--ink20);
+}
+
+.kolonaSpremne {
+    background: hsl(150 35% 35% / .04);
+}
+
+.kolonaGlava {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink20);
+}
+
+.kolonaNaslov {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--rust);
+}
+
+.kolonaNaslovZel {
+    color: var(--zel);
+}
+
+.kolonaBroj {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 17px;
+    min-width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--rust);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 7px 0;
+}
+
+.kolonaBrojZel {
+    background: var(--zel);
+}
+
+.kolonaLista {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+}
+
+.kolonaPrazno {
+    font-family: var(--font-cav);
+    font-size: 19px;
+    color: var(--ink40);
+    text-align: center;
+    padding: 46px 10px;
+}
+
+@media (max-width: 900px) {
+    .kolone {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .kolona:first-child {
+        border-right: none;
+        border-bottom: 3px dashed var(--ink20);
+        padding-bottom: 26px;
+    }
+
+    .kolona {
+        padding: 0;
+        min-height: 0;
+    }
+}
+
 .poruka {
     text-align: center;
     font-family: var(--font-cav);
@@ -200,13 +283,17 @@
     position: relative;
 }
 
-.akcent_U_PRIPREMI {
+.akcent_NOVA {
     border: 3px solid var(--rust);
     box-shadow: 0 12px 32px hsl(14 65% 44% / .2);
 }
 
-.akcent_SPREMNA {
+.akcent_U_PRIPREMI {
     border-left: 4px solid var(--rust);
+}
+
+.akcent_SPREMNA {
+    border-left: 4px solid var(--zel);
 }
 
 .akcent_REALIZOVANA {
@@ -267,15 +354,21 @@
     white-space: nowrap;
 }
 
-.badge_U_PRIPREMI {
+.badge_NOVA {
     color: var(--rust);
     border-color: hsl(14 65% 44% / .5);
     background: hsl(48 90% 68% / .35);
 }
 
-.badge_SPREMNA {
+.badge_U_PRIPREMI {
     color: var(--rust);
     border-color: hsl(14 65% 44% / .5);
+}
+
+.badge_SPREMNA {
+    color: var(--zel);
+    border-color: hsl(150 35% 35% / .5);
+    background: hsl(150 35% 35% / .08);
 }
 
 .badge_REALIZOVANA {
@@ -324,6 +417,17 @@
 
 .stavkaNaziv {
     color: var(--ink);
+}
+
+.stavkeToggle {
+    font-family: var(--font-cav);
+    font-size: 19px;
+    color: var(--rust);
+    text-decoration: underline;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 6px 2px 2px;
 }
 
 .napomena {
@@ -485,11 +589,52 @@
     border: 3px solid var(--rust);
     box-shadow: var(--sen-modal);
     width: 100%;
-    max-width: 560px;
-    max-height: 86vh;
+    max-width: 660px;
+    max-height: 88vh;
     display: flex;
     flex-direction: column;
     position: relative;
+}
+
+/* Nova porudžbina — krupnije i čitljivije za radnike na tabletu */
+.popupLista .karticaId {
+    font-size: 42px;
+}
+
+.popupLista .kupac {
+    font-size: 22px;
+}
+
+.popupLista .stavka {
+    font-size: 26px;
+    padding: 7px 2px;
+}
+
+.popupLista .stavkaKolicina {
+    font-size: 32px;
+    min-width: 42px;
+}
+
+.popupLista .napomena {
+    font-size: 21px;
+}
+
+.popupLista .ukupno {
+    font-size: 32px;
+}
+
+.popupLista .vremeBtn {
+    font-size: 23px;
+    padding: 9px 18px 5px;
+}
+
+.popupLista .vremeLabel {
+    font-size: 22px;
+}
+
+.popupLista .btn {
+    font-size: 23px;
+    padding: 11px 20px 6px;
 }
 
 .popupStiker {
