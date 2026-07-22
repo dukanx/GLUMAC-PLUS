@@ -241,23 +241,22 @@
         font-size: 20px;
     }
 
-    .srceDugme {
-        display: none;
-    }
-
     .mobMeni {
-        display: block;
+        display: flex;
+        flex-direction: column;
         position: fixed;
         inset: 0;
         z-index: 60;
         background: var(--paper);
         background-image: radial-gradient(circle, hsl(22 30% 14% / .06) .5px, transparent .5px);
         background-size: 3px 3px;
-        padding: 18px 8% 40px;
+        /* veći donji razmak — broj/odjava se ne kriju iza Safari donje trake */
+        padding: 14px 8% calc(92px + env(safe-area-inset-bottom, 0px));
+        overflow: hidden;
         opacity: 0;
         pointer-events: none;
-        transform: scale(1.04) rotate(.6deg);
-        transition: opacity .28s ease, transform .34s cubic-bezier(.22, 1, .36, 1);
+        transform: scale(1.03) rotate(.5deg);
+        transition: opacity .3s ease, transform .42s cubic-bezier(.22, 1, .36, 1);
     }
 
     .mobMeniOtvoren {
@@ -267,89 +266,199 @@
     }
 }
 
+/* Gornji red menija — logo + zatvori */
+.mobHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.mobLogoLink {
+    display: inline-flex;
+    line-height: 0;
+}
+
+.mobLogo {
+    height: 42px;
+    width: auto;
+    display: block;
+    transform: rotate(-1.5deg) translateY(-8px);
+    opacity: 0;
+    transition: opacity .4s .05s ease, transform .5s .05s cubic-bezier(.22, 1, .36, 1);
+}
+
+.mobMeniOtvoren .mobLogo {
+    opacity: 1;
+    transform: rotate(-1.5deg) translateY(0);
+}
+
+/* Zatvori — iscrtani hamburger koji pređe u X */
 .mobZatvori {
-    position: absolute;
-    top: 14px;
-    right: 5%;
     background: none;
     border: 0;
     padding: 8px;
     cursor: pointer;
-    font-family: var(--font-hand);
-    font-weight: 700;
-    font-size: 40px;
-    line-height: 1;
     color: var(--ink);
-    transition: transform .25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
 }
 
-.mobZatvori:active {
-    transform: rotate(-90deg);
+.burgerX {
+    width: 34px;
+    height: auto;
+    display: block;
 }
 
+.blTop,
+.blMid,
+.blBot {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform .4s cubic-bezier(.5, .1, .2, 1.3), opacity .25s ease;
+}
+
+/* prelaz hamburger → X kad je meni otvoren */
+.mobMeniOtvoren .blTop { transform: translateY(8px) rotate(45deg); }
+.mobMeniOtvoren .blMid { opacity: 0; transform: scaleX(.2); }
+.mobMeniOtvoren .blBot { transform: translateY(-8px) rotate(-45deg); }
+
+.mobZatvori:active .burgerX {
+    color: var(--rust);
+}
+
+/* Linkovi — bliže vrhu (ne u sredini) */
 .mobLinkovi {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-top: 64px;
+    justify-content: flex-start;
+    margin-top: clamp(18px, 5vh, 52px);
+    gap: 2px;
 }
 
 .mobLink {
     font-family: var(--font-hand);
     font-weight: 700;
-    font-size: 44px;
+    font-size: clamp(40px, 12vw, 52px);
     letter-spacing: .06em;
-    padding: 10px 0;
+    padding: 14px 0;
     border-bottom: 2px dashed var(--ink12);
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    transform: translateY(14px);
+    transform: translateX(-26px) rotate(-2deg);
     opacity: 0;
-    transition: opacity .35s ease, transform .35s cubic-bezier(.22, 1, .36, 1);
+    transition: opacity .4s ease, transform .5s cubic-bezier(.22, 1, .36, 1), color .2s;
 }
 
 .mobMeniOtvoren .mobLink {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0) rotate(0);
 }
 
-.mobMeniOtvoren .mobLink:nth-child(2) { transition-delay: .06s; }
-.mobMeniOtvoren .mobLink:nth-child(3) { transition-delay: .12s; }
-.mobMeniOtvoren .mobLink:nth-child(4) { transition-delay: .18s; }
-.mobMeniOtvoren .mobLink:nth-child(5) { transition-delay: .24s; }
+.mobMeniOtvoren .mobLink:nth-child(1) { transition-delay: .08s; }
+.mobMeniOtvoren .mobLink:nth-child(2) { transition-delay: .14s; }
+.mobMeniOtvoren .mobLink:nth-child(3) { transition-delay: .20s; }
+.mobMeniOtvoren .mobLink:nth-child(4) { transition-delay: .26s; }
+.mobMeniOtvoren .mobLink:nth-child(5) { transition-delay: .32s; }
+
+.mobLink:active {
+    color: var(--rust);
+}
 
 .mobLinkAktivan {
     color: var(--rust);
 }
 
-.mobBroj {
-    font-family: var(--font-cav);
-    font-size: 20px;
-    color: var(--ink40);
+/* Iscrtana ikonica strane umesto broja (desno u redu) */
+.mobIko {
+    align-self: center;
+    opacity: .9;
+    line-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    /* isti slot za svaku ikonicu → sve poravnate (bez obzira na širinu crteža) */
+    width: 40px;
+}
+
+.mobIko svg {
+    height: 32px;
+    width: auto;
+    display: block;
+}
+
+/* Prijava / Odjava — odvojeno, niže, jasnom linijom razdvojeno od strana */
+.mobAuth {
+    flex-shrink: 0;
+    margin-top: 12px;
+    padding-top: 22px;
+    border-top: 2px solid var(--ink20);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .4s .3s ease, transform .45s .3s cubic-bezier(.22, 1, .36, 1);
+}
+
+.mobMeniOtvoren .mobAuth {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.mobAuthLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 34px;
+    letter-spacing: .05em;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    line-height: 1;
 }
 
 .mobPrijava {
-    border-bottom: 0;
+    composes: mobAuthLink;
     color: var(--rust);
 }
 
 .mobOdjava {
-    composes: mobLink;
-    background: none;
-    border-left: 0;
-    border-right: 0;
-    border-top: 0;
-    width: 100%;
-    text-align: left;
+    composes: mobAuthLink;
     color: var(--ink55);
-    cursor: pointer;
 }
 
-.mobDno {
-    font-family: var(--font-cav);
-    font-size: 22px;
-    color: var(--ink70);
-    margin-top: 36px;
-    transform: rotate(-1deg);
+/* Podnožje — samo kontakt (telefon), ulazi poslednje */
+.mobFoot {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity .4s .36s ease, transform .45s .36s cubic-bezier(.22, 1, .36, 1);
+}
+
+.mobMeniOtvoren .mobFoot {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.mobTel {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: .03em;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--rust);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    align-self: flex-start;
 }

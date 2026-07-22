@@ -5,9 +5,7 @@ import logoDark from '../assets/logoDark.png';
 import gpBlack from '../assets/GPblackNOBG.png';
 import styles from './Navbar.module.css';
 import { useAuth } from '../context/AuthContext';
-import { Srce, Odjava, Hamburger } from './Doodle';
-
-const SLOGAN = '— sveže, brzo, u srcu Dorćola —';
+import { Srce, Odjava, Hamburger, Profil } from './Doodle';
 
 export default function Navbar() {
     const { korisnik, popust, logout } = useAuth();
@@ -153,45 +151,83 @@ export default function Navbar() {
 
             {/* Mobilni pun-ekran meni */}
             <div className={`${styles.mobMeni} ${menuOtvoren ? styles.mobMeniOtvoren : ''}`}>
-                <button className={styles.mobZatvori} onClick={zatvori} aria-label="Zatvori meni">×</button>
+                <div className={styles.mobHead}>
+                    <Link
+                        to="/"
+                        className={styles.mobLogoLink}
+                        onClick={() => { zatvori(); naVrhHome(); }}
+                        aria-label="Glumac Plus — početna"
+                    >
+                        <img src={logoDark} alt="Glumac Plus" className={styles.mobLogo} />
+                    </Link>
+                    <button className={styles.mobZatvori} onClick={zatvori} aria-label="Zatvori meni">
+                        <svg className={styles.burgerX} viewBox="0 0 30 24" fill="none" aria-hidden="true">
+                            <path className={styles.blTop} d="M2 4 C 10 3, 20 5, 28 3.5" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                            <path className={styles.blMid} d="M3 12 C 11 11, 19 13, 27 11.5" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                            <path className={styles.blBot} d="M2 20 C 10 19, 20 21, 28 19.5" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                        </svg>
+                    </button>
+                </div>
                 <nav className={styles.mobLinkovi}>
                     {jeZaposleni ? (
                         <NavLink to="/panel" className={mobKlasa} onClick={zatvori}>
-                            Panel<span className={styles.mobBroj}>01</span>
+                            Panel
+                            <span className={styles.mobIko}>
+                                <svg viewBox="0 0 48 62" fill="none"><path d="M12 12 L 36 12 L 36 56 L 12 56 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /><path d="M18 12 L 18 7 C 18 6, 19 5, 20 5 L 28 5 C 29 5, 30 6, 30 7 L 30 12" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M18 27 L 30 27 M18 37 L 30 37 M18 47 L 26 47" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                            </span>
                         </NavLink>
                     ) : (
                         <>
                             <NavLink to="/meni" className={mobKlasa} onClick={zatvori}>
-                                Meni<span className={styles.mobBroj}>01</span>
+                                Meni
+                                <span className={styles.mobIko}>
+                                    <svg viewBox="0 0 60 70" fill="none"><path d="M10 8 C 24 4, 38 4, 50 8 L 48 62 C 36 66, 24 66, 12 62 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /><path d="M20 24 L 40 24 M20 34 L 42 34 M20 44 L 36 44" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                                </span>
                             </NavLink>
                             <NavLink to="/loyalty" className={mobKlasa} onClick={zatvori}>
-                                Loyalty<span className={styles.mobBroj}>02</span>
+                                Loyalty
+                                <span className={styles.mobIko}>
+                                    <svg viewBox="0 0 60 60" fill="none"><path d="M30 6 L 34 24 L 52 28 L 34 33 L 30 52 L 26 33 L 8 28 L 26 24 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /></svg>
+                                </span>
                             </NavLink>
                             {korisnik && (
                                 <>
                                     <NavLink to="/istorija" className={mobKlasa} onClick={zatvori}>
-                                        Porudžbine<span className={styles.mobBroj}>03</span>
+                                        Porudžbine
+                                        <span className={styles.mobIko}>
+                                            <svg viewBox="0 0 48 62" fill="none"><path d="M10 6 L 38 6 L 38 54 L 31 49 L 24 54 L 17 49 L 10 54 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /><path d="M17 22 L 31 22 M17 31 L 31 31 M17 40 L 27 40" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                                        </span>
                                     </NavLink>
                                     <NavLink to="/omiljene" className={mobKlasa} onClick={zatvori}>
-                                        Omiljene<span className={styles.mobBroj}>04</span>
+                                        Omiljene
+                                        <span className={styles.mobIko}>
+                                            <svg viewBox="0 0 60 54" fill="none"><path d="M30 48 C 8 32, 4 16, 14 9 C 22 4, 29 10, 30 16 C 31 10, 38 4, 46 9 C 56 16, 52 32, 30 48 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /></svg>
+                                        </span>
                                     </NavLink>
                                 </>
                             )}
                         </>
                     )}
+                </nav>
+
+                {/* Prijava / Odjava — odvojeno, niže */}
+                <div className={styles.mobAuth}>
                     {korisnik ? (
-                        <button className={styles.mobOdjava} onClick={handleLogout}>Odjava</button>
+                        <button className={styles.mobOdjava} onClick={handleLogout}>
+                            <Odjava size={28} /> Odjava
+                        </button>
                     ) : (
-                        <NavLink
-                            to="/login"
-                            className={`${styles.mobLink} ${styles.mobPrijava}`}
-                            onClick={zatvori}
-                        >
-                            Prijava →
+                        <NavLink to="/login" className={styles.mobPrijava} onClick={zatvori}>
+                            <Profil size={28} /> Prijava →
                         </NavLink>
                     )}
-                </nav>
-                <p className={styles.mobDno}>{SLOGAN}</p>
+                </div>
+
+                <div className={styles.mobFoot}>
+                    <a href="tel:+381658178476" className={styles.mobTel} onClick={zatvori}>
+                        +381 65 817 8476
+                    </a>
+                </div>
             </div>
         </>
     );
