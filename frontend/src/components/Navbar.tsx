@@ -20,7 +20,7 @@ export default function Navbar() {
     // Prati skrol na home da bismo znali koji logo prikazati.
     useEffect(() => {
         if (!jeHome) { setScrolled(false); return; }
-        const onScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.4);
+        const onScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.28);
         onScroll();
         window.addEventListener('scroll', onScroll, { passive: true });
         return () => window.removeEventListener('scroll', onScroll);
@@ -64,12 +64,16 @@ export default function Navbar() {
 
     const zatvori = () => setMenuOtvoren(false);
 
+    // Klik na logo — uvek na vrh home stranice (bilo da sam na home ili ne),
+    // ne tamo dokle je skrol stao.
+    const naVrhHome = () => window.scrollTo({ top: 0, behavior: jeHome ? 'smooth' : 'auto' });
+
     return (
         <>
             <nav className={styles.navbar}>
 
                 {/* Logo — crossfade: GP monogram na home vrhu ↔ logoDark pri skrolu/drugoj strani */}
-                <Link to="/" className={styles.logo} aria-label="Glumac Plus — početna">
+                <Link to="/" className={styles.logo} onClick={naVrhHome} aria-label="Glumac Plus — početna">
                     <motion.img
                         src={logoDark}
                         alt="Glumac Plus"

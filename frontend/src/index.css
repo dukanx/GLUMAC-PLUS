@@ -36,6 +36,22 @@
   padding: 0;
 }
 
+html {
+  /* Meki skrol za anchor linkove (npr. „kontakt i info ↓") — desktop i mobilni */
+  scroll-behavior: smooth;
+}
+
+/* Da meta odredište anchor-a ne završi pod navbarom */
+#kontakt {
+  scroll-margin-top: 88px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   background-color: var(--paper);
   background-image: radial-gradient(circle, hsl(22 30% 14% / .06) .5px, transparent .5px);

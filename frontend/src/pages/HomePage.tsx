@@ -8,6 +8,8 @@ import gpWhite from '../assets/GPwhiteNOBG.png';
 import glovoLogo from '../assets/glovo.png';
 import woltLogo from '../assets/wolt.png';
 import maskota from '../assets/maskota.png';
+import deliveryDoodle from '../assets/DeliveryDoodle.png';
+import orderDoodle from '../assets/OrderDoodle.png';
 import bg from '../assets/bg.png';
 import bg1 from '../assets/bg1.png';
 import CrtaniOkvir from '../components/CrtaniOkvir';
@@ -59,16 +61,6 @@ function MarqX() {
         <svg className={styles.marqX} viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M2 12 C 5 6, 8 16, 11 9 C 13 5, 16 13, 18 9"
                 stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        </svg>
-    );
-}
-
-// Mala rukom-crtana strelica koja pokazuje ka slici (uz oznake lokacija)
-function StrelicaKaSlici() {
-    return (
-        <svg width="26" height="22" viewBox="0 0 30 24" fill="none" aria-hidden="true">
-            <path d="M4 5 C 11 9, 18 14, 25 19" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-            <path d="M17 19 L 26 20 L 23 12" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     );
 }
@@ -187,6 +179,14 @@ export default function HomePage() {
                 <svg className={styles.heroDoodle} style={{ top: 84, right: '22%', width: 46, transform: 'rotate(-10deg)' }} viewBox="0 0 50 50" fill="none"><path d="M25 4 L 27 18 M25 46 L 23 32 M4 25 L 18 27 M46 25 L 32 23" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
                 <svg className={styles.heroDoodle} style={{ bottom: 150, right: '15%', width: 56, transform: 'rotate(6deg)' }} viewBox="0 0 60 60" fill="none"><path d="M30 30 C 30 24, 38 24, 38 30 C 38 38, 24 38, 24 29 C 24 18, 42 18, 43 30 C 44 44, 20 46, 17 30 C 14 12, 44 8, 50 26" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" /></svg>
                 <svg className={styles.heroDoodle} style={{ bottom: 60, left: '28%', width: 26, color: 'var(--rust)', opacity: .6, transform: 'rotate(-18deg)' }} viewBox="0 0 40 40" fill="none"><path d="M20 6 L 22 16 L 33 20 L 22 24 L 20 34 L 18 24 L 7 20 L 18 16 Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /></svg>
+                <svg className={styles.heroDoodle} style={{ bottom: 56, right: '19%', width: 44, opacity: .75, transform: 'rotate(-8deg)' }} viewBox="0 0 60 70" fill="none"><path d="M12 20 C 15 10, 30 5, 44 8 C 52 10, 54 17, 48 21" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /><path d="M12 20 C 21 15, 39 14, 48 21 L 31 63 C 30 65.5, 29.5 65.5, 28.5 63 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /><path d="M26 31 L 33 31 M29 41 L 35 41 M28 51 L 32 51" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
+
+                {/* Mali doodlovi samo za mobilni (dooMob) — veliki su na mobilnom skriveni */}
+                <svg className={styles.dooMob} style={{ top: 44, left: '10%', width: 30, color: 'var(--rust)', opacity: .6, transform: 'rotate(12deg)' }} viewBox="0 0 40 40" fill="none"><path d="M20 4 C 20.5 14, 19.5 26, 20 36 M4 20 C 14 19.5, 26 20.5, 36 20" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" /></svg>
+                <svg className={styles.dooMob} style={{ top: 40, right: '10%', width: 24, transform: 'rotate(-14deg)' }} viewBox="0 0 40 40" fill="none"><path d="M20 6 L 22 16 L 33 20 L 22 24 L 20 34 L 18 24 L 7 20 L 18 16 Z" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>
+                <svg className={styles.dooMob} style={{ top: '46%', left: '6%', width: 30, color: 'var(--rust)', opacity: .5, transform: 'rotate(10deg)' }} viewBox="0 0 60 54" fill="none"><path d="M30 48 C 8 32, 4 16, 14 9 C 22 4, 29 10, 30 16 C 31 10, 38 4, 46 9 C 56 16, 52 32, 30 48 Z" stroke="currentColor" strokeWidth="2.8" strokeLinejoin="round" /></svg>
+                <svg className={styles.dooMob} style={{ top: '41%', right: '7%', width: 34, color: 'var(--ink40)', opacity: .55, transform: 'rotate(-6deg)' }} viewBox="0 0 60 60" fill="none"><path d="M32 30 C 32 25, 39 25, 39 31 C 39 39, 26 39, 26 29 C 26 17, 43 17, 43 32 C 43 47, 22 48, 20 31" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
+                <svg className={styles.dooMob} style={{ bottom: 120, left: '9%', width: 34, color: '#FFC244', opacity: .8, transform: 'rotate(-10deg)' }} viewBox="0 0 60 60" fill="none"><path d="M30 6 L 33 26 L 52 30 L 33 34 L 30 54 L 27 34 L 8 30 L 27 26 Z" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>
 
                 <span className={styles.estUgao}>
                     est. 2000
@@ -267,7 +267,7 @@ export default function HomePage() {
                         </div>
                     </div>
                     <div className={styles.hpDostRed}>
-                        <span className={styles.hpDostLab}>dostava:</span>
+                        <img src={deliveryDoodle} alt="dostava" className={styles.hpDostLab} />
                         <a className={`${styles.hpDost} ${styles.hpDostG}`} href={GLOVO_URL} target="_blank" rel="noopener noreferrer">
                             <img src={glovoLogo} alt="Glovo" />
                         </a>
@@ -295,11 +295,11 @@ export default function HomePage() {
 
             {/* ── Dostava ── */}
             <section className={`${styles.sec} ${styles.secDost}`}>
-                <svg className={styles.doodle} style={{ top: 48, right: '9%', width: 74, transform: 'rotate(6deg)' }} viewBox="0 0 80 50" fill="none"><path d="M4 38 C 12 12, 30 8, 32 24 C 33 38, 16 42, 15 30 C 14 20, 34 12, 52 16 C 64 19, 72 28, 76 40" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
                 <div className={styles.split}>
-                    <div>
+                    <div className={styles.dLevo}>
                         <span className={styles.eyeb}>Naručite online</span>
                         <h2 className={styles.h2}>Dostava na<br /><span className={`${styles.rust} ${styles.brushHi}`}>vašu adresu.</span></h2>
+                        <img src={deliveryDoodle} alt="" className={styles.dostDoodle} />
                         <div className={styles.dkarte}>
                             <Rvl className={styles.dkart}>
                                 <CrtaniOkvir kasnjenje={0.1} />
@@ -313,7 +313,8 @@ export default function HomePage() {
                             </Rvl>
                         </div>
                     </div>
-                    <div style={{ paddingLeft: 'clamp(0px, 5vw, 72px)' }}>
+                    <div className={styles.dDesno}>
+                        <img src={orderDoodle} alt="" className={styles.orderDoodle} />
                         <span className={styles.eyeb}>Ili poruči kod nas</span>
                         <ol className={styles.uspLista}>
                             <Rvl>
@@ -355,7 +356,17 @@ export default function HomePage() {
             {/* ── Preporuke ── */}
             {preporuke.length > 0 && (
                 <section className={styles.menu}>
-                    <svg className={styles.doodle} style={{ top: 38, left: '4.5%', width: 64, transform: 'rotate(-10deg)' }} viewBox="0 0 80 80" fill="none"><path d="M40 24 L 40 72" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /><path d="M33 8 L 33 20 M40 6 L 40 20 M47 8 L 47 20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /><path d="M33 20 C 33 27, 47 27, 47 20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" /><path d="M24 46 L 8 46 C 6 42, 8 37, 13 37 L 24 37 Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /><path d="M24 41.5 L 72 41.5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                    <svg className={`${styles.doodle} ${styles.dooKarta}`} style={{ top: 40, left: '3%', width: 60, transform: 'rotate(-10deg)' }} viewBox="0 0 80 80" fill="none"><path d="M40 24 L 40 72" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /><path d="M33 8 L 33 20 M40 6 L 40 20 M47 8 L 47 20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /><path d="M33 20 C 33 27, 47 27, 47 20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" /><path d="M24 46 L 8 46 C 6 42, 8 37, 13 37 L 24 37 Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /><path d="M24 41.5 L 72 41.5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                    {/* Doodlovi levo/desno od karte, na sredini između margine i karte
+                        (calc(25% − 295px) ≈ polovina razmaka; samo šire širine). */}
+                    {/* — leva strana — */}
+                    <svg className={`${styles.doodle} ${styles.dooStran}`} style={{ top: '15%', left: 'calc(25% - 295px)', width: 56, color: 'var(--rust)', opacity: .7, transform: 'rotate(-8deg)' }} viewBox="0 0 60 60" fill="none"><path d="M8 8 C 20 3, 40 3, 52 8 C 54 22, 50 42, 30 52 C 10 42, 6 22, 8 8 Z" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M20 34 C 25 40, 35 40, 40 34" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
+                    <svg className={`${styles.doodle} ${styles.dooStran}`} style={{ top: '45%', left: 'calc(25% - 295px)', width: 52, opacity: .6, transform: 'rotate(7deg)' }} viewBox="0 0 60 60" fill="none"><path d="M12 24 L 44 24 L 41 50 C 40 56, 16 56, 15 50 Z" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M44 30 C 54 30, 54 42, 44 42" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" /><path d="M23 8 C 21 12, 27 14, 25 18 M33 8 C 31 12, 37 14, 35 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
+                    <svg className={`${styles.doodle} ${styles.dooStran}`} style={{ bottom: '13%', left: 'calc(25% - 295px)', width: 46, color: 'var(--rust)', opacity: .6, transform: 'rotate(-12deg)' }} viewBox="0 0 60 60" fill="none"><path d="M30 6 L 33 26 L 52 30 L 33 34 L 30 54 L 27 34 L 8 30 L 27 26 Z" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>
+                    {/* — desna strana — */}
+                    <svg className={`${styles.doodle} ${styles.dooStran}`} style={{ top: '20%', right: 'calc(25% - 295px)', width: 54, opacity: .6, transform: 'rotate(8deg)' }} viewBox="0 0 60 60" fill="none"><path d="M32 30 C 32 25, 39 25, 39 31 C 39 39, 26 39, 26 29 C 26 17, 43 17, 43 32 C 43 47, 22 48, 20 31" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
+                    <svg className={`${styles.doodle} ${styles.dooStran}`} style={{ top: '50%', right: 'calc(25% - 295px)', width: 52, color: 'var(--rust)', opacity: .65, transform: 'rotate(-6deg)' }} viewBox="0 0 60 54" fill="none"><path d="M30 48 C 8 32, 4 16, 14 9 C 22 4, 29 10, 30 16 C 31 10, 38 4, 46 9 C 56 16, 52 32, 30 48 Z" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>
+                    <svg className={`${styles.doodle} ${styles.dooStran}`} style={{ bottom: '16%', right: 'calc(25% - 295px)', width: 50, opacity: .55, transform: 'rotate(6deg)' }} viewBox="0 0 80 30" fill="none"><path d="M4 18 C 18 6, 28 26, 42 14 C 54 4, 64 22, 76 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
                     <div className={styles.mwrap}>
                         <span className={styles.eyeb}>Karta</span>
                         <h2 className={styles.h2}>Naše preporuke.</h2>
@@ -399,7 +410,7 @@ export default function HomePage() {
 
             {/* ── O nama ── */}
             <section className={styles.onama}>
-                <svg className={styles.doodle} style={{ top: 64, right: '26%', width: 60, color: 'var(--rust)', opacity: .7 }} viewBox="0 0 70 70" fill="none"><circle cx="35" cy="35" r="13" stroke="currentColor" strokeWidth="2.4" /><path d="M35 6 L 35 14 M35 56 L 35 64 M6 35 L 14 35 M56 35 L 64 35 M14 14 L 20 20 M50 50 L 56 56 M56 14 L 50 20 M20 50 L 14 56" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                <svg className={styles.doodle} style={{ top: 44, right: '5%', width: 60, color: 'var(--rust)', opacity: .7 }} viewBox="0 0 70 70" fill="none"><circle cx="35" cy="35" r="13" stroke="currentColor" strokeWidth="2.4" /><path d="M35 6 L 35 14 M35 56 L 35 64 M6 35 L 14 35 M56 35 L 64 35 M14 14 L 20 20 M50 50 L 56 56 M56 14 L 50 20 M20 50 L 14 56" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
                 <span className={styles.eyeb}>Priča</span>
                 <h2 className={styles.h2}>Novi ambijent, <span className={`${styles.rust} ${styles.brushHi}`}>stari recepti.</span></h2>
                 <div className={styles.onGrid}>
@@ -419,26 +430,20 @@ export default function HomePage() {
                         </div>
                     </div>
                     <div className={`${styles.polaTri} ${styles.onGridPolaTri}`}>
-                        <Rvl className={styles.pola} style={{ transform: 'rotate(2deg)' }}>
-                            <span className={`${styles.polaOznaka} ${styles.polaOznakaL}`}>
-                                prva lokacija <StrelicaKaSlici />
-                            </span>
+                        <Rvl className={styles.pola} style={{ transform: 'rotate(-6.5deg)' }}>
                             <span className={styles.tape} />
                             <div className={styles.polaSlot}><img src={bg} alt="Prva lokacija" /></div>
+                            <span className={styles.polaCap}>prva lokacija</span>
                         </Rvl>
-                        <Rvl delay={0.15} className={`${styles.pola} ${styles.pol2}`} style={{ transform: 'rotate(-2.4deg)' }}>
-                            <span className={`${styles.polaOznaka} ${styles.polaOznakaD}`}>
-                                <span className={styles.strelicaObrnuta}><StrelicaKaSlici /></span> druga lokacija
-                            </span>
+                        <Rvl delay={0.15} className={`${styles.pola} ${styles.pol2}`} style={{ transform: 'rotate(6deg)' }}>
                             <span className={styles.tape} />
                             <div className={styles.polaSlot}><img src={bg1} alt="Druga lokacija" /></div>
+                            <span className={styles.polaCap}>druga lokacija</span>
                         </Rvl>
-                        <Rvl delay={0.3} className={`${styles.pola} ${styles.pol3}`} style={{ transform: 'rotate(1.8deg)' }}>
-                            <span className={`${styles.polaOznaka} ${styles.polaOznakaL}`}>
-                                Dorćol, danas ♥ <StrelicaKaSlici />
-                            </span>
+                        <Rvl delay={0.3} className={`${styles.pola} ${styles.pol3}`} style={{ transform: 'rotate(-5deg)' }}>
                             <span className={styles.tape} />
                             <div className={styles.polaSlot}><img src={bg} alt="Dorćol danas" /></div>
+                            <span className={styles.polaCap}>Dorćol, danas ♥</span>
                         </Rvl>
                     </div>
                 </div>
@@ -517,7 +522,7 @@ export default function HomePage() {
                 <div className={styles.galIntro}>
                     <span className={styles.eyeb}>Naš lokal</span>
                     <h2 className={styles.h2}>Dođi, vidi, <span className={`${styles.rust} ${styles.brushHi}`}>ostani.</span></h2>
-                    <svg className={styles.doodle} style={{ top: 64, right: '16%', width: 90, color: 'var(--rust)' }} viewBox="0 0 100 70" fill="none"><path d="M90 8 C 70 18, 56 36, 50 60" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M42 52 L 50 62 L 58 54" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <svg className={styles.doodle} style={{ top: 40, right: '13%', width: 54, color: 'var(--rust)', transform: 'rotate(-8deg)' }} viewBox="0 0 60 66" fill="none"><path d="M30 4 C 17 4, 8 13, 8 26 C 8 42, 30 62, 30 62 C 30 62, 52 42, 52 26 C 52 13, 43 4, 30 4 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /><circle cx="30" cy="25" r="8" stroke="currentColor" strokeWidth="2.4" /></svg>
                     <p className={styles.galZaviri}>— zaviri unutra ↓</p>
                 </div>
                 <div className={styles.gal}>
@@ -544,6 +549,7 @@ export default function HomePage() {
 
             {/* ── Recenzije ── */}
             <section className={styles.rec}>
+                <svg className={styles.doodle} style={{ top: 44, right: '7%', width: 56, color: 'var(--rust)', opacity: .8, transform: 'rotate(6deg)' }} viewBox="0 0 64 56" fill="none"><path d="M8 12 C 8 8, 12 6, 18 6 L 46 6 C 52 6, 56 8, 56 13 L 56 30 C 56 35, 52 37, 46 37 L 26 37 L 15 48 L 16 37 C 11 36, 8 34, 8 30 Z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" /><path d="M20 18 L 44 18 M20 26 L 38 26" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
                 <div className={styles.recHead}>
                     <div>
                         <span className={styles.eyeb}>Google recenzije</span>
