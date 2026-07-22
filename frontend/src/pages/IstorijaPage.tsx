@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { tipLabela, type Porudzbina } from '../types/porudzbina';
 import type { Proizvod } from '../types/proizvod';
-import { Klose, Sat, ChevronDole } from '../components/Doodle';
+import { Klose, Sat, ChevronDole, Refresh, Srce } from '../components/Doodle';
 import * as porudzbineApi from '../api/porudzbine';
 import * as proizvodiApi from '../api/proizvodi';
 import styles from './IstorijaPage.module.css';
@@ -124,7 +124,6 @@ function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
 
     return (
         <motion.div
-            layout
             className={otkazana ? styles.istKartOtkazana : styles.istKart}
             style={{ transform: `rotate(${(p.porudzbinaId % 2 ? 0.25 : -0.2)}deg)` }}
             onClick={() => !otkazana && setOtvoreno(v => !v)}
@@ -152,25 +151,17 @@ function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
                 </div>
             </div>
 
-            {!otvoreno && (
-                <div className={styles.sazetiRed}>
-                    <span className={styles.sazetiStavke}>{sazetakStavki(p)}</span>
-                    {!otkazana && (
-                        <span className={styles.sazetiAkcije}>
-                            <button
-                                className={styles.akcMini}
-                                onClick={e => { e.stopPropagation(); onPoruciPonovo(p); }}
-                            >
-                                ↻ poruči ponovo
-                            </button>
-                            <span className={styles.akcMini}>
-                                stavke <ChevronDole size={13} />
-                            </span>
-                        </span>
-                    )}
-                </div>
-            )}
+            {/* Sažetak stavki + strelica (uvek vidljivo) */}
+            <div className={styles.sazetiRed}>
+                <span className={styles.sazetiStavke}>
+                    {sazetakStavki(p)}{otkazana ? ' · bez bodova' : ''}
+                </span>
+                {!otkazana && (
+                    <ChevronDole size={17} className={otvoreno ? styles.chevOpen : styles.chev} />
+                )}
+            </div>
 
+            {/* Detalji — glatko otvaranje (samo visina jedne sekcije) */}
             <AnimatePresence initial={false}>
                 {otvoreno && !otkazana && (
                     <motion.div
@@ -178,7 +169,7 @@ function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
                     >
                         {p.stavke.map((s, i) => (
                             <div key={i} className={styles.stavR}>
@@ -201,37 +192,34 @@ function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
                                 )}
                             </div>
                         )}
-
-                        <div className={styles.akcije}>
-                            <button
-                                className={styles.akcBPun}
-                                onClick={e => { e.stopPropagation(); onPoruciPonovo(p); }}
-                            >
-                                ↻ Poruči ponovo
-                            </button>
-                            <button
-                                className={styles.akcB}
-                                onClick={e => { e.stopPropagation(); onSacuvaj(p.porudzbinaId); }}
-                                disabled={sacuvana}
-                            >
-                                {sacuvana ? '✓ Sačuvano' : '☆ Sačuvaj kao omiljenu'}
-                            </button>
-                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {otkazana && (
-                <div className={styles.sazetiRed}>
-                    <span className={styles.sazetiStavke}>{sazetakStavki(p)} · bez bodova</span>
+            {/* Crni dugmići — ikonice sklopljeno, + tekst kad je otvoreno */}
+            <div className={styles.akcije}>
+                <button
+                    className={`${styles.akcBtn} ${!otvoreno && !otkazana ? styles.akcBtnMini : ''}`}
+                    onClick={e => { e.stopPropagation(); onPoruciPonovo(p); }}
+                    aria-label="Poruči ponovo"
+                    title="Poruči ponovo"
+                >
+                    <Refresh size={19} strokeWidth={2.4} />
+                    {(otvoreno || otkazana) && <span>Poruči ponovo</span>}
+                </button>
+                {!otkazana && (
                     <button
-                        className={styles.akcMini}
-                        onClick={e => { e.stopPropagation(); onPoruciPonovo(p); }}
+                        className={`${styles.akcBtn} ${!otvoreno ? styles.akcBtnMini : ''} ${sacuvana ? styles.akcBtnSacuvana : ''}`}
+                        onClick={e => { e.stopPropagation(); onSacuvaj(p.porudzbinaId); }}
+                        disabled={sacuvana}
+                        aria-label="Sačuvaj kao omiljenu"
+                        title="Sačuvaj kao omiljenu"
                     >
-                        ↻ poruči ponovo
+                        <Srce size={19} strokeWidth={2.4} />
+                        {otvoreno && <span>{sacuvana ? 'Sačuvano ✓' : 'Sačuvaj kao omiljenu'}</span>}
                     </button>
-                </div>
-            )}
+                )}
+            </div>
         </motion.div>
     );
 }
@@ -341,7 +329,7 @@ export default function IstorijaPage() {
             </AnimatePresence>
 
             <div className={styles.wrap}>
-                <span className={styles.eyeb}>tvoje porudžbine</span>
+                <span className={styles.eyeb}>tvoje </span>
                 <div className={styles.glava}>
                     <h1 className={styles.naslov}>Porudžbine</h1>
                     {ukupnoStavki > 0 && (
@@ -444,11 +432,7 @@ export default function IstorijaPage() {
                 {/* Istorija */}
                 {!loading && istorija.length > 0 && (
                     <>
-                        <div className={styles.ranijeRed}>
-                            <span className={styles.kSekc}>— ranije</span>
-                            <span className={styles.ranijeCrta} />
-                            <span className={styles.ranijeNap}>klik na priznanicu otvara stavke</span>
-                        </div>
+                        
 
                         <div className={styles.lista}>
                             {istorija.map(p => (
