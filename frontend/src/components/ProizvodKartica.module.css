@@ -137,46 +137,73 @@
 }
 
 @media (max-width: 1000px) {
+    /* Čist mobilni red: [slika] [naziv+opis+cena] [+ / kolicina], sve centrirano.
+       Tačkaste vođice (dots) ne izgledaju dobro kad se naziv prelama — sklanjaju se. */
     .red {
-        gap: 10px;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 2px;
     }
 
     .thumb {
-        width: 56px;
-        height: 56px;
+        width: 62px;
+        height: 62px;
+    }
+
+    .levo {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
     }
 
     .naziv {
         font-size: 22px;
         white-space: normal;
+        line-height: 1.05;
     }
 
     .opis {
-        font-size: 16px;
+        font-size: 15px;
+        margin: 0;
+        /* dug opis skratimo na 2 reda da red ostane kompaktan */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
+    .dots {
+        display: none;
+    }
+
+    /* cena + dugme desno, vertikalno centrirano uz sadržaj */
     .cena {
-        font-size: 23px;
+        font-size: 24px;
     }
 
     .cenaStara {
         font-size: 15px;
     }
 
+    .plusBtn {
+        width: 44px;
+        height: 44px;
+        font-size: 26px;
+    }
+
+    .qty {
+        padding: 3px;
+    }
+
     .qtyBtn {
-        width: 24px;
-        height: 24px;
-        font-size: 19px;
+        width: 34px;
+        height: 34px;
+        font-size: 22px;
     }
 
     .qtyBroj {
-        font-size: 19px;
-        min-width: 15px;
-    }
-
-    .plusBtn {
-        width: 36px;
-        height: 36px;
-        font-size: 22px;
+        font-size: 21px;
+        min-width: 20px;
     }
 }

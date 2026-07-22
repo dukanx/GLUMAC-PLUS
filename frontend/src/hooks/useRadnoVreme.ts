@@ -18,7 +18,7 @@ export interface RadniDan {
 }
 
 const DAN_SKRACENICA: Record<DanKljuc, string> = {
-    PONEDELJAK: 'Pon', UTORAK: 'Uto', SREDA: 'Sri',
+    PONEDELJAK: 'Pon', UTORAK: 'Uto', SREDA: 'Sre',
     CETVRTAK: 'Čet', PETAK: 'Pet', SUBOTA: 'Sub', NEDELJA: 'Ned',
 };
 

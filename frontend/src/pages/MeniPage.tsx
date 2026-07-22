@@ -11,10 +11,11 @@ import { Zvezda } from '../components/Doodle';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
 import type { Proizvod } from '../types/proizvod';
 import * as proizvodiApi from '../api/proizvodi';
+import deliveryDoodle from '../assets/DeliveryDoodle.png';
 
 // ── Konstante ──────────────────────────────────────────────────────────────
 const TELEFON = '+381 65 817 8476';
-const ADRESA = 'Dositejeva 1a, Dorćol';
+const ADRESA = 'Dositejeva 1a';
 const MAPS_URL = 'https://www.google.com/maps/place/glumac+plus/data=!4m2!3m1!1s0x475a7bc2e551cbab:0xb7899385a5114972?sa=X&ved=1t:242&ictx=111';
 const WOLT_URL = 'https://wolt.com/en/srb/belgrade/restaurant/palainkarnica-glumac-plus';
 const GLOVO_URL = 'https://glovoapp.com/en/rs/belgrade/stores/glumac-plus-beg';
@@ -71,6 +72,13 @@ export default function MeniPage() {
             .filter(g => g.stavke.length > 0);
     }, [aktivniTab, filtrirani, kategorije]);
 
+    // Radno vreme počinje od današnjeg dana (pa se skroluje udesno za ostale)
+    const rasporedPrikaz = useMemo(() => {
+        if (raspored.length === 0) return raspored;
+        const i = raspored.findIndex(r => r.dan === danasKljuc);
+        return i > 0 ? [...raspored.slice(i), ...raspored.slice(0, i)] : raspored;
+    }, [raspored, danasKljuc]);
+
     const handleDodaj = useCallback((p: Proizvod) => dodaj(p), [dodaj]);
 
     return (
@@ -79,6 +87,7 @@ export default function MeniPage() {
             {/* ── Header ── */}
             <header className={styles.mhead}>
                 <h1 className={styles.naslov}>Meni</h1>
+                <p className={styles.podnaslov}>lično preuzimanje</p>
                 <div className={styles.infoTagovi}>
                     {korisnik && popust > 0 && (
                         <span className={styles.loyBan}>
@@ -89,13 +98,15 @@ export default function MeniPage() {
                             </span>
                         </span>
                     )}
-                    <span className={styles.dostavaPitanje}>dostava:</span>
-                    <a href={GLOVO_URL} target="_blank" rel="noopener noreferrer" className={styles.infoTagGlovo}>
-                        Glovo ↗
-                    </a>
-                    <a href={WOLT_URL} target="_blank" rel="noopener noreferrer" className={styles.infoTagWolt}>
-                        Wolt ↗
-                    </a>
+                    <span className={styles.dostavaRed}>
+                        <img src={deliveryDoodle} alt="dostava" className={styles.dostDoodleMeni} />
+                        <a href={GLOVO_URL} target="_blank" rel="noopener noreferrer" className={styles.infoTagGlovo}>
+                            Glovo ↗
+                        </a>
+                        <a href={WOLT_URL} target="_blank" rel="noopener noreferrer" className={styles.infoTagWolt}>
+                            Wolt ↗
+                        </a>
+                    </span>
                 </div>
             </header>
 
@@ -120,7 +131,7 @@ export default function MeniPage() {
                     </a>
                 </div>
 
-                <div className={styles.infoBl}>
+                <div className={`${styles.infoBl} ${styles.infoBlRadno}`}>
                     <span className={styles.infoBlH}>radno vreme</span>
                     {radnoVremeLoading ? (
                         <span className={styles.rvFallback}>učitavam…</span>
@@ -128,7 +139,7 @@ export default function MeniPage() {
                         <span className={styles.rvFallback}>privremeno nedostupno</span>
                     ) : (
                         <div className={styles.rvGrid}>
-                            {raspored.map(({ dan, skracenica, vreme }) => (
+                            {rasporedPrikaz.map(({ dan, skracenica, vreme }) => (
                                 <div
                                     key={dan}
                                     className={dan === danasKljuc ? styles.rvDanas : styles.rvDan}

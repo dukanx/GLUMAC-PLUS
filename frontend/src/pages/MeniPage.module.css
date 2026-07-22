@@ -62,11 +62,37 @@
     color: var(--ink);
 }
 
-.dostavaPitanje {
+/* „lično preuzimanje" ispod naslova Meni */
+.podnaslov {
     font-family: var(--font-cav);
-    font-size: 20px;
+    font-size: 22px;
     color: var(--ink55);
-    margin-left: 10px;
+    margin: 4px 0 0;
+    transform: rotate(-1deg);
+}
+
+/* Doodle + Glovo + Wolt drže se zajedno u jednom redu (poravnati) */
+.dostavaRed {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+}
+
+/* Doodle dostave levo od Glovo/Wolt (providni PNG, iseckan) */
+.dostDoodleMeni {
+    width: 58px;
+    height: auto;
+    margin-right: 2px;
+    align-self: center;
+    pointer-events: none;
+}
+
+/* Desktop — malo više razmaka između loyalty papira i dostava-grupe */
+@media (min-width: 1001px) {
+    .loyBan + .dostavaRed {
+        margin-left: 26px;
+    }
 }
 
 .loyBan {
@@ -297,6 +323,11 @@
 
 /* ── Mobilni ── */
 @media (max-width: 1000px) {
+    /* nikad horizontalni skrol cele strane (samo radno-vreme traka ima svoj) */
+    .stranica {
+        overflow-x: hidden;
+    }
+
     .sadrzaj {
         grid-template-columns: 1fr;
         gap: 0;
@@ -316,8 +347,47 @@
     }
 
     .infoStrip {
-        gap: 18px;
+        gap: 14px 24px;
         padding: 16px 5% 14px;
+        align-items: center;
+    }
+
+    .infoBl {
+        min-width: 0;
+    }
+
+    /* „gde smo" i „pozovi nas" ostaju u redu (centrirani); radno vreme ide
+       u svoj puni red ispod i skroluje samo ono, ne cela strana. */
+    .infoBlRadno {
+        flex-basis: 100%;
+        align-items: stretch;
+    }
+
+    .rvGrid {
+        width: 100%;
+        min-width: 0;
+        max-width: 90vw;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        /* samo ova traka se prevlači levo-desno, ne cela strana */
+        touch-action: pan-x;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        gap: 10px;
+        padding: 4px 0 2px;
+        scroll-snap-type: x proximity;
+    }
+
+    .rvGrid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .rvDan,
+    .rvDanas {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
     }
 
     .tabRow {
