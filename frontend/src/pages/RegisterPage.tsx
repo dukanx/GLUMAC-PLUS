@@ -66,14 +66,13 @@ export default function RegisterPage() {
     return (
         <div className={styles.stranica}>
             {/* Doodle dekoracije */}
-            <svg className={styles.doodle} style={{ top: '14%', right: '22%', width: 50, color: 'hsl(14 65% 44% / .35)', transform: 'rotate(12deg)' }} viewBox="0 0 60 60" fill="none"><path d="M30 8 C 22 2, 8 8, 9 19 C 10 30, 22 38, 30 45 C 38 38, 50 30, 51 19 C 52 8, 38 2, 30 8 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /></svg>
-            <svg className={styles.doodle} style={{ top: '18%', left: '19%', width: 64, color: 'hsl(22 30% 14% / .25)', transform: 'rotate(-9deg)' }} viewBox="0 0 80 50" fill="none"><ellipse cx="40" cy="25" rx="34" ry="16" stroke="currentColor" strokeWidth="2.6" /><path d="M14 22 C 26 14, 54 14, 66 22" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
-            <svg className={styles.doodle} style={{ bottom: '16%', left: '15%', width: 38, color: 'hsl(14 65% 44% / .3)', transform: 'rotate(-15deg)' }} viewBox="0 0 60 60" fill="none"><path d="M30 6 C 32 12, 34 17, 36.5 22.5 C 42 23, 48 23.2, 54 23.5 C 49.5 27.2, 45 30.8, 40.5 34.5 C 42.2 40.2, 43.8 45.8, 45.5 51.5 C 40.3 48.2, 35.2 44.8, 30 41.5 C 24.8 44.8, 19.7 48.2, 14.5 51.5 C 16.2 45.8, 17.8 40.2, 19.5 34.5 C 15 30.8, 10.5 27.2, 6 23.5 C 12 23.2, 18 23, 23.5 22.5 C 25.7 17, 27.8 12, 30 6 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /></svg>
-            <svg className={styles.doodle} style={{ bottom: '22%', right: '16%', width: 56, color: 'hsl(22 30% 14% / .22)', transform: 'rotate(10deg)' }} viewBox="0 0 70 55" fill="none"><path d="M12 44 C 8 30, 14 12, 30 10 C 48 8, 60 20, 58 34 C 56 46, 40 50, 30 46" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /><path d="M24 24 C 26 22, 28 22, 30 24 M 40 24 C 42 22, 44 22, 46 24" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /><path d="M28 34 C 32 38, 40 38, 44 34" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
+            <svg className={`${styles.doodle} ${styles.dTR}`} style={{ width: 50, color: 'hsl(14 65% 44% / .35)', transform: 'rotate(12deg)' }} viewBox="0 0 60 60" fill="none"><path d="M30 8 C 22 2, 8 8, 9 19 C 10 30, 22 38, 30 45 C 38 38, 50 30, 51 19 C 52 8, 38 2, 30 8 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /></svg>
+            <svg className={`${styles.doodle} ${styles.dTL}`} style={{ width: 64, color: 'hsl(22 30% 14% / .25)', transform: 'rotate(-9deg)' }} viewBox="0 0 80 50" fill="none"><ellipse cx="40" cy="25" rx="34" ry="16" stroke="currentColor" strokeWidth="2.6" /><path d="M14 22 C 26 14, 54 14, 66 22" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
+            <svg className={`${styles.doodle} ${styles.dBL}`} style={{ width: 38, color: 'hsl(14 65% 44% / .3)', transform: 'rotate(-15deg)' }} viewBox="0 0 60 60" fill="none"><path d="M30 6 C 32 12, 34 17, 36.5 22.5 C 42 23, 48 23.2, 54 23.5 C 49.5 27.2, 45 30.8, 40.5 34.5 C 42.2 40.2, 43.8 45.8, 45.5 51.5 C 40.3 48.2, 35.2 44.8, 30 41.5 C 24.8 44.8, 19.7 48.2, 14.5 51.5 C 16.2 45.8, 17.8 40.2, 19.5 34.5 C 15 30.8, 10.5 27.2, 6 23.5 C 12 23.2, 18 23, 23.5 22.5 C 25.7 17, 27.8 12, 30 6 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /></svg>
+            <svg className={`${styles.doodle} ${styles.dBR}`} style={{ width: 56, color: 'hsl(22 30% 14% / .22)', transform: 'rotate(10deg)' }} viewBox="0 0 70 55" fill="none"><path d="M12 44 C 8 30, 14 12, 30 10 C 48 8, 60 20, 58 34 C 56 46, 40 50, 30 46" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /><path d="M24 24 C 26 22, 28 22, 30 24 M 40 24 C 42 22, 44 22, 46 24" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /><path d="M28 34 C 32 38, 40 38, 44 34" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
 
             <motion.div
                 className={styles.kartica}
-                style={{ rotate: -0.5 }}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -138,7 +137,7 @@ export default function RegisterPage() {
                     </div>
 
                     <button type="submit" className={styles.dugme} disabled={ucitava}>
-                        {ucitava ? 'Kreiram nalog…' : 'Kreiraj nalog →'}
+                        {ucitava ? 'Kreiram nalog…' : 'Kreiraj nalog'}
                     </button>
                 </form>
 
