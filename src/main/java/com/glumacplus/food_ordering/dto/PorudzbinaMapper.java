@@ -14,6 +14,7 @@ public class PorudzbinaMapper {
         dto.setDatum(p.getDatum());
         dto.setStatus(p.getStatus());
         dto.setUkupanIznos(p.getUkupanIznos());
+        dto.setOriginalnaCena(p.getOriginalnaCena());
         dto.setNapomena(p.getNapomena());
         dto.setTipPorudzbine(p.getTipPorudzbine());
         dto.setProcenjenoVreme(p.getProcenjenoVreme());

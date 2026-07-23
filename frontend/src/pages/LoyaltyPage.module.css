@@ -39,6 +39,11 @@
     max-width: 48ch;
 }
 
+.heroLedeDrugi::before {
+    content: "·";
+    margin: 0 8px;
+}
+
 /* ── Ulaznica ── */
 .ulaznicaWrap {
     max-width: 920px;
@@ -99,10 +104,10 @@
 
 .ulazImeRed {
     display: flex;
-    align-items: center;
-    gap: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
     margin-top: 14px;
-    flex-wrap: wrap;
 }
 
 .ulazIme {
@@ -123,16 +128,19 @@
 .tren {
     font-family: var(--font-hand);
     font-weight: 700;
-    font-size: 28px;
+    font-size: 34px;
     letter-spacing: .05em;
     text-transform: uppercase;
     color: #fff;
-    background: var(--rust);
-    padding: 7px 24px 4px;
-    border-radius: 999px;
+    background: var(--ink);
+    padding: 7px 26px 4px;
+    /* ručno-crtani "žig" oblik — bez ravnog okvira */
+    border-radius: 255px 14px 235px 14px / 16px 235px 14px 255px;
+    border: 0;
     display: inline-block;
-    transform: rotate(-2deg);
-    box-shadow: 0 5px 12px hsl(14 65% 44% / .32);
+    align-self: center;
+    transform: rotate(-1.5deg);
+    box-shadow: 0 5px 14px hsl(22 30% 14% / .26);
 }
 
 .ulazStats {
@@ -151,6 +159,26 @@
 .ulazStat:first-child {
     border-left: 0;
     padding-left: 0;
+}
+
+/* Bodovi — broj + labela jedno pored drugog */
+.bodoviRed {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bodoviLabela {
+    font-family: var(--font-cav);
+    font-size: 19px;
+    color: var(--ink55);
+    line-height: 1.05;
+}
+
+.bodoviLabela b {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 1.1em;
 }
 
 .statB {
@@ -199,6 +227,12 @@
     background: repeating-linear-gradient(0deg, transparent, transparent 8px, hsl(22 30% 14% / .03) 8px, hsl(22 30% 14% / .03) 16px);
 }
 
+/* Glava kupona — "sledeći nivo" blok, podignut i poravnat desno */
+.kuponGlava {
+    text-align: left;
+    margin-top: -6px;
+}
+
 .kuponEyeb {
     font-family: var(--font-cav);
     font-size: 20px;
@@ -211,7 +245,7 @@
 .kuponNivo {
     font-family: var(--font-hand);
     font-weight: 700;
-    font-size: 30px;
+    font-size: 34px;
     line-height: 1;
     display: block;
     text-transform: uppercase;
@@ -219,8 +253,11 @@
 
 .kuponPopust {
     font-family: var(--font-cav);
-    font-size: 20px;
+    font-size: 25px;
     color: var(--rust);
+    font-weight: 600;
+    display: block;
+    margin-top: 2px;
 }
 
 .kuponTekst {
@@ -257,7 +294,10 @@
 }
 
 .naruci {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
     font-family: var(--font-hand);
     font-weight: 700;
     font-size: 26px;
@@ -270,6 +310,11 @@
     cursor: pointer;
     text-align: center;
     line-height: 1;
+}
+
+.naruci svg {
+    margin-top: -3px;
+    flex-shrink: 0;
 }
 
 .kuponLink {
@@ -316,7 +361,7 @@
 /* Put nivoa sa žigovima */
 .nivoi {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(var(--nivoi-cols, 4), 1fr);
     gap: 0;
     margin-top: 40px;
     position: relative;
@@ -328,6 +373,10 @@
     left: 12%;
     width: 76%;
     height: 20px;
+}
+
+.nivoWrap {
+    position: relative;
 }
 
 .nivo {
@@ -405,15 +454,40 @@
     display: block;
 }
 
+/* Trenutni nivo — blago pulsira prsten (osećaj "dostignutog") */
+@keyframes zigPuls {
+    0%, 100% { box-shadow: 0 0 0 8px hsl(14 65% 44% / .16); }
+    50% { box-shadow: 0 0 0 15px hsl(14 65% 44% / .04); }
+}
+
+.zigTi {
+    animation: zigPuls 2.4s ease-in-out infinite;
+}
+
+/* Hover na nivo karticama (samo desktop) */
+@media (hover: hover) and (min-width: 901px) {
+    .nivo, .nivoTi {
+        transition: transform .2s ease;
+    }
+
+    .nivo:hover {
+        transform: translateY(-7px);
+    }
+
+    .nivoTi:hover {
+        transform: translateY(-14px) rotate(-2deg);
+    }
+}
+
 /* Kako radi */
 .kakoRadi {
     border: 2px dashed var(--ink20);
     border-radius: 12px;
-    padding: 16px 22px;
+    padding: 18px 24px;
     margin-top: 36px;
     display: flex;
-    gap: 28px;
-    align-items: baseline;
+    gap: 30px;
+    align-items: flex-start;
 }
 
 .kakoRadiNaslov {
@@ -422,13 +496,44 @@
     font-size: 22px;
     letter-spacing: .06em;
     white-space: nowrap;
+    padding-top: 2px;
 }
 
-.kakoRadiTekst {
+.kakoRadiLista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.kakoRadiLista li {
     font-family: var(--font-cav);
-    font-size: 19px;
+    font-size: 20px;
     color: var(--ink70);
-    line-height: 1.4;
+    line-height: 1.2;
+    padding-left: 24px;
+    position: relative;
+}
+
+.kakoRadiLista li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 1px;
+    color: var(--rust);
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.kakoRadiLista b {
+    font-weight: 400;
+    color: var(--ink);
+    font-family: var(--font-hand);
+    font-size: 1.15em;
+    letter-spacing: .02em;
 }
 
 /* CTA na dnu */
@@ -538,6 +643,15 @@
         margin-top: 8px;
     }
 
+    /* Drugi deo ("popust se primenjuje…") ide u novi red ispod */
+    .heroLedeDrugi {
+        display: block;
+    }
+
+    .heroLedeDrugi::before {
+        content: none;
+    }
+
     .ulaznicaWrap {
         margin-top: -72px;
         padding: 0 16px;
@@ -559,20 +673,39 @@
     }
 
     .ulazStats {
-        gap: 18px;
+        gap: 14px 18px;
     }
 
+    /* Bodovi — zaseban, istaknut red preko cele širine */
+    .ulazStat:first-child {
+        flex-basis: 100%;
+        border-left: 0;
+        padding-left: 0;
+        padding-bottom: 14px;
+        border-bottom: 2px dashed var(--ink20);
+    }
+
+    /* Preostala dva — u zajedničkom redu ispod */
     .ulazStat {
+        flex: 1;
         padding-left: 18px;
     }
 
-    .statB {
-        font-size: 28px;
+    .ulazStat:nth-child(2) {
+        border-left: 0;
+        padding-left: 0;
     }
 
-    .statBVeliki,
+    .statB {
+        font-size: 30px;
+    }
+
     .statBSivi {
-        font-size: 36px;
+        font-size: 40px;
+    }
+
+    .statBVeliki {
+        font-size: 52px;
     }
 
     .sadrzaj,

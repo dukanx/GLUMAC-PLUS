@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { Katanac } from '../components/Doodle';
+import { Katanac, NalogPlus, Kesa } from '../components/Doodle';
 import type { Porudzbina } from '../types/porudzbina';
 import * as porudzbineApi from '../api/porudzbine';
 import styles from './LoyaltyPage.module.css';
@@ -17,6 +17,33 @@ function formatirajDatum(iso: string): string {
     if (d.toDateString() === juce.toDateString()) return 'juče';
     return d.toLocaleDateString('sr-RS', { day: 'numeric', month: 'long' });
 }
+
+// Count-up animacija broja (easeOutCubic)
+function useCountUp(target: number, aktivan: boolean, trajanje = 1000): number {
+    const [val, setVal] = useState(0);
+    useEffect(() => {
+        if (!aktivan) { setVal(target); return; }
+        let raf = 0;
+        const start = performance.now();
+        const tick = (now: number) => {
+            const p = Math.min(1, (now - start) / trajanje);
+            const eased = 1 - Math.pow(1 - p, 3);
+            setVal(Math.round(target * eased));
+            if (p < 1) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+    }, [target, aktivan, trajanje]);
+    return val;
+}
+
+// Ulazak sekcija pri skrolu
+const ulazak = {
+    initial: { opacity: 0, y: 28 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.2 },
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const },
+};
 
 export default function LoyaltyPage() {
     const { korisnik, token, loyaltyProgrami, popust } = useAuth();
@@ -47,6 +74,7 @@ export default function LoyaltyPage() {
     );
 
     const bodovi = korisnik?.brojBodova ?? 0;
+    const bodoviPrikaz = useCountUp(bodovi, !!korisnik);
     const trenutniNivo = [...nivoi].reverse().find(n => bodovi >= n.pragBodova) ?? nivoi[0];
     const sledeciNivo = nivoi.find(n => n.pragBodova > bodovi);
 
@@ -92,9 +120,12 @@ export default function LoyaltyPage() {
                     )}
                 </h1>
                 <p className={styles.heroLede}>
-                    {korisnik
-                        ? '100 RSD = 1 bod · popust se primenjuje automatski pri svakoj porudžbini'
-                        : '100 RSD = 1 bod · popust na svaku porudžbinu · besplatno zauvek'}
+                    <span>100 RSD = 1 bod</span>
+                    <span className={styles.heroLedeDrugi}>
+                        {korisnik
+                            ? 'popust se primenjuje automatski pri svakoj porudžbini'
+                            : 'popust na svaku porudžbinu'}
+                    </span>
                 </p>
             </section>
 
@@ -129,8 +160,10 @@ export default function LoyaltyPage() {
                             {korisnik ? (
                                 <>
                                     <div className={styles.ulazStat}>
-                                        <div className={styles.statBVeliki}>{bodovi}</div>
-                                        <div className={styles.statL}><b>bodova</b> na računu</div>
+                                        <div className={styles.bodoviRed}>
+                                            <div className={styles.statBVeliki}>{bodoviPrikaz}</div>
+                                            <div className={styles.bodoviLabela}><b>bodova</b><br />na računu</div>
+                                        </div>
                                     </div>
                                     <div className={styles.ulazStat}>
                                         <div className={styles.statB}>
@@ -166,7 +199,7 @@ export default function LoyaltyPage() {
                         {korisnik ? (
                             sledeciNivo ? (
                                 <>
-                                    <div>
+                                    <div className={styles.kuponGlava}>
                                         <span className={styles.kuponEyeb}>sledeći nivo</span>
                                         <span className={styles.kuponNivo}>{sledeciNivo.nivo}</span>
                                         <span className={styles.kuponPopust}>−{sledeciNivo.popust}% na sve</span>
@@ -196,11 +229,8 @@ export default function LoyaltyPage() {
                             )
                         ) : (
                             <>
-                                <span className={styles.kuponTekst}>
-                                    registracija traje minut, bodovi kreću od prve porudžbine
-                                </span>
                                 <button className={styles.naruci} onClick={() => navigate('/register')}>
-                                    Napravi nalog →
+                                    Napravi nalog <NalogPlus size={23} strokeWidth={2.4} />
                                 </button>
                                 <Link to="/login" className={styles.kuponLink}>već imam nalog</Link>
                             </>
@@ -212,74 +242,89 @@ export default function LoyaltyPage() {
             {/* ── Sadržaj: put nivoa + aktivnosti ── */}
             <div className={korisnik ? styles.sadrzaj : styles.sadrzajGost}>
                 <div>
-                    <div>
+                    <motion.div {...ulazak}>
                         <span className={styles.kSekc}>— nivoi</span>
                         <span className={styles.kSekcNap}>popust raste sa brojem skupljenih bodova</span>
-                    </div>
+                    </motion.div>
 
                     {nivoi.length > 0 && (
                         <div
                             className={styles.nivoi}
-                            style={{ gridTemplateColumns: `repeat(${nivoi.length}, 1fr)` }}
+                            style={{ '--nivoi-cols': nivoi.length } as React.CSSProperties}
                         >
                             <svg className={styles.nivoiLinija} viewBox="0 0 800 20" fill="none" preserveAspectRatio="none">
                                 <path d="M4 12 C 150 6, 300 15, 400 10 C 520 5, 680 14, 796 9"
                                     stroke="hsl(22 30% 14%/.3)" strokeWidth="3" strokeDasharray="10 8" strokeLinecap="round" />
                             </svg>
-                            {nivoi.map(n => {
+                            {nivoi.map((n, i) => {
                                 const dostignut = korisnik !== null && bodovi >= n.pragBodova;
                                 const trenutni = korisnik !== null && trenutniNivo?.id === n.id;
                                 return (
-                                    <div key={n.id} className={trenutni ? styles.nivoTi : styles.nivo}>
-                                        <span className={
-                                            trenutni ? styles.zigTi
-                                                : dostignut ? styles.zig
-                                                    : styles.zigBuduci
-                                        }>
-                                            {trenutni ? 'TI'
-                                                : dostignut ? '✓'
-                                                    : <Katanac size={20} strokeWidth={2} />}
-                                        </span>
-                                        <h3 className={
-                                            trenutni ? styles.nivoNazTi
-                                                : dostignut ? styles.nivoNaz
-                                                    : styles.nivoNazBuduci
-                                        }>
-                                            {n.nivo}
-                                        </h3>
-                                        <span className={styles.nivoPrag}>
-                                            {n.pragBodova.toLocaleString('sr-RS')} bod. · {n.popust}%
-                                        </span>
-                                    </div>
+                                    <motion.div
+                                        key={n.id}
+                                        className={styles.nivoWrap}
+                                        initial={{ opacity: 0, y: 18 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true, amount: 0.5 }}
+                                        transition={{ delay: i * 0.09, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                                    >
+                                        <div className={trenutni ? styles.nivoTi : styles.nivo}>
+                                            <motion.span
+                                                className={
+                                                    trenutni ? styles.zigTi
+                                                        : dostignut ? styles.zig
+                                                            : styles.zigBuduci
+                                                }
+                                                initial={{ scale: 1.7, rotate: -14, opacity: 0 }}
+                                                whileInView={{ scale: 1, rotate: trenutni ? -3 : 0, opacity: 1 }}
+                                                viewport={{ once: true, amount: 0.5 }}
+                                                transition={{ delay: i * 0.09 + 0.12, type: 'spring', stiffness: 320, damping: 13 }}
+                                            >
+                                                {trenutni ? 'TI'
+                                                    : dostignut ? '✓'
+                                                        : <Katanac size={20} strokeWidth={2} />}
+                                            </motion.span>
+                                            <h3 className={
+                                                trenutni ? styles.nivoNazTi
+                                                    : dostignut ? styles.nivoNaz
+                                                        : styles.nivoNazBuduci
+                                            }>
+                                                {n.nivo}
+                                            </h3>
+                                            <span className={styles.nivoPrag}>
+                                                {n.pragBodova.toLocaleString('sr-RS')} bod. · {n.popust}%
+                                            </span>
+                                        </div>
+                                    </motion.div>
                                 );
                             })}
                         </div>
                     )}
 
-                    <div className={styles.kakoRadi}>
+                    <motion.div className={styles.kakoRadi} {...ulazak}>
                         <span className={styles.kakoRadiNaslov}>KAKO RADI</span>
-                        <span className={styles.kakoRadiTekst}>
-                            100 RSD = 1 bod · bodovi se pripisuju kad porudžbina bude preuzeta ·
-                            nivo se ne gubi — jednom dostignut, ostaje ·
-                            popust važi za porudžbine kroz sajt, ne za Wolt/Glovo
-                        </span>
-                    </div>
+                        <ul className={styles.kakoRadiLista}>
+                            <li>svakih <b>100 RSD</b> ti donese <b>1 bod</b></li>
+                            <li>bodovi se pripisuju kad  <b>preuzmeš</b> porudžbinu </li>
+                            <li>popust važi za porudžbine <b>preko sajta</b> — ne za Wolt/Glovo</li>
+                        </ul>
+                    </motion.div>
 
-                    <div className={styles.dnoCta}>
+                    <motion.div className={styles.dnoCta} {...ulazak}>
                         {korisnik && sledeciNivo ? (
                             <span className={styles.dnoCtaTekst}>
                                 još {preostalo.toLocaleString('sr-RS')} bodova do sledećeg nivoa —
                             </span>
                         ) : !korisnik ? (
-                            <span className={styles.dnoCtaTekst}>bodovi kreću od prve porudžbine —</span>
+                            <span className={styles.dnoCtaTekst}>bodovi kreću od prve porudžbine </span>
                         ) : null}
-                        <Link to="/meni" className={styles.naruci}>Poruči odmah →</Link>
-                    </div>
+                        <Link to="/meni" className={styles.naruci}>Poruči odmah <Kesa size={23} strokeWidth={2} /></Link>
+                    </motion.div>
                 </div>
 
                 {/* Poslednje aktivnosti (samo ulogovan) */}
                 {korisnik && (
-                    <div>
+                    <motion.div {...ulazak}>
                         <span className={styles.kSekc}>— poslednje aktivnosti</span>
                         <div style={{ marginTop: 18 }}>
                             {loadingStats ? (
@@ -317,7 +362,7 @@ export default function LoyaltyPage() {
                                 </span>
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 )}
             </div>
         </div>

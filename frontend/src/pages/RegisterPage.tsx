@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import styles from './Auth.module.css';
+import { NalogPlus } from '../components/Doodle';
 import * as authApi from '../api/auth';
 import { ApiError } from '../api/client';
 
@@ -137,7 +138,7 @@ export default function RegisterPage() {
                     </div>
 
                     <button type="submit" className={styles.dugme} disabled={ucitava}>
-                        {ucitava ? 'Kreiram nalog…' : 'Kreiraj nalog'}
+                        {ucitava ? 'Kreiram nalog…' : <>Kreiraj nalog <NalogPlus size={24} strokeWidth={2.4} /></>}
                     </button>
                 </form>
 

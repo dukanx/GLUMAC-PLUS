@@ -15,6 +15,7 @@ public class PorudzbinaViewDto {
     private Long porudzbinaId;
     private StatusPorudzbine status;
     private BigDecimal ukupanIznos;
+    private BigDecimal originalnaCena;
     private String napomena;
     private TipPorudzbine tipPorudzbine;
     private Integer procenjenoVreme;
@@ -25,6 +26,14 @@ public class PorudzbinaViewDto {
 
     public void setUkupanIznos(BigDecimal ukupanIznos) {
         this.ukupanIznos = ukupanIznos;
+    }
+
+    public BigDecimal getOriginalnaCena() {
+        return originalnaCena;
+    }
+
+    public void setOriginalnaCena(BigDecimal originalnaCena) {
+        this.originalnaCena = originalnaCena;
     }
 
     public LocalDateTime getDatum() {

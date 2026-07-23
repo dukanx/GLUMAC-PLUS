@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import styles from './Auth.module.css';
 import { useAuth } from '../context/AuthContext';
+import { Kljuc } from '../components/Doodle';
 import * as authApi from '../api/auth';
 import { ApiError } from '../api/client';
 
@@ -89,7 +90,7 @@ export default function LoginPage() {
           </div>
 
           <button type="submit" className={styles.dugme} disabled={ucitava}>
-            {ucitava ? 'Prijavljujem…' : 'Prijavi se'}
+            {ucitava ? 'Prijavljujem…' : <>Prijavi se <Kljuc size={24} strokeWidth={2.4} /></>}
           </button>
         </form>
 

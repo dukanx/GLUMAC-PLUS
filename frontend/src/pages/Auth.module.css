@@ -122,7 +122,10 @@
 }
 
 .dugme {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     width: 100%;
     font-family: var(--font-hand);
     font-weight: 700;
@@ -137,6 +140,11 @@
     text-align: center;
     line-height: 1;
     margin-top: 30px;
+}
+
+.dugme svg {
+    margin-top: -3px;
+    flex-shrink: 0;
 }
 
 .dugme:disabled {

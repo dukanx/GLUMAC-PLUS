@@ -152,3 +152,46 @@ export function Hamburger({ size = 30, ...rest }: IkonaProps) {
         </svg>
     );
 }
+
+// Ključ — "prijavi se" (uđi na nalog)
+export function Kljuc(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props)}>
+            <circle cx="8" cy="8" r="4.2" />
+            <path d="M11 11 L 20 20 M 17 17 L 15 19 M 20 20 L 18 22" />
+        </svg>
+    );
+}
+
+// Osoba sa plusom — "napravi / kreiraj nalog"
+export function NalogPlus(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props)}>
+            <circle cx="10" cy="8" r="3.8" />
+            <path d="M3 20 C 4 15.5, 7 14, 10 14 C 12 14, 13.5 14.5, 14.5 15.5" />
+            <path d="M18 15 L 18 22 M 14.5 18.5 L 21.5 18.5" />
+        </svg>
+    );
+}
+
+// Tanjir sa priborom — "poruči" (jelo)
+export function Tanjir(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props, 2)}>
+            <circle cx="13" cy="12" r="7.5" />
+            <circle cx="13" cy="12" r="3.6" />
+            <path d="M3.5 4.5 L 3.5 11 M 6 4.5 L 6 11 M 4.75 4.5 L 4.75 20" />
+        </svg>
+    );
+}
+
+// Kesa za poneti — "poruči odmah"
+export function Kesa(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props, 2)}>
+            <path d="M6 9 L 18 9 L 16.8 21 C 12 21.8, 8.5 21.5, 7.2 21 Z" />
+            <path d="M6 9 L 7.6 4.6 C 11 3.9, 14 4, 16.4 4.6 L 18 9" />
+            <path d="M10 9 C 10 6.3, 14 6.3, 14 9" />
+        </svg>
+    );
+}
