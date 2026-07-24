@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,14 +29,59 @@ import java.util.stream.Collectors;
 public class RadnoVremeService {
 
     private final RadnoVremeRepository repository;
+    private final Clock clock;
 
     /**
-     * Kreira servis sa potrebnim repozitorijumom.
+     * Kreira servis sa potrebnim zavisnostima.
      *
      * @param repository repozitorijum radnog vremena
+     * @param clock sat aplikacije (za proveru trenutnog radnog vremena)
      */
-    public RadnoVremeService(RadnoVremeRepository repository) {
+    public RadnoVremeService(RadnoVremeRepository repository, Clock clock) {
         this.repository = repository;
+        this.clock = clock;
+    }
+
+    /**
+     * Da li je restoran trenutno u radnom vremenu. Ako nije definisan nijedan
+     * aktivan interval, smatra se da je otvoren. Jedinstveno mesto istine —
+     * koriste ga i {@link PorudzbinaService} (blokada poručivanja van radnog
+     * vremena) i {@link SmenaService} (automatsko otvaranje/zatvaranje smene).
+     *
+     * @return {@code true} ako je trenutno u okviru nekog aktivnog intervala
+     */
+    public boolean jeOtvorenoSada() {
+        if (repository.findByAktivno(true).isEmpty()) {
+            return true;
+        }
+        LocalDateTime now = LocalDateTime.now(clock);
+        DanUNedelji dan = mapDan(now.getDayOfWeek());
+        LocalTime vreme = now.toLocalTime();
+        return repository.findByDanAndAktivno(dan, true).stream()
+                .anyMatch(interval -> uIntervalu(vreme, interval));
+    }
+
+    /** Da li vreme pada unutar intervala; podržava i intervale koji prelaze ponoć. */
+    private boolean uIntervalu(LocalTime vreme, RadnoVreme interval) {
+        LocalTime od = interval.getOdVremena();
+        LocalTime doV = interval.getDoVremena();
+        if (!od.isAfter(doV)) {
+            return !vreme.isBefore(od) && !vreme.isAfter(doV);
+        }
+        // Interval prelazi ponoć.
+        return !vreme.isBefore(od) || !vreme.isAfter(doV);
+    }
+
+    private DanUNedelji mapDan(DayOfWeek dow) {
+        return switch (dow) {
+            case MONDAY -> DanUNedelji.PONEDELJAK;
+            case TUESDAY -> DanUNedelji.UTORAK;
+            case WEDNESDAY -> DanUNedelji.SREDA;
+            case THURSDAY -> DanUNedelji.CETVRTAK;
+            case FRIDAY -> DanUNedelji.PETAK;
+            case SATURDAY -> DanUNedelji.SUBOTA;
+            case SUNDAY -> DanUNedelji.NEDELJA;
+        };
     }
 
     /**

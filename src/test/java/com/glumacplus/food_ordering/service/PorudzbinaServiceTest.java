@@ -21,7 +21,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +38,8 @@ class PorudzbinaServiceTest {
     @Mock KorisnikRepository korisnikRepo;
     @Mock LoyaltyProgramRepository loyaltyRepo;
     @Mock NotifikacijaService notifikacijaService;
-    @Mock RadnoVremeRepository radnoVremeRepo;
+    @Mock RadnoVremeService radnoVremeService;
+    @Mock SmenaStanjeRepository smenaStanjeRepo;
 
     PorudzbinaService porudzbinaService;
 
@@ -47,7 +47,7 @@ class PorudzbinaServiceTest {
     void setUp() {
         porudzbinaService = new PorudzbinaService(
                 porudzbinaRepo, proizvodRepo, korisnikRepo, loyaltyRepo,
-                notifikacijaService, radnoVremeRepo,
+                notifikacijaService, radnoVremeService, smenaStanjeRepo,
                 Clock.fixed(Instant.parse("2026-01-01T10:00:00Z"), ZoneId.of("UTC"))
         );
     }
@@ -72,7 +72,7 @@ class PorudzbinaServiceTest {
     }
 
     private void mockRestoranOtvoren() {
-        when(radnoVremeRepo.findByAktivno(true)).thenReturn(List.of());
+        when(radnoVremeService.jeOtvorenoSada()).thenReturn(true);
     }
 
     // SO: create
@@ -161,18 +161,12 @@ class PorudzbinaServiceTest {
 
     @Test
     void testCreateVanRadnogVremenaBaca400() {
-        // Clock je fiksiran na 2026-01-01T10:00 (cetvrtak)
         setupSecurityContext("korisnik@gmail.com");
 
         Korisnik k = korisnik(1L, "korisnik@gmail.com");
 
-        RadnoVreme cetvrtak = new RadnoVreme();
-        cetvrtak.setOdVremena(LocalTime.of(14, 0));
-        cetvrtak.setDoVremena(LocalTime.of(22, 0));
-
         when(korisnikRepo.findByEmail("korisnik@gmail.com")).thenReturn(Optional.of(k));
-        when(radnoVremeRepo.findByAktivno(true)).thenReturn(List.of(cetvrtak));
-        when(radnoVremeRepo.findByDanAndAktivno(DanUNedelji.CETVRTAK, true)).thenReturn(List.of(cetvrtak));
+        when(radnoVremeService.jeOtvorenoSada()).thenReturn(false);
 
         ResponseStatusException ex = assertThrows(
                 ResponseStatusException.class,

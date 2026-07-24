@@ -15,7 +15,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,9 +34,13 @@ class RadnoVremeServiceTest {
 
     RadnoVremeService radnoVremeService;
 
+    // Clock fiksiran na 2026-01-01T10:00 UTC (četvrtak, 10h).
+    private static final Clock CLOCK =
+            Clock.fixed(Instant.parse("2026-01-01T10:00:00Z"), ZoneId.of("UTC"));
+
     @BeforeEach
     void setUp() {
-        radnoVremeService = new RadnoVremeService(repository);
+        radnoVremeService = new RadnoVremeService(repository, CLOCK);
     }
 
     @AfterEach
@@ -171,5 +179,34 @@ class RadnoVremeServiceTest {
         );
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
         verify(repository, never()).deleteById(any());
+    }
+
+    // SO: jeOtvorenoSada
+
+    @Test
+    void testJeOtvorenoSadaBezAktivnogRadnogVremenaVracaTrue() {
+        when(repository.findByAktivno(true)).thenReturn(List.of());
+
+        assertTrue(radnoVremeService.jeOtvorenoSada());
+    }
+
+    @Test
+    void testJeOtvorenoSadaUnutarIntervalaVracaTrue() {
+        // Clock je četvrtak 10h; interval 08–22 pokriva ovo vreme.
+        RadnoVreme cetvrtak = radnoVreme(1L, DanUNedelji.CETVRTAK);
+        when(repository.findByAktivno(true)).thenReturn(List.of(cetvrtak));
+        when(repository.findByDanAndAktivno(DanUNedelji.CETVRTAK, true)).thenReturn(List.of(cetvrtak));
+
+        assertTrue(radnoVremeService.jeOtvorenoSada());
+    }
+
+    @Test
+    void testJeOtvorenoSadaVanIntervalaVracaFalse() {
+        // Clock je četvrtak 10h; interval 14–22 ne pokriva ovo vreme.
+        RadnoVreme cetvrtak = new RadnoVreme(DanUNedelji.CETVRTAK, LocalTime.of(14, 0), LocalTime.of(22, 0), true);
+        when(repository.findByAktivno(true)).thenReturn(List.of(cetvrtak));
+        when(repository.findByDanAndAktivno(DanUNedelji.CETVRTAK, true)).thenReturn(List.of(cetvrtak));
+
+        assertFalse(radnoVremeService.jeOtvorenoSada());
     }
 }

@@ -6,7 +6,7 @@ import com.glumacplus.food_ordering.repository.KorisnikRepository;
 import com.glumacplus.food_ordering.repository.LoyaltyProgramRepository;
 import com.glumacplus.food_ordering.repository.PorudzbinaRepository;
 import com.glumacplus.food_ordering.repository.ProizvodRepository;
-import com.glumacplus.food_ordering.repository.RadnoVremeRepository;
+import com.glumacplus.food_ordering.repository.SmenaStanjeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,9 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +42,8 @@ public class PorudzbinaService {
     private final KorisnikRepository korisnikRepo;
     private final LoyaltyProgramRepository loyaltyRepo;
     private final NotifikacijaService notifikacijaService;
-    private final RadnoVremeRepository radnoVremeRepo;
+    private final RadnoVremeService radnoVremeService;
+    private final SmenaStanjeRepository smenaStanjeRepo;
     private final Clock appClock;
 
     /**
@@ -55,16 +54,18 @@ public class PorudzbinaService {
      * @param korisnikRepo repozitorijum korisnika
      * @param loyaltyRepo repozitorijum loyalty programa
      * @param notifikacijaService servis notifikacija
-     * @param radnoVremeRepo repozitorijum radnog vremena
-     * @param appClock sat aplikacije (za vreme i proveru radnog vremena)
+     * @param radnoVremeService servis radnog vremena (provera da li je otvoreno)
+     * @param smenaStanjeRepo repozitorijum stanja smene (ručna pauza)
+     * @param appClock sat aplikacije (za vreme porudžbine)
      */
-    public PorudzbinaService(PorudzbinaRepository porudzbinaRepo, ProizvodRepository proizvodRepo, KorisnikRepository korisnikRepo, LoyaltyProgramRepository loyaltyRepo, NotifikacijaService notifikacijaService, RadnoVremeRepository radnoVremeRepo, Clock appClock){
+    public PorudzbinaService(PorudzbinaRepository porudzbinaRepo, ProizvodRepository proizvodRepo, KorisnikRepository korisnikRepo, LoyaltyProgramRepository loyaltyRepo, NotifikacijaService notifikacijaService, RadnoVremeService radnoVremeService, SmenaStanjeRepository smenaStanjeRepo, Clock appClock){
         this.porudzbinaRepo = porudzbinaRepo;
         this.proizvodRepo = proizvodRepo;
         this.korisnikRepo = korisnikRepo;
         this.loyaltyRepo = loyaltyRepo;
         this.notifikacijaService = notifikacijaService;
-        this.radnoVremeRepo = radnoVremeRepo;
+        this.radnoVremeService = radnoVremeService;
+        this.smenaStanjeRepo = smenaStanjeRepo;
         this.appClock = appClock;
     }
 
@@ -140,6 +141,11 @@ public class PorudzbinaService {
 
             Proizvod p = proizvodRepo.findById(stavkaDto.getProizvodId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nema proizvoda"));
+
+            if (!p.isDostupan()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Proizvod '" + p.getNaziv() + "' trenutno nije dostupan.");
+            }
 
             StavkaPorudzbine prava = new StavkaPorudzbine();
             prava.setCena(p.getCena());
@@ -439,57 +445,17 @@ public class PorudzbinaService {
      * @throws ResponseStatusException sa statusom 400 ako je van radnog vremena
      */
     private void ensureRestaurantIsOpenNow() {
-        if (radnoVremeRepo.findByAktivno(true).isEmpty()) {
-            return;
+        // Ručna pauza — zaposleni je zaustavio primanje porudžbina i unutar radnog vremena.
+        boolean pauzirano = smenaStanjeRepo.findById(1L)
+                .map(SmenaStanje::isPauzirano)
+                .orElse(false);
+        if (pauzirano) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trenutno ne primamo porudžbine. Pokušaj kasnije.");
         }
 
-        LocalDateTime now = LocalDateTime.now(appClock);
-        DanUNedelji dan = mapDayOfWeek(now.getDayOfWeek());
-        LocalTime trenutnoVreme = now.toLocalTime();
-
-        List<RadnoVreme> intervali = radnoVremeRepo.findByDanAndAktivno(dan, true);
-        boolean otvoreno = intervali.stream().anyMatch(interval -> isWithinInterval(trenutnoVreme, interval));
-
-        if (!otvoreno) {
+        if (!radnoVremeService.jeOtvorenoSada()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trenutno nije moguće poručivanje van radnog vremena");
         }
-    }
-
-    /**
-     * Mapira {@link DayOfWeek} u domenski {@link DanUNedelji}.
-     *
-     * @param dayOfWeek dan u nedelji iz {@code java.time}
-     * @return odgovarajući {@link DanUNedelji}
-     */
-    private DanUNedelji mapDayOfWeek(DayOfWeek dayOfWeek) {
-        return switch (dayOfWeek) {
-            case MONDAY -> DanUNedelji.PONEDELJAK;
-            case TUESDAY -> DanUNedelji.UTORAK;
-            case WEDNESDAY -> DanUNedelji.SREDA;
-            case THURSDAY -> DanUNedelji.CETVRTAK;
-            case FRIDAY -> DanUNedelji.PETAK;
-            case SATURDAY -> DanUNedelji.SUBOTA;
-            case SUNDAY -> DanUNedelji.NEDELJA;
-        };
-    }
-
-    /**
-     * Proverava da li trenutno vreme pada unutar zadatog intervala radnog
-     * vremena. Podržava i intervale koji prelaze ponoć.
-     *
-     * @param trenutnoVreme trenutno vreme
-     * @param interval interval radnog vremena
-     * @return {@code true} ako je vreme unutar intervala, inače {@code false}
-     */
-    private boolean isWithinInterval(LocalTime trenutnoVreme, RadnoVreme interval) {
-        LocalTime od = interval.getOdVremena();
-        LocalTime doVremena = interval.getDoVremena();
-
-        if (!od.isAfter(doVremena)) {
-            return !trenutnoVreme.isBefore(od) && !trenutnoVreme.isAfter(doVremena);
-        }
-
-        return !trenutnoVreme.isBefore(od) || !trenutnoVreme.isAfter(doVremena);
     }
 
     /**
