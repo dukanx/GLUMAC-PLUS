@@ -23,8 +23,9 @@ Frontend trenutno prati "Sačuvano" stanje samo per-sesija (resetuje se na refre
 **🟠 0d. Zaokruživanje novca na ceo dinar (konzistentno)**
 RSD nema podjedinicu, ali `ukupanIznos` izlazi sa .5 (npr. 5% od 590 = 560.5). Problem je i nekonzistentnost: meni računa `round(cena × 0.95)` = 561, korpa je računala `round(popust)` = 560 — `round(a−b) ≠ a − round(b)`. Pravilo mora biti JEDNO svuda: **zaokruži finalnu cenu** (`round(ukupnaCena × (1 − popust/100))`, `HALF_UP`), pa popust izvedi. Frontend preview (korpa) je već usklađen na to pravilo. Backend treba isto da zaokružuje `ukupanIznos` (i da se poklopi sa frontend preview-om), inače admin/istorija prikazuju .5.
 
-**🟡 0e. Vreme prihvatanja / countdown za aktivne porudžbine**
-Panel treba countdown za porudžbine u pripremi ("ostalo ~mm:ss"). Za to treba znati KAD je prihvaćena — trenutno DTO daje samo `datum` (kreiranje). Dodati na `Porudzbina` + `PorudzbinaViewDto` ili `vremePrihvatanja: LocalDateTime` (kad pređe u SPREMNA) ili direktno `rokGotovo: LocalDateTime` (= vremePrihvatanja + procenjenoVreme). Frontend onda tika svake sekunde i crveni kad istekne.
+**🟢 0e. Vreme prihvatanja / countdown za aktivne porudžbine — REŠENO client-side (backend opciono)**
+Panel ima countdown za U_PRIPREMI (sada prikaz u minutima, Space Mono). Trenutna implementacija: start odbrojavanja se pamti **lokalno** (`localStorage: panel_vreme_start`, po porudžbini, stamp pri prihvatanju). Radi tačno i preko hard-reload-a (localStorage persistira) — potvrđeno u praksi 2026-07-23.
+Backend verzija je potrebna SAMO ako: (a) panel se koristi na **više uređaja/tableta istovremeno** (localStorage se ne deli), ili (b) treba da preživi čišćenje storage-a / rad iz incognita. Tada dodati `vremePrihvatanja: LocalDateTime` (kad pređe U NOVA→U_PRIPREMI) ili `rokGotovo` na `Porudzbina` + `PorudzbinaViewDto`, i računati countdown od servera. Za sada nije prioritet.
 
 **🔴 0f. BUG: `/api/porudzbine/moje` vraća `List` umesto `Page` — nepristupačne porudžbine**
 `getMyOrders` prima `page`/`size` i interno seče rezultat, ali vraća `List<PorudzbinaViewDto>` (ne `Page`). Posledica: frontend ne dobija `totalPages`/`totalElements`, pa IstorijaPage uvek misli da postoji 1 strana — pager se nikad ne prikaže. **Korisnik sa >8 porudžbina ne može da vidi 9. i dalje** (tihi bug; ne aktivira se dok ima malo porudžbina).
@@ -70,9 +71,51 @@ Race u `PanelPorudzbina.tsx`: auto-refresh GET pokrenut pre klika na akciju (Zav
 **🔵 6. Notifikacije — odloženo za mobilnu aplikaciju**
 Backend ima ceo `Notifikacija` model + 6 tipova (`PORUDZBINA_PRIHVACENA`, `PORUDZBINA_VREME_PROMENJENO`, `PORUDZBINA_OTKAZANA`, `PROSLJENA_ZAVRSENA`, `LOYALTY_LEVEL_UP`, `RUCNO`), ali web frontend ih ne koristi. Push/in-app notifikacije će se raditi u sklopu mobilne aplikacije, ne na webu.
 
+**🟡 7. Pretraga neosetljiva na srpska slova (dijakritika)**
+Sve pretrage rade `naziv.toLowerCase().includes(q)` — osetljivo na dijakritiku, pa „sunka" ne nalazi „šunka", „cokolada" ne nalazi „čokolada". Napraviti helper `normalizuj(s)` (npr. `src/utils/tekst.ts`) koji skida dijakritiku i primeni na i upit i naziv. VAŽNO: `đ` se NE razlaže NFD-om — ručno `đ→dj`, `Đ→dj` (vidi memoriju o srpskoj transliteraciji). Primeniti svuda gde se pretražuje: `PanelProizvodi` (panel), `MeniPage` (kupac), i bilo gde drugde. Idealno isti helper i na backendu ako pretraga ikad ode na server.
+
+**🟡 8. Animacije umesto tekstualnih „Učitavam…/Šaljem…" stanja**
+Trenutno se svuda pri učitavanju/slanju prikazuje običan tekst („Učitavam porudžbine…", „Šaljem…", „Nije moguće učitati…"). Zameniti to konzistentnim loading animacijama u papirnom stilu — spinner/skeleton (npr. treperava „linija rukopisa", tačkice, ili skeleton kartice). Napraviti 1–2 reusable komponente (`Spinner`, `SkeletonKartica`) i provući ih kroz: panel (učitavanje porudžbina, akcije), meni, istorija, omiljene, login/register (dugmad u toku slanja), status porudžbine. Cilj: nigde goli tekst kao indikator rada.
+
 ---
 
 ## Veliki feature-i (posle odbrane / pred produkciju)
+
+### 🛠️ Admin panel (NE POSTOJI — treba napraviti)
+Trenutno postoji samo **panel zaposlenog** (`/panel` = `PanelPorudzbina`, upravljanje porudžbinama uživo). Ne postoji admin panel za upravljanje **katalogom i konfiguracijom**. (Napomena: stari TODO/docs ponegde pominju "AdminPage" kao da postoji — NE postoji u kodu.)
+
+**Obim (predlog):** zaseban ekran `/admin` (role ADMIN), odvojen od panela zaposlenog:
+1. **Proizvodi (CRUD):** dodavanje/izmena/brisanje palačinki i ostalih stavki, cena, opis, kategorija (`tip`), slika. (Vezuje se sa "Popuniti opise" 0h i "Dostupnost" ispod.)
+2. **Dostupnost proizvoda** — vidi zasebnu tačku ispod.
+3. **Loyalty nivoi (CRUD):** pragovi + procenti popusta (trenutno seed-ovano).
+4. **Radno vreme:** izmena `RadnoVreme` po danima.
+5. **Korisnici / uloge:** pregled, promena uloge (već postoji `updateUserRole` na backendu sa `@PreAuthorize` ADMIN).
+6. (Opciono) **Statistika / dashboard:** promet, broj porudžbina po statusu, popularne stavke, ušteđeno — može da povuče isti agregat kao `/loyalty/stats` ideja.
+
+**Backend:** većina CRUD endpointa za `Proizvod`/`LoyaltyProgram`/`RadnoVreme` verovatno delom postoji (proveriti kontrolere) — treba upotpuniti + zaključati na ADMIN. Frontend je glavni posao.
+
+### ✅ Dostupnost proizvoda ("86 lista") — URAĐENO 2026-07-23 (pun dizajn)
+Zaposleni skida/vraća proizvode iz ponude preko **panela** (tab "PROIZVODI"). Implementirano prema dizajnu ("Panel zaposlenih" handoff).
+
+**Backend (gotovo, kompajlira):**
+- `Proizvod`: `boolean dostupan` (default true) + `RazlogNedostupnosti nedostupanRazlog` (enum: DO_KRAJA_SMENE / DO_DALJNJEG, null kad dostupan). Migracija `V11__proizvod_dostupan.sql` (dodaje obe kolone).
+- `ProizvodViewDto`/`ProizvodDto`/`ProizvodMapper` propuštaju polja.
+- `PATCH /api/proizvodi/{id}/dostupnost?dostupan=&razlog=` (ZAPOSLENI/ADMIN).
+- `PorudzbinaService.create()` → **409** ako je stavka nedostupna.
+- Smena: `SmenaService` + `SmenaController` — `GET /api/smena/pregled`, `POST /api/smena/zatvori` (vraća DO_KRAJA_SMENE proizvode + dnevna statistika: broj porudžbina, promet, prosečna priprema). `SmenaStatDto`.
+
+**Frontend (gotovo, build prolazi):**
+- Panel: prekidač ekrana "Porudžbine / Proizvodi". `PanelProizvodi.tsx` = 86-lista (pretraga, grupisano po tipu, ✓IMA/✗NEMA, izbor DO KRAJA SMENE / DO DALJNJEG / NAZAD, "Zatvori smenu" modal sa statistikom).
+- Meni kupca (`ProizvodKartica`): nedostupno = zasivljeno + "nema danas" + disable dodavanja + precrtana cena.
+- `api/proizvodi.setDostupnost`, `api/smena`.
+
+**Automatsko + ručno otvaranje/zatvaranje smene (URAĐENO 2026-07-23):**
+- **Auto:** `@EnableScheduling` + `SmenaService.automatskaSmena()` (`@Scheduled fixedRate=60s`), vezano za `RadnoVreme`. Prelaz u zatvoreno → vraća "do kraja smene" proizvode; prelaz u otvoreno → skida ručnu pauzu (nova smena). Detekcija prelaza preko `biloOtvoreno` (in-memory), safe na restart.
+- **Ručna pauza (pravi override):** `SmenaStanje` entitet (jedan red, migracija `V12__smena_stanje.sql`) + `smena_stanje.pauzirano`. Endpoint-i `GET /api/smena/stanje`, `POST /api/smena/pauziraj`, `POST /api/smena/nastavi`. `PorudzbinaService.ensureRestaurantIsOpenNow()` → **400** ako je pauzirano (blokira i unutar radnog vremena). "Zatvori smenu" dugme sad i pauzira (kraj dana). Auto-otvaranje sledećeg dana skida pauzu.
+- **Frontend:** panel header status ("prima porudžbine" / "pauzirano" / "van radnog vremena") + toggle "⏸ Pauziraj" / "▶ Nastavi" (poll na 15s).
+- `PorudzbinaService` dobio `SmenaStanjeRepository` (test setup ažuriran, `PorudzbinaServiceTest` prolazi).
+
+**⚠️ Za primenu:** restartovati backend da Flyway primeni `V11` + `V12` na Neon (i da scheduler krene).
 
 ### 🧇 Dodaci na palačinke (Wolt-stil konfigurator)
 Trenutno su palačinke fiksne komponovane stavke. Cilj: zadržati gotove palačinke, ali dozvoliti kupcu da doda **opcione ekstra dodatke**, svaki sa svojom cenom — kao Wolt:
