@@ -16,6 +16,8 @@ public class ProizvodMapper {
         dto.setProteini(p.getProteini());
         dto.setMasti(p.getMasti());
         dto.setUgljeniHidrati(p.getUgljeniHidrati());
+        dto.setDostupan(p.isDostupan());
+        dto.setNedostupanRazlog(p.getNedostupanRazlog() != null ? p.getNedostupanRazlog().name() : null);
         dto.setAlergeniNazivi(
                 p.getAlergeni().stream()
                         .map(alergen -> alergen.getNaziv())
@@ -35,6 +37,7 @@ public class ProizvodMapper {
         p.setProteini(dto.getProteini());
         p.setMasti(dto.getMasti());
         p.setUgljeniHidrati(dto.getUgljeniHidrati());
+        p.setDostupan(dto.getDostupan() == null || dto.getDostupan());
         return p;
     }
 }

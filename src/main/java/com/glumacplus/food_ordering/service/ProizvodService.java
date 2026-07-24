@@ -5,6 +5,7 @@ import com.glumacplus.food_ordering.dto.ProizvodMapper;
 import com.glumacplus.food_ordering.dto.ProizvodViewDto;
 import com.glumacplus.food_ordering.model.Alergen;
 import com.glumacplus.food_ordering.model.Proizvod;
+import com.glumacplus.food_ordering.model.RazlogNedostupnosti;
 import com.glumacplus.food_ordering.repository.AlergenRepository;
 import com.glumacplus.food_ordering.repository.ProizvodRepository;
 import org.springframework.http.HttpStatus;
@@ -111,9 +112,29 @@ public class ProizvodService {
         p.setProteini(dto.getProteini());
         p.setMasti(dto.getMasti());
         p.setUgljeniHidrati(dto.getUgljeniHidrati());
+        if (dto.getDostupan() != null) {
+            p.setDostupan(dto.getDostupan());
+        }
 
         p = repository.save(p);
         return ProizvodMapper.toViewDto(p);
+    }
+
+    /**
+     * Postavlja dostupnost proizvoda za naručivanje.
+     *
+     * @param id identifikator proizvoda
+     * @param dostupan {@code true} ako je proizvod dostupan
+     * @return ažurirani proizvod
+     * @throws ResponseStatusException sa statusom 404 ako proizvod ne postoji
+     */
+    public ProizvodViewDto setDostupnost(Long id, boolean dostupan, RazlogNedostupnosti razlog) {
+        Proizvod p = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proizvod nije pronađen"));
+        p.setDostupan(dostupan);
+        // Kad je dostupan — razlog se briše; kad nije — podrazumevano "do daljnjeg".
+        p.setNedostupanRazlog(dostupan ? null : (razlog != null ? razlog : RazlogNedostupnosti.DO_DALJNJEG));
+        return ProizvodMapper.toViewDto(repository.save(p));
     }
 
     /**

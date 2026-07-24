@@ -3,6 +3,7 @@ package com.glumacplus.food_ordering.controller;
 import com.glumacplus.food_ordering.dto.ProizvodAlergeniUpdateDto;
 import com.glumacplus.food_ordering.dto.ProizvodDto;
 import com.glumacplus.food_ordering.dto.ProizvodViewDto;
+import com.glumacplus.food_ordering.model.RazlogNedostupnosti;
 import com.glumacplus.food_ordering.service.ProizvodService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,16 @@ public class ProizvodController {
             @RequestBody @Valid ProizvodAlergeniUpdateDto dto
     ) {
         return ResponseEntity.ok(service.setAlergeni(id, dto.getAlergeniIds()));
+    }
+
+    @PatchMapping("/{id}/dostupnost")
+    @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
+    public ResponseEntity<ProizvodViewDto> setDostupnost(
+            @PathVariable Long id,
+            @RequestParam boolean dostupan,
+            @RequestParam(required = false) RazlogNedostupnosti razlog
+    ) {
+        return ResponseEntity.ok(service.setDostupnost(id, dostupan, razlog));
     }
 
     @DeleteMapping("/{id}")

@@ -1,6 +1,7 @@
 package com.glumacplus.food_ordering.repository;
 
 import com.glumacplus.food_ordering.model.Proizvod;
+import com.glumacplus.food_ordering.model.RazlogNedostupnosti;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.lang.NonNull;
@@ -20,4 +21,6 @@ public interface ProizvodRepository extends JpaRepository<Proizvod, Long> {
     List<Proizvod> findByNazivContainingIgnoreCaseOrTipContainingIgnoreCase(String nazivTerm, String tipTerm);
 
     boolean existsByNazivAndTip(String naziv, String tip);
+
+    List<Proizvod> findAllByNedostupanRazlog(RazlogNedostupnosti razlog);
 }

@@ -22,6 +22,9 @@ public class ProizvodDto {
     @PositiveOrZero private double masti;
     @PositiveOrZero private double ugljeniHidrati;
 
+    /** Dostupnost; ako je {@code null} pri kreiranju, podrazumeva se {@code true}. */
+    private Boolean dostupan;
+
 
     public String getNaziv() { return naziv; }
     public void setNaziv(String naziv) { this.naziv = naziv; }
@@ -39,4 +42,6 @@ public class ProizvodDto {
     public void setMasti(double masti) { this.masti = masti; }
     public double getUgljeniHidrati() { return ugljeniHidrati; }
     public void setUgljeniHidrati(double ugljeniHidrati) { this.ugljeniHidrati = ugljeniHidrati; }
+    public Boolean getDostupan() { return dostupan; }
+    public void setDostupan(Boolean dostupan) { this.dostupan = dostupan; }
 }

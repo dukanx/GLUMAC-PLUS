@@ -11,6 +11,8 @@ public class ProizvodViewDto {
     private BigDecimal cena;
     private String jedinicaMere;
     private double kalorije, proteini, masti, ugljeniHidrati;
+    private boolean dostupan = true;
+    private String nedostupanRazlog;
     private List<String> alergeniNazivi = new ArrayList<>();
 
 
@@ -32,6 +34,10 @@ public class ProizvodViewDto {
     public void setMasti(double masti) { this.masti = masti; }
     public double getUgljeniHidrati() { return ugljeniHidrati; }
     public void setUgljeniHidrati(double ugljeniHidrati) { this.ugljeniHidrati = ugljeniHidrati; }
+    public boolean isDostupan() { return dostupan; }
+    public void setDostupan(boolean dostupan) { this.dostupan = dostupan; }
+    public String getNedostupanRazlog() { return nedostupanRazlog; }
+    public void setNedostupanRazlog(String nedostupanRazlog) { this.nedostupanRazlog = nedostupanRazlog; }
     public List<String> getAlergeniNazivi() { return alergeniNazivi; }
     public void setAlergeniNazivi(List<String> alergeniNazivi) { this.alergeniNazivi = alergeniNazivi; }
 }

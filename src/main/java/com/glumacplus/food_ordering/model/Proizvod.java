@@ -55,6 +55,15 @@ public class Proizvod {
     /** Količina ugljenih hidrata. */
     private double ugljeniHidrati;
 
+    /** Da li je proizvod trenutno dostupan za naručivanje. */
+    @Column(nullable = false)
+    private boolean dostupan = true;
+
+    /** Razlog nedostupnosti (samo kad {@code dostupan == false}), inače {@code null}. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "nedostupan_razlog", length = 32)
+    private RazlogNedostupnosti nedostupanRazlog;
+
     /** Skup alergena koje proizvod sadrži. */
     @ManyToMany
     @JoinTable(
@@ -257,6 +266,34 @@ public class Proizvod {
         }
         this.ugljeniHidrati = ugljeniHidrati;
     }
+
+    /**
+     * Vraća da li je proizvod trenutno dostupan za naručivanje.
+     *
+     * @return {@code true} ako je dostupan
+     */
+    public boolean isDostupan() { return dostupan; }
+
+    /**
+     * Postavlja dostupnost proizvoda za naručivanje.
+     *
+     * @param dostupan {@code true} ako je dostupan
+     */
+    public void setDostupan(boolean dostupan) { this.dostupan = dostupan; }
+
+    /**
+     * Vraća razlog nedostupnosti (ili {@code null} ako je dostupan).
+     *
+     * @return razlog nedostupnosti
+     */
+    public RazlogNedostupnosti getNedostupanRazlog() { return nedostupanRazlog; }
+
+    /**
+     * Postavlja razlog nedostupnosti.
+     *
+     * @param nedostupanRazlog razlog nedostupnosti ({@code null} kad je dostupan)
+     */
+    public void setNedostupanRazlog(RazlogNedostupnosti nedostupanRazlog) { this.nedostupanRazlog = nedostupanRazlog; }
 
     /**
      * Vraća skup alergena koje proizvod sadrži.
