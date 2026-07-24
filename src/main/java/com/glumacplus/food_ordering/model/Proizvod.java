@@ -64,6 +64,11 @@ public class Proizvod {
     @Column(name = "nedostupan_razlog", length = 32)
     private RazlogNedostupnosti nedostupanRazlog;
 
+    /** Ukus proizvoda — za poklapanje dodataka sa palačinkama; {@code null} gde nije primenljivo. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ukus", length = 16)
+    private Ukus ukus;
+
     /** Skup alergena koje proizvod sadrži. */
     @ManyToMany
     @JoinTable(
@@ -294,6 +299,20 @@ public class Proizvod {
      * @param nedostupanRazlog razlog nedostupnosti ({@code null} kad je dostupan)
      */
     public void setNedostupanRazlog(RazlogNedostupnosti nedostupanRazlog) { this.nedostupanRazlog = nedostupanRazlog; }
+
+    /**
+     * Vraća ukus proizvoda (ili {@code null} ako nije primenljiv).
+     *
+     * @return ukus proizvoda
+     */
+    public Ukus getUkus() { return ukus; }
+
+    /**
+     * Postavlja ukus proizvoda.
+     *
+     * @param ukus ukus proizvoda ({@code null} gde nije primenljiv)
+     */
+    public void setUkus(Ukus ukus) { this.ukus = ukus; }
 
     /**
      * Vraća skup alergena koje proizvod sadrži.
