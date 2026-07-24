@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { tipLabela, type Porudzbina, type StatusPorudzbine } from '../types/porudzbina';
-import { Zvono, Refresh } from '../components/Doodle';
+import { Zvono, Refresh, Sat } from '../components/Doodle';
+import ZatvoriSmenuModal from '../components/ZatvoriSmenuModal';
+import * as smenaApi from '../api/smena';
 import styles from './PanelPorudzbina.module.css';
 
 type Tab = 'PRIPREMA' | 'ZAVRSENE' | 'OTKAZANE';
@@ -33,6 +35,55 @@ function formatDatum(datum: string) {
     });
 }
 
+/* ─── Odbrojavanje vremena pripreme ───────────────────────────
+   Početak pamtimo lokalno po porudžbini (panel je jedan tablet),
+   pa MM:SS otkucava u realnom vremenu. */
+const LS_PANEL_START = 'panel_vreme_start';
+
+function ucitajStartMapu(): Record<number, number> {
+    try { return JSON.parse(localStorage.getItem(LS_PANEL_START) || '{}'); }
+    catch { return {}; }
+}
+
+function stampStart(id: number): number {
+    const mapa = ucitajStartMapu();
+    if (!mapa[id]) {
+        mapa[id] = Date.now();
+        localStorage.setItem(LS_PANEL_START, JSON.stringify(mapa));
+    }
+    return mapa[id];
+}
+
+function obrisiStart(id: number) {
+    const mapa = ucitajStartMapu();
+    if (mapa[id] != null) {
+        delete mapa[id];
+        localStorage.setItem(LS_PANEL_START, JSON.stringify(mapa));
+    }
+}
+
+function Odbrojavanje({ id, minuta }: { id: number; minuta: number }) {
+    const cilj = useMemo(() => stampStart(id) + minuta * 60000, [id, minuta]);
+    const [preostalo, setPreostalo] = useState(() => Math.round((cilj - Date.now()) / 1000));
+
+    useEffect(() => {
+        const tick = () => setPreostalo(Math.round((cilj - Date.now()) / 1000));
+        tick();
+        const t = setInterval(tick, 1000);
+        return () => clearInterval(t);
+    }, [cilj]);
+
+    const isteklo = preostalo <= 0;
+    const prikazMin = Math.ceil(Math.abs(preostalo) / 60);
+    return (
+        <span className={`${styles.vremeChip} ${isteklo ? styles.vremeChipIsteklo : ''}`}>
+            <Sat size={20} strokeWidth={2.4} />
+            <span className={styles.vremeBroj}>{isteklo ? `+${prikazMin}` : prikazMin}</span>
+            <span className={styles.vremeMin}>min</span>
+        </span>
+    );
+}
+
 /* ─── Kartica porudžbine ──────────────────────────────────── */
 
 interface KarticaProps {
@@ -53,6 +104,11 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onSpremno, onPreuzeto, onOt
     const sveStavke = p.stavke ?? [];
     const vidljiveStavke = stavkeProsirene ? sveStavke : sveStavke.slice(0, PRIKAZI_STAVKI);
     const skrivenoStavki = sveStavke.length - PRIKAZI_STAVKI;
+
+    // Popust (za kasu — radnica mora da unese isti %). Izvedeno iz pune vs. konačne cene.
+    const popustProcenat = p.originalnaCena != null && p.originalnaCena > p.ukupanIznos
+        ? Math.round((1 - p.ukupanIznos / p.originalnaCena) * 100)
+        : 0;
 
     const potvrdiCustom = () => {
         const v = Number(customVreme);
@@ -78,10 +134,13 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onSpremno, onPreuzeto, onOt
                         <span className={styles.tipBadge}>{tipLabela(p.tipPorudzbine)}</span>
                     )}
                 </div>
-                <span className={`${styles.statusBadge} ${styles[`badge_${p.status}`]}`}>
-                    {STATUS_LABELA[p.status]}
-                    {p.status === 'U_PRIPREMI' && p.procenjenoVreme != null && ` · ~${p.procenjenoVreme} min`}
-                </span>
+                {p.status === 'U_PRIPREMI' && p.procenjenoVreme != null ? (
+                    <Odbrojavanje id={p.porudzbinaId} minuta={p.procenjenoVreme} />
+                ) : (
+                    <span className={`${styles.statusBadge} ${styles[`badge_${p.status}`]}`}>
+                        {STATUS_LABELA[p.status]}
+                    </span>
+                )}
             </div>
 
             {p.korisnikIme && <p className={styles.kupac}>{p.korisnikIme}</p>}
@@ -112,12 +171,24 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onSpremno, onPreuzeto, onOt
             )}
 
             <div className={styles.karticaDno}>
-                <span className={styles.ukupno}>{p.ukupanIznos.toLocaleString('sr-RS')} RSD</span>
+                <div className={styles.cenaBlok}>
+                    <span className={styles.ukupno}>
+                        {p.ukupanIznos.toLocaleString('sr-RS')}<span className={styles.rsd}>RSD</span>
+                    </span>
+                    {popustProcenat > 0 && (
+                        <span className={styles.popustBlok}>
+                            <span className={styles.popustBadge}>popust −{popustProcenat}%</span>
+                            <span className={styles.punaCena}>
+                                puna {p.originalnaCena!.toLocaleString('sr-RS')}
+                            </span>
+                        </span>
+                    )}
+                </div>
 
-                <div className={styles.akcije}>
+                <div className={`${styles.akcije} ${p.status === 'NOVA' ? styles.akcijeNova : ''}`}>
                     {/* NOVA — izbor vremena JE prihvatanje (bez zasebnog koraka); ili odbij */}
                     {p.status === 'NOVA' && !customMode && (
-                        <div className={styles.vremeBiraci}>
+                        <div className={`${styles.vremeBiraci} ${styles.vremeBiraciNova}`}>
                             <span className={styles.vremeLabel}>prihvati za:</span>
                             {PRESET_VREMENA.map((v) => (
                                 <button
@@ -133,7 +204,7 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onSpremno, onPreuzeto, onOt
                                 drugo
                             </button>
                             <button
-                                className={`${styles.btn} ${styles.btnOtkazi}`}
+                                className={`${styles.btn} ${styles.btnOtkazi} ${styles.odbijUgao}`}
                                 onClick={() => onOtkazi(p.porudzbinaId)}
                                 disabled={azurira}
                             >
@@ -224,7 +295,13 @@ export default function PanelPorudzbina() {
     const [ucitava, setUcitava] = useState(true);
     const [tab, setTab] = useState<Tab>('PRIPREMA');
     const [azurira, setAzurira] = useState<number | null>(null);
-    const [zvuk, setZvuk] = useState(false);
+    // Zvuk je podrazumevano UKLJUČEN; audio se otključava na prvi dodir/klik (browser policy).
+    // Ikonica je providna dok se ne otključa, pa crna — da ne zbuni pre prve interakcije.
+    const [zvuk, setZvuk] = useState(true);
+    const [zvukOtkljucan, setZvukOtkljucan] = useState(false);
+    const [osvezava, setOsvezava] = useState(false);
+    const [stanjeSmene, setStanjeSmene] = useState<smenaApi.SmenaStanje | null>(null);
+    const [smenaModal, setSmenaModal] = useState(false);
 
     // Auto-refresh se pauzira ~4s oko akcije da ne pregazi tek promenjeno stanje.
     const poslednjaAkcija = useRef(0);
@@ -296,8 +373,9 @@ export default function PanelPorudzbina() {
 
     // Prvo vreme (dok je NOVA — bez notifikacije), pa status — notifikacija
     // "prihvaćena, ~X min" ide tek na prelazu NOVA → U_PRIPREMI.
-    const prihvati = (id: number, vreme: number) =>
-        izvrsi(id, { status: 'U_PRIPREMI', procenjenoVreme: vreme }, async () => {
+    const prihvati = (id: number, vreme: number) => {
+        stampStart(id); // start odbrojavanja = trenutak prihvatanja
+        return izvrsi(id, { status: 'U_PRIPREMI', procenjenoVreme: vreme }, async () => {
             const vremeRes = await fetch(
                 `${API}/api/porudzbine/${id}/procenjeno-vreme?procenjenoVreme=${vreme}`,
                 { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } }
@@ -305,10 +383,11 @@ export default function PanelPorudzbina() {
             if (!vremeRes.ok) return false;
             return patchStatus(id, 'U_PRIPREMI');
         });
+    };
 
-    const spremno  = (id: number) => izvrsi(id, { status: 'SPREMNA' },     () => patchStatus(id, 'SPREMNA'));
-    const preuzeto = (id: number) => izvrsi(id, { status: 'REALIZOVANA' }, () => patchStatus(id, 'REALIZOVANA'));
-    const otkazi   = (id: number) => izvrsi(id, { status: 'OTKAZANA' },    () => patchStatus(id, 'OTKAZANA'));
+    const spremno  = (id: number) => { obrisiStart(id); return izvrsi(id, { status: 'SPREMNA' },     () => patchStatus(id, 'SPREMNA')); };
+    const preuzeto = (id: number) => { obrisiStart(id); return izvrsi(id, { status: 'REALIZOVANA' }, () => patchStatus(id, 'REALIZOVANA')); };
+    const otkazi   = (id: number) => { obrisiStart(id); return izvrsi(id, { status: 'OTKAZANA' },    () => patchStatus(id, 'OTKAZANA')); };
 
     // Nove (neprihvaćene) idu u popup, ne u tab.
     const nove = useMemo(
@@ -332,21 +411,30 @@ export default function PanelPorudzbina() {
             .sort((a, b) => b.porudzbinaId - a.porudzbinaId);
     }, [porudzbine, tab]);
 
-    // Zvučni alarm: pišti dok ima neprihvaćenih porudžbina (i dok je zvuk uključen).
+    // Zvučni alarm: topli dvotonski "ding-dong" dok ima neprihvaćenih porudžbina.
     const bip = useCallback(() => {
         const ctx = audioCtxRef.current;
         if (!ctx) return;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.value = 880;
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.35);
+        // Jedan "zvonak" ton — dva sinusa (osnovni + kvinta) uz meki envelope.
+        const ton = (freq: number, kada: number, trajanje: number, jacina: number) => {
+            const t = ctx.currentTime + kada;
+            [freq, freq * 1.5].forEach((f, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = f;
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                const v = jacina * (i === 0 ? 1 : 0.4);
+                gain.gain.setValueAtTime(0.0001, t);
+                gain.gain.exponentialRampToValueAtTime(v, t + 0.012);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + trajanje);
+                osc.start(t);
+                osc.stop(t + trajanje);
+            });
+        };
+        ton(1046.5, 0, 0.45, 0.3);      // C6 — "ding"
+        ton(784.0, 0.16, 0.55, 0.26);   // G5 — "dong" (silazna kvinta)
     }, []);
 
     useEffect(() => {
@@ -356,21 +444,73 @@ export default function PanelPorudzbina() {
         return () => clearInterval(id);
     }, [zvuk, nove.length, bip]);
 
+    // Browser blokira zvuk dok korisnik ne interaguje sa stranicom. Zvuk je uključen
+    // po defaultu, pa audio otključavamo na prvi dodir/klik/taster bilo gde na panelu.
+    useEffect(() => {
+        const otkljucaj = () => {
+            const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+            if (!audioCtxRef.current && Ctx) audioCtxRef.current = new Ctx();
+            audioCtxRef.current?.resume();
+            setZvukOtkljucan(true);
+            window.removeEventListener('pointerdown', otkljucaj);
+            window.removeEventListener('keydown', otkljucaj);
+        };
+        window.addEventListener('pointerdown', otkljucaj);
+        window.addEventListener('keydown', otkljucaj);
+        return () => {
+            window.removeEventListener('pointerdown', otkljucaj);
+            window.removeEventListener('keydown', otkljucaj);
+        };
+    }, []);
+
     const toggleZvuk = () => {
         // Prvi klik otključava audio (browser autoplay policy zahteva gest korisnika).
-        if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
-        audioCtxRef.current.resume();
-        setZvuk((v) => !v);
+        // webkit prefiks za Safari; potvrdni bip da se ODMAH čuje da zvuk radi.
+        const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!audioCtxRef.current && Ctx) audioCtxRef.current = new Ctx();
+        audioCtxRef.current?.resume();
+        setZvukOtkljucan(true);
+        const novi = !zvuk;
+        if (novi) bip();
+        setZvuk(novi);
+    };
+
+    // Ručni refresh sa vidljivim odzivom (ikonica se vrti bar ~0.6s).
+    const rucnoOsvezi = async () => {
+        if (osvezava) return;
+        setOsvezava(true);
+        const t0 = Date.now();
+        await fetchPorudzbine(true);
+        setTimeout(() => setOsvezava(false), Math.max(0, 600 - (Date.now() - t0)));
+    };
+
+    // Stanje smene (prima porudžbine / pauzirano / van radnog vremena) — povremeno osvežavanje.
+    useEffect(() => {
+        if (!korisnik) return;
+        const ucitaj = () => smenaApi.stanjeSmene().then(setStanjeSmene).catch(() => { });
+        ucitaj();
+        const id = setInterval(ucitaj, 15000);
+        return () => clearInterval(id);
+    }, [korisnik]);
+
+    const togglePauza = async () => {
+        const bilo = stanjeSmene?.pauzirano ?? false;
+        setStanjeSmene(s => s ? { ...s, pauzirano: !bilo, primaPorudzbine: !bilo ? false : s.uRadnomVremenu } : s);
+        try {
+            setStanjeSmene(bilo ? await smenaApi.nastaviSmenu() : await smenaApi.pauzirajSmenu());
+        } catch {
+            smenaApi.stanjeSmene().then(setStanjeSmene).catch(() => { });
+        }
     };
 
     const ZvukToggle = (
         <button
-            className={`${styles.zvukBtn} ${zvuk ? styles.zvukAktivan : ''}`}
+            className={`${styles.zvukBtn} ${zvuk && zvukOtkljucan ? styles.zvukAktivan : ''}`}
             onClick={toggleZvuk}
             title={zvuk ? 'Isključi zvuk' : 'Uključi zvuk'}
+            aria-label={zvuk ? 'Isključi zvuk' : 'Uključi zvuk'}
         >
-            <Zvono size={17} strokeWidth={2.2} />
-            {zvuk ? 'Zvuk' : 'Zvuk isklj.'}
+            <Zvono size={19} strokeWidth={2.2} />
         </button>
     );
 
@@ -379,15 +519,32 @@ export default function PanelPorudzbina() {
             {/* Header */}
             <header className={styles.header}>
                 <div className={styles.headerLevo}>
-                    <span className={styles.oznaka}>panel zaposlenog</span>
                     <h1 className={styles.naslov}>Porudžbine</h1>
                 </div>
                 <div className={styles.headerDesno}>
+                    {stanjeSmene && (
+                        <span className={`${styles.smenaStatus} ${
+                            stanjeSmene.primaPorudzbine ? styles.smenaStatusPrima : styles.smenaStatusZatvoreno
+                        }`}>
+                            <span className={styles.smenaTacka} />
+                            {stanjeSmene.primaPorudzbine ? 'OTVORENO' : 'ZATVORENO'}
+                        </span>
+                    )}
+                    <button className={styles.zatvoriBtn} onClick={() => setSmenaModal(true)}>
+                        Zatvori smenu
+                    </button>
+                    <button
+                        className={`${styles.pauzaBtn} ${stanjeSmene?.pauzirano ? styles.pauzaBtnNastavi : ''}`}
+                        onClick={togglePauza}
+                    >
+                        {stanjeSmene?.pauzirano ? '▶ Nastavi' : '⏸ Pauziraj'}
+                    </button>
                     {ZvukToggle}
-                    <span className={styles.zivo}>
-                        <span className={styles.zivoTacka} /> uživo
-                    </span>
-                    <button className={styles.refreshBtn} onClick={() => fetchPorudzbine(true)} title="Osveži">
+                    <button
+                        className={`${styles.refreshBtn} ${osvezava ? styles.refreshBtnSpin : ''}`}
+                        onClick={rucnoOsvezi}
+                        title="Osveži"
+                    >
                         <Refresh size={18} strokeWidth={2.2} />
                     </button>
                 </div>
@@ -444,12 +601,12 @@ export default function PanelPorudzbina() {
                     <div className={`${styles.kolona} ${styles.kolonaSpremne}`}>
                         <div className={styles.kolonaGlava}>
                             <span className={`${styles.kolonaNaslov} ${styles.kolonaNaslovZel}`}>
-                                spremne — čekaju preuzimanje
+                                spremne
                             </span>
                             <span className={`${styles.kolonaBroj} ${styles.kolonaBrojZel}`}>{spremne.length}</span>
                         </div>
                         {spremne.length === 0 ? (
-                            <div className={styles.kolonaPrazno}>nijedna ne čeka preuzimanje</div>
+                            <div className={styles.kolonaPrazno}>nema spremnih</div>
                         ) : (
                             <div className={styles.kolonaLista}>
                                 <AnimatePresence initial={false}>
@@ -533,6 +690,16 @@ export default function PanelPorudzbina() {
                             </div>
                         </motion.div>
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Modal: zatvori smenu (kraj radnog dana) ── */}
+            <AnimatePresence>
+                {smenaModal && (
+                    <ZatvoriSmenuModal
+                        onClose={() => setSmenaModal(false)}
+                        onZatvoreno={() => smenaApi.stanjeSmene().then(setStanjeSmene).catch(() => { })}
+                    />
                 )}
             </AnimatePresence>
         </div>

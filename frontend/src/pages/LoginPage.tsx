@@ -25,7 +25,9 @@ export default function LoginPage() {
     try {
       const data = await authApi.login(email, lozinka);
       login(data.korisnik, data.token);
-      navigate('/meni');
+      // Zaposleni/admin idu pravo na panel, ostali na meni.
+      const uloga = data.korisnik.uloga;
+      navigate(uloga === 'ADMIN' || uloga === 'ZAPOSLENI' ? '/panel' : '/meni');
     } catch (e) {
       setGreska(e instanceof ApiError
         ? (e.body?.message ?? 'Pogrešan email ili lozinka.')

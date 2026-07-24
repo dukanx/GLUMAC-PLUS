@@ -92,7 +92,10 @@ export default function Navbar() {
                 {/* Centar — navigacija (desktop) */}
                 <div className={styles.center}>
                     {jeZaposleni ? (
-                        <NavLink to="/panel" className={navKlasa}>Panel</NavLink>
+                        <>
+                            <NavLink to="/panel" end className={navKlasa}>Porudžbine</NavLink>
+                            <NavLink to="/panel/proizvodi" className={navKlasa}>Proizvodi</NavLink>
+                        </>
                     ) : (
                         <>
                             <NavLink to="/meni" className={navKlasa}>Meni</NavLink>
@@ -170,12 +173,20 @@ export default function Navbar() {
                 </div>
                 <nav className={styles.mobLinkovi}>
                     {jeZaposleni ? (
-                        <NavLink to="/panel" className={mobKlasa} onClick={zatvori}>
-                            Panel
-                            <span className={styles.mobIko}>
-                                <svg viewBox="0 0 48 62" fill="none"><path d="M12 12 L 36 12 L 36 56 L 12 56 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /><path d="M18 12 L 18 7 C 18 6, 19 5, 20 5 L 28 5 C 29 5, 30 6, 30 7 L 30 12" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M18 27 L 30 27 M18 37 L 30 37 M18 47 L 26 47" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
-                            </span>
-                        </NavLink>
+                        <>
+                            <NavLink to="/panel" end className={mobKlasa} onClick={zatvori}>
+                                Porudžbine
+                                <span className={styles.mobIko}>
+                                    <svg viewBox="0 0 48 62" fill="none"><path d="M12 12 L 36 12 L 36 56 L 12 56 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /><path d="M18 12 L 18 7 C 18 6, 19 5, 20 5 L 28 5 C 29 5, 30 6, 30 7 L 30 12" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="M18 27 L 30 27 M18 37 L 30 37 M18 47 L 26 47" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                                </span>
+                            </NavLink>
+                            <NavLink to="/panel/proizvodi" className={mobKlasa} onClick={zatvori}>
+                                Proizvodi
+                                <span className={styles.mobIko}>
+                                    <svg viewBox="0 0 60 70" fill="none"><path d="M10 8 C 24 4, 38 4, 50 8 L 48 62 C 36 66, 24 66, 12 62 Z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /><path d="M20 24 L 40 24 M20 34 L 42 34 M20 44 L 36 44" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+                                </span>
+                            </NavLink>
+                        </>
                     ) : (
                         <>
                             <NavLink to="/meni" className={mobKlasa} onClick={zatvori}>

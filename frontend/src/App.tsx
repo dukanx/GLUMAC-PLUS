@@ -12,6 +12,7 @@ import PrivateRoute from './components/PrivateRoute';
 import StatusPorudzbine from './components/StatusPorudzbine';
 import FloatingBubble from './components/FloatingBubble';
 import PanelPorudzbina from './pages/PanelPorudzbina';
+import PanelProizvodi from './components/PanelProizvodi';
 import OmiljenePage from './pages/OmiljenePage';
 
 export default function App() {
@@ -36,6 +37,9 @@ export default function App() {
         } />
         <Route path="/panel" element={
           <PrivateRoute><PanelPorudzbina /></PrivateRoute>
+        } />
+        <Route path="/panel/proizvodi" element={
+          <PrivateRoute><PanelProizvodi /></PrivateRoute>
         } />
       </Routes>
     </>
