@@ -21,10 +21,11 @@ function ProizvodKartica({
 }: Props) {
     const cena = Math.round(proizvod.cena);
     const cenaSaPopustom = popust > 0 ? Math.round(cena * (1 - popust / 100)) : null;
+    const dostupan = proizvod.dostupan !== false;
 
     return (
         <motion.div
-            className={styles.red}
+            className={`${styles.red} ${!dostupan ? styles.redNedostupno : ''}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
@@ -35,7 +36,10 @@ function ProizvodKartica({
                 <Klose size={30} strokeWidth={1.8} />
             </div>
             <div className={styles.levo}>
-                <h3 className={styles.naziv}>{proizvod.naziv}</h3>
+                <h3 className={styles.naziv}>
+                    {proizvod.naziv}
+                    {!dostupan && <span className={styles.nemaDanasTag}>nema danas</span>}
+                </h3>
                 {proizvod.opis && <p className={styles.opis}>{proizvod.opis}</p>}
             </div>
 
@@ -48,6 +52,9 @@ function ProizvodKartica({
                 {cenaSaPopustom ?? cena}<span className={styles.rsd}>RSD</span>
             </span>
 
+            {!dostupan ? (
+                <span className={styles.nedostupnoBtn} aria-label="Trenutno nedostupno">✕</span>
+            ) : (
             <AnimatePresence mode="wait">
                 {kolicina === 0 ? (
                     <motion.button
@@ -91,6 +98,7 @@ function ProizvodKartica({
                     </motion.div>
                 )}
             </AnimatePresence>
+            )}
         </motion.div>
     );
 }
