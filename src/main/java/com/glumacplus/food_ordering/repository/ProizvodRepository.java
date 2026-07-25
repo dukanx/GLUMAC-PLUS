@@ -2,6 +2,7 @@ package com.glumacplus.food_ordering.repository;
 
 import com.glumacplus.food_ordering.model.Proizvod;
 import com.glumacplus.food_ordering.model.RazlogNedostupnosti;
+import com.glumacplus.food_ordering.model.Ukus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.lang.NonNull;
@@ -23,4 +24,10 @@ public interface ProizvodRepository extends JpaRepository<Proizvod, Long> {
     boolean existsByNazivAndTip(String naziv, String tip);
 
     List<Proizvod> findAllByNedostupanRazlog(RazlogNedostupnosti razlog);
+
+    /** Dostupni dodaci zadatog ukusa (za konfigurator uz palačinku). */
+    List<Proizvod> findByTipAndUkusAndDostupanTrueOrderByNazivAsc(String tip, Ukus ukus);
+
+    /** Svi dostupni dodaci (kad ukus nije poznat/bitan). */
+    List<Proizvod> findByTipAndDostupanTrueOrderByNazivAsc(String tip);
 }

@@ -13,6 +13,8 @@ public class ProizvodViewDto {
     private double kalorije, proteini, masti, ugljeniHidrati;
     private boolean dostupan = true;
     private String nedostupanRazlog;
+    /** Ukus proizvoda (SLATKO/SLANO) — za poklapanje dodataka; {@code null} gde nije primenljiv. */
+    private String ukus;
     private List<String> alergeniNazivi = new ArrayList<>();
 
 
@@ -38,6 +40,8 @@ public class ProizvodViewDto {
     public void setDostupan(boolean dostupan) { this.dostupan = dostupan; }
     public String getNedostupanRazlog() { return nedostupanRazlog; }
     public void setNedostupanRazlog(String nedostupanRazlog) { this.nedostupanRazlog = nedostupanRazlog; }
+    public String getUkus() { return ukus; }
+    public void setUkus(String ukus) { this.ukus = ukus; }
     public List<String> getAlergeniNazivi() { return alergeniNazivi; }
     public void setAlergeniNazivi(List<String> alergeniNazivi) { this.alergeniNazivi = alergeniNazivi; }
 }

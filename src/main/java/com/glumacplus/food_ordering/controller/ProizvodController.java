@@ -4,6 +4,7 @@ import com.glumacplus.food_ordering.dto.ProizvodAlergeniUpdateDto;
 import com.glumacplus.food_ordering.dto.ProizvodDto;
 import com.glumacplus.food_ordering.dto.ProizvodViewDto;
 import com.glumacplus.food_ordering.model.RazlogNedostupnosti;
+import com.glumacplus.food_ordering.model.Ukus;
 import com.glumacplus.food_ordering.service.ProizvodService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,14 @@ public class ProizvodController {
     @GetMapping
     public ResponseEntity<List<ProizvodViewDto>> getAll(@RequestParam(name = "q", required = false) String term) {
         return ResponseEntity.ok(service.getAll(term));
+    }
+
+    /** Dostupni dodaci za konfigurator; bez parametra vraća sve dodatke. */
+    @GetMapping("/dodaci")
+    public ResponseEntity<List<ProizvodViewDto>> getDodaci(
+            @RequestParam(required = false) Ukus ukus
+    ) {
+        return ResponseEntity.ok(service.getDodaci(ukus));
     }
 
     @GetMapping("/{id}")

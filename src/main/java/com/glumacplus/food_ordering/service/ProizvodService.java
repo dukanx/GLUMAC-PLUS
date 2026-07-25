@@ -6,6 +6,7 @@ import com.glumacplus.food_ordering.dto.ProizvodViewDto;
 import com.glumacplus.food_ordering.model.Alergen;
 import com.glumacplus.food_ordering.model.Proizvod;
 import com.glumacplus.food_ordering.model.RazlogNedostupnosti;
+import com.glumacplus.food_ordering.model.Ukus;
 import com.glumacplus.food_ordering.repository.AlergenRepository;
 import com.glumacplus.food_ordering.repository.ProizvodRepository;
 import org.springframework.http.HttpStatus;
@@ -57,6 +58,23 @@ public class ProizvodService {
         }
 
         return proizvodi.stream()
+                .map(ProizvodMapper::toViewDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Vraća dostupne dodatke, opciono samo one koji odgovaraju zadatom ukusu
+     * (slatki dodaci uz slatke stavke, slani uz slane).
+     *
+     * @param ukus željeni ukus, ili {@code null} za sve dostupne dodatke
+     * @return lista dodataka sortirana po nazivu
+     */
+    public List<ProizvodViewDto> getDodaci(Ukus ukus) {
+        List<Proizvod> dodaci = ukus == null
+                ? repository.findByTipAndDostupanTrueOrderByNazivAsc(Proizvod.TIP_DODACI)
+                : repository.findByTipAndUkusAndDostupanTrueOrderByNazivAsc(Proizvod.TIP_DODACI, ukus);
+
+        return dodaci.stream()
                 .map(ProizvodMapper::toViewDto)
                 .collect(Collectors.toList());
     }

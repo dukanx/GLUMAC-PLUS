@@ -18,6 +18,7 @@ public class ProizvodMapper {
         dto.setUgljeniHidrati(p.getUgljeniHidrati());
         dto.setDostupan(p.isDostupan());
         dto.setNedostupanRazlog(p.getNedostupanRazlog() != null ? p.getNedostupanRazlog().name() : null);
+        dto.setUkus(p.getUkus() != null ? p.getUkus().name() : null);
         dto.setAlergeniNazivi(
                 p.getAlergeni().stream()
                         .map(alergen -> alergen.getNaziv())
