@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
+import { cenaStavke } from '../utils/korpa';
 import styles from './CartDrawer.module.css';
 import * as porudzbineApi from '../api/porudzbine';
 import { ApiError } from '../api/client';
@@ -45,6 +46,10 @@ export default function CartDrawer() {
                 stavke: korpa.map(i => ({
                     proizvodId: i.proizvod.id,
                     kolicina: i.kolicina,
+                    dodaci: i.dodaci.map(d => ({
+                        proizvodId: d.proizvod.id,
+                        kolicina: d.kolicina,
+                    })),
                 })),
             });
             const novaPorudzbinaId: number | null = nova?.porudzbinaId ?? null;
@@ -125,7 +130,7 @@ export default function CartDrawer() {
                                 <AnimatePresence initial={false}>
                                     {korpa.map(item => (
                                         <motion.div
-                                            key={item.proizvod.id}
+                                            key={item.id}
                                             layout
                                             initial={{ opacity: 0, x: 20 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -138,18 +143,30 @@ export default function CartDrawer() {
                                                 </span>
                                                 <button
                                                     className={styles.ukloniBtn}
-                                                    onClick={() => ukloni(item.proizvod.id)}
+                                                    onClick={() => ukloni(item.id)}
                                                     aria-label={`Ukloni ${item.proizvod.naziv}`}
                                                 >
                                                     ✕
                                                 </button>
                                             </div>
+                                            {item.dodaci.length > 0 && (
+                                                <ul className={styles.dodaciStavke}>
+                                                    {item.dodaci.map(d => (
+                                                        <li key={d.proizvod.id} className={styles.dodatakStavka}>
+                                                            + {d.proizvod.naziv}
+                                                            <span className={styles.dodatakStavkaCena}>
+                                                                {Math.round(d.proizvod.cena * d.kolicina)}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
                                             <div className={styles.stavkaRed}>
                                                 <div className={styles.qty}>
                                                     <motion.button
                                                         whileTap={{ scale: 0.85 }}
                                                         className={styles.qtyBtn}
-                                                        onClick={() => smanji(item.proizvod.id)}
+                                                        onClick={() => smanji(item.id)}
                                                     >
                                                         −
                                                     </motion.button>
@@ -157,13 +174,13 @@ export default function CartDrawer() {
                                                     <motion.button
                                                         whileTap={{ scale: 0.85 }}
                                                         className={styles.qtyBtn}
-                                                        onClick={() => povecaj(item.proizvod.id)}
+                                                        onClick={() => povecaj(item.id)}
                                                     >
                                                         +
                                                     </motion.button>
                                                 </div>
                                                 <span className={styles.stavkaCena}>
-                                                    {Math.round(item.proizvod.cena * item.kolicina)}
+                                                    {Math.round(cenaStavke(item))}
                                                     <span className={styles.rsd}>RSD</span>
                                                 </span>
                                             </div>

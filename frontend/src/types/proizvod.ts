@@ -7,14 +7,33 @@ export interface Proizvod {
     tip: string;
     dostupan?: boolean;
     nedostupanRazlog?: RazlogNedostupnosti | null;
+    ukus?: Ukus | null;
     alergeniNazivi?: string[];
 }
 
 // Razlog zbog kog je proizvod skinut sa menija ("86 lista").
 export type RazlogNedostupnosti = 'DO_KRAJA_SMENE' | 'DO_DALJNJEG';
 
-// Stavka u korpi = proizvod + količina.
-export interface StavkaKorpe {
+// Ukus proizvoda — slatki dodaci idu uz slatke stavke, slani uz slane.
+// null/undefined = nije primenljivo (piće, žestoko).
+export type Ukus = 'SLATKO' | 'SLANO';
+
+// Kategorija pod kojom se vode dodaci (par backend konstante Proizvod.TIP_DODACI).
+// Dodaci se ne prikazuju kao zasebna kategorija u meniju kupca — biraju se uz stavku.
+export const TIP_DODACI = 'Dodaci';
+
+// Dodatak izabran uz stavku korpe (količina je po jednoj jedinici osnovnog proizvoda).
+export interface DodatakKorpe {
     proizvod: Proizvod;
     kolicina: number;
+}
+
+// Stavka u korpi = proizvod + količina + izabrani dodaci.
+// `id` je potpis (proizvod + dodaci): isti proizvod sa istim dodacima je ista stavka,
+// a sa različitim dodacima su dve odvojene stavke.
+export interface StavkaKorpe {
+    id: string;
+    proizvod: Proizvod;
+    kolicina: number;
+    dodaci: DodatakKorpe[];
 }

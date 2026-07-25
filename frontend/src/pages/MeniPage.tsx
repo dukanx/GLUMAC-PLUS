@@ -9,7 +9,8 @@ import MiniKorpa from '../components/MiniKorpa';
 import DetaljProizvoda from '../components/DetaljProizvoda';
 import { Zvezda } from '../components/Doodle';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
-import type { Proizvod } from '../types/proizvod';
+import { TIP_DODACI, type Proizvod } from '../types/proizvod';
+import { prefetchDodatke } from '../hooks/useDodaci';
 import * as proizvodiApi from '../api/proizvodi';
 import deliveryDoodle from '../assets/DeliveryDoodle.png';
 
@@ -31,7 +32,7 @@ function normalizuj(tekst: string): string {
 
 // ── Komponenta ─────────────────────────────────────────────────────────────
 export default function MeniPage() {
-    const { korpa, dodaj, povecaj, smanji } = useCart();
+    const { dodaj, kolicinaProizvoda, smanjiPoslednju } = useCart();
     const { korisnik, popust } = useAuth();
     const { raspored, danasKljuc, loading: radnoVremeLoading, imaPodataka } = useRadnoVreme();
 
@@ -44,7 +45,14 @@ export default function MeniPage() {
 
     useEffect(() => {
         proizvodiApi.getSvi()
-            .then(data => { setProizvodi(data); setUcitava(false); })
+            // Dodaci nisu zasebna stavka menija — biraju se uz proizvod u detalju.
+            .then(data => {
+                setProizvodi(data.filter(p => p.tip !== TIP_DODACI));
+                setUcitava(false);
+                // Dok kupac razgleda meni, u pozadini spremamo liste dodataka,
+                // pa je otvaranje detalja trenutno.
+                prefetchDodatke();
+            })
             .catch(() => { setGreska('Ne mogu da učitam meni.'); setUcitava(false); });
     }, []);
 
@@ -79,7 +87,11 @@ export default function MeniPage() {
         return i > 0 ? [...raspored.slice(i), ...raspored.slice(0, i)] : raspored;
     }, [raspored, danasKljuc]);
 
+    // "+" u meniju je brzo dodavanje bez dodataka; dodaci se biraju u detalju.
+    // "−" skida sa poslednje dodate varijante (brojač na redu je zbir svih varijanti).
     const handleDodaj = useCallback((p: Proizvod) => dodaj(p), [dodaj]);
+    const handlePovecaj = useCallback((p: Proizvod) => dodaj(p), [dodaj]);
+    const handleSmanji = useCallback((p: Proizvod) => smanjiPoslednju(p.id), [smanjiPoslednju]);
 
     return (
         <div className={styles.stranica}>
@@ -219,11 +231,11 @@ export default function MeniPage() {
                                     <ProizvodKartica
                                         key={p.id}
                                         proizvod={p}
-                                        kolicina={korpa.find(i => i.proizvod.id === p.id)?.kolicina ?? 0}
+                                        kolicina={kolicinaProizvoda(p.id)}
                                         popust={popust}
                                         onDodaj={handleDodaj}
-                                        onPovecaj={povecaj}
-                                        onSmanji={smanji}
+                                        onPovecaj={handlePovecaj}
+                                        onSmanji={handleSmanji}
                                         onOtvoriDetalj={setDetalj}
                                     />
                                 ))}
@@ -242,7 +254,7 @@ export default function MeniPage() {
             <DetaljProizvoda
                 proizvod={detalj}
                 popust={popust}
-                onDodaj={(p, kolicina) => dodaj(p, kolicina)}
+                onDodaj={(p, kolicina, dodaci) => dodaj(p, kolicina, dodaci)}
                 onZatvori={() => setDetalj(null)}
             />
         </div>

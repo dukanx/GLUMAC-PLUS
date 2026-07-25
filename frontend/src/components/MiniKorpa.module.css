@@ -25,6 +25,9 @@
 }
 
 .naslov {
+    display: flex;
+    align-items: center;
+    gap: 9px;
     font-family: var(--font-hand);
     font-weight: 700;
     font-size: 34px;
@@ -296,4 +299,32 @@
     font-size: 19px;
     color: var(--ink55);
     margin-top: 4px;
+}
+
+/* ── Dodaci ispod naziva stavke ── */
+.dodaciStavke {
+    list-style: none;
+    margin: 2px 0 6px;
+    padding: 0 0 0 10px;
+    border-left: 2px dashed var(--ink20);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.dodatakStavka {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--ink55);
+}
+
+.dodatakStavkaCena {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--ink40);
+    white-space: nowrap;
 }

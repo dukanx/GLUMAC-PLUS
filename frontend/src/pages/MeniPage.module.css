@@ -116,7 +116,9 @@
 .infoStrip {
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    /* Poravnanje po vrhu — sve tri labele ("gde smo", "pozovi nas",
+       "radno vreme") stoje u istoj liniji, vrednosti idu ispod njih. */
+    align-items: flex-start;
     gap: 64px;
     padding: 26px 5% 24px;
     flex-wrap: wrap;

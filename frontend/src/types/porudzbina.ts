@@ -18,12 +18,20 @@ export function tipLabela(tip?: string): string {
     return TIP_LABELE[tip as TipPorudzbine] ?? tip;
 }
 
+// Dodatak na stavci porudžbine (naziv i cena zapamćeni u trenutku porudžbine).
+export interface StavkaDodatak {
+    nazivProizvoda: string;
+    kolicina: number;
+    cena: number;
+}
+
 // Stavka porudžbine (superset — `iznosStavke` koristi istorija; panel ga ne prikazuje).
 export interface StavkaPorudzbine {
     nazivProizvoda: string;
     kolicina: number;
     cena: number;
     iznosStavke: number;
+    dodaci?: StavkaDodatak[];
 }
 
 // Porudžbina (superset polja iz istorije i panela; opciona polja su view-specifična).

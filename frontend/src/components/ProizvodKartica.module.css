@@ -248,3 +248,24 @@
     border-radius: var(--wob);
     cursor: not-allowed;
 }
+
+/* Tiha oznaka da stavka prima dodatke — bira se u detalju proizvoda.
+   Stoji ispod naziva, pa je ista i na desktopu i na mobilnom. */
+.dodaciPil {
+    align-self: flex-start;
+    margin-top: 2px;
+    font-family: var(--font-cav);
+    font-size: 16px;
+    line-height: 1.1;
+    color: var(--ink40);
+    border: 2px dashed var(--ink12);
+    border-radius: 999px;
+    padding: 1px 11px 3px;
+    white-space: nowrap;
+    transition: color .15s, border-color .15s;
+}
+
+.red:hover .dodaciPil {
+    color: var(--rust);
+    border-color: hsl(14 65% 44% / .35);
+}

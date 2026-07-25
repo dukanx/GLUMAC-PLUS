@@ -442,6 +442,12 @@ public class PorudzbinaService {
             return;
         }
 
+        // Dodatak ne može da nosi svoje dodatke (npr. Nutela uz Nutelu).
+        if (Proizvod.TIP_DODACI.equalsIgnoreCase(osnovni.getTip())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Na dodatak '" + osnovni.getNaziv() + "' ne mogu da se dodaju dodaci.");
+        }
+
         for (StavkaDodatakDto dodatakDto : dodaciDto) {
             Proizvod dodatak = proizvodRepo.findById(dodatakDto.getProizvodId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Dodatak ne postoji"));

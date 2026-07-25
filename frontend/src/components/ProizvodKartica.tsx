@@ -1,16 +1,17 @@
 import { motion, AnimatePresence } from 'motion/react';
 import styles from './ProizvodKartica.module.css';
 import React from 'react';
-import type { Proizvod } from '../types/proizvod';
+import { TIP_DODACI, type Proizvod } from '../types/proizvod';
 import { Klose } from './Doodle';
 
 interface Props {
     proizvod: Proizvod;
+    /** Ukupno komada u korpi, kroz sve varijante dodataka. */
     kolicina: number;
     popust: number;
     onDodaj: (proizvod: Proizvod) => void;
-    onPovecaj: (id: number) => void;
-    onSmanji: (id: number) => void;
+    onPovecaj: (proizvod: Proizvod) => void;
+    onSmanji: (proizvod: Proizvod) => void;
     onOtvoriDetalj: (proizvod: Proizvod) => void;
 }
 
@@ -22,6 +23,8 @@ function ProizvodKartica({
     const cena = Math.round(proizvod.cena);
     const cenaSaPopustom = popust > 0 ? Math.round(cena * (1 - popust / 100)) : null;
     const dostupan = proizvod.dostupan !== false;
+    // Dodatke primaju samo stavke sa ukusom (piće ih nema), i sami dodaci ne.
+    const primaDodatke = !!proizvod.ukus && proizvod.tip !== TIP_DODACI;
 
     return (
         <motion.div
@@ -41,6 +44,9 @@ function ProizvodKartica({
                     {!dostupan && <span className={styles.nemaDanasTag}>nema danas</span>}
                 </h3>
                 {proizvod.opis && <p className={styles.opis}>{proizvod.opis}</p>}
+                {primaDodatke && dostupan && (
+                    <span className={styles.dodaciPil}>+ dodaci</span>
+                )}
             </div>
 
             <span className={styles.dots} />
@@ -82,7 +88,7 @@ function ProizvodKartica({
                     >
                         <motion.button
                             className={styles.qtyBtn}
-                            onClick={() => onSmanji(proizvod.id)}
+                            onClick={() => onSmanji(proizvod)}
                             whileTap={{ scale: 0.85 }}
                         >
                             −
@@ -90,7 +96,7 @@ function ProizvodKartica({
                         <span className={styles.qtyBroj}>{kolicina}</span>
                         <motion.button
                             className={styles.qtyBtn}
-                            onClick={() => onPovecaj(proizvod.id)}
+                            onClick={() => onPovecaj(proizvod)}
                             whileTap={{ scale: 0.85 }}
                         >
                             +

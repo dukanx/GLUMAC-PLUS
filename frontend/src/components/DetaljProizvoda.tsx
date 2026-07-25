@@ -1,27 +1,36 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import type { Proizvod } from '../types/proizvod';
+import { TIP_DODACI, type DodatakKorpe, type Proizvod } from '../types/proizvod';
+import { cenaJedinice } from '../utils/korpa';
+import { useDodaci } from '../hooks/useDodaci';
 import { Klose } from './Doodle';
 import styles from './DetaljProizvoda.module.css';
 
 interface Props {
     proizvod: Proizvod | null;
     popust: number;
-    onDodaj: (proizvod: Proizvod, kolicina: number) => void;
+    onDodaj: (proizvod: Proizvod, kolicina: number, dodaci: DodatakKorpe[]) => void;
     onZatvori: () => void;
 }
 
 /**
  * Detalj proizvoda — klik na red u meniju otvara ovaj papirić
- * (popup na desktopu, bottom sheet na mobilnom). Alergeni žive ovde,
- * red u meniju ostaje čist. ESC / klik van zatvara.
+ * (popup na desktopu, bottom sheet na mobilnom). Alergeni i izbor dodataka
+ * žive ovde, red u meniju ostaje čist. ESC / klik van zatvara.
  */
 export default function DetaljProizvoda({ proizvod, popust, onDodaj, onZatvori }: Props) {
     const [kolicina, setKolicina] = useState(1);
+    const [izabrani, setIzabrani] = useState<number[]>([]);
 
     useEffect(() => {
         setKolicina(1);
+        setIzabrani([]);
     }, [proizvod?.id]);
+
+    // Dodatke dobijaju samo stavke sa ukusom (piće ih nema), i sami dodaci ne.
+    // Lista je keširana po ukusu, pa je posle prvog dohvatanja otvaranje trenutno.
+    const primaDodatke = !!proizvod?.ukus && proizvod.tip !== TIP_DODACI;
+    const { dodaci, ucitava: dodaciUcitavaju } = useDodaci(primaDodatke ? proizvod?.ukus : null);
 
     useEffect(() => {
         if (!proizvod) return;
@@ -32,7 +41,35 @@ export default function DetaljProizvoda({ proizvod, popust, onDodaj, onZatvori }
         return () => document.removeEventListener('keydown', onEsc);
     }, [proizvod, onZatvori]);
 
-    const cena = proizvod ? Math.round(proizvod.cena) : 0;
+    // Dok je papirić otvoren, strana iza ne sme da skroluje. Skrol kontejner je
+    // <html>, pa se zaključava on; padding nadoknađuje širinu skrol trake da
+    // sadržaj ne poskoči kad ona nestane.
+    useEffect(() => {
+        if (!proizvod) return;
+        const html = document.documentElement;
+        const sirinaTrake = window.innerWidth - html.clientWidth;
+        const staroOverflow = html.style.overflow;
+        const staroPadding = document.body.style.paddingRight;
+
+        html.style.overflow = 'hidden';
+        if (sirinaTrake > 0) document.body.style.paddingRight = `${sirinaTrake}px`;
+
+        return () => {
+            html.style.overflow = staroOverflow;
+            document.body.style.paddingRight = staroPadding;
+        };
+    }, [proizvod]);
+
+    // Izabrani dodaci kao stavke korpe (količina 1 po jedinici proizvoda).
+    const izabraniDodaci: DodatakKorpe[] = dodaci
+        .filter(d => izabrani.includes(d.id))
+        .map(d => ({ proizvod: d, kolicina: 1 }));
+
+    const toggleDodatak = (id: number) =>
+        setIzabrani(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+    // Cena po jedinici uključuje izabrane dodatke; popust se primenjuje na finalnu.
+    const cena = proizvod ? Math.round(cenaJedinice(proizvod, izabraniDodaci)) : 0;
     const cenaSaPopustom = popust > 0 ? Math.round(cena * (1 - popust / 100)) : null;
 
     return (
@@ -83,6 +120,43 @@ export default function DetaljProizvoda({ proizvod, popust, onDodaj, onZatvori }
                                         </div>
                                     </>
                                 )}
+
+                                {dodaciUcitavaju && (
+                                    <>
+                                        <span className={styles.sekcLab}>dodaci</span>
+                                        <div className={styles.dodaciLista} aria-busy="true">
+                                            {Array.from({ length: 6 }).map((_, i) => (
+                                                <span key={i} className={styles.dodatakSkelet} aria-hidden="true" />
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+
+                                {!dodaciUcitavaju && dodaci.length > 0 && (
+                                    <>
+                                        <span className={styles.sekcLab}>dodaci</span>
+                                        <div className={styles.dodaciLista}>
+                                            {dodaci.map(d => {
+                                                const cekiran = izabrani.includes(d.id);
+                                                return (
+                                                    <button
+                                                        key={d.id}
+                                                        type="button"
+                                                        className={`${styles.dodatak} ${cekiran ? styles.dodatakOn : ''}`}
+                                                        onClick={() => toggleDodatak(d.id)}
+                                                        aria-pressed={cekiran}
+                                                    >
+                                                        <span className={styles.dodatakKvadrat} aria-hidden="true">
+                                                            {cekiran ? '✓' : ''}
+                                                        </span>
+                                                        <span className={styles.dodatakNaziv}>{d.naziv}</span>
+                                                        <span className={styles.dodatakCena}>+{Math.round(d.cena)}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -119,11 +193,11 @@ export default function DetaljProizvoda({ proizvod, popust, onDodaj, onZatvori }
                                 <button
                                     className={styles.dodaj}
                                     onClick={() => {
-                                        onDodaj(proizvod, kolicina);
+                                        onDodaj(proizvod, kolicina, izabraniDodaci);
                                         onZatvori();
                                     }}
                                 >
-                                    Dodaj u korpu →
+                                    Dodaj u korpu
                                 </button>
                             </span>
                         </div>

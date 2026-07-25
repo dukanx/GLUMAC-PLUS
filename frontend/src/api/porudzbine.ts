@@ -3,9 +3,15 @@
 import { apiFetch } from './client';
 import type { Porudzbina } from '../types/porudzbina';
 
+export interface DodatakZahtev {
+    proizvodId: number;
+    kolicina: number;
+}
+
 export interface StavkaZahtev {
     proizvodId: number;
     kolicina: number;
+    dodaci?: DodatakZahtev[];
 }
 
 export interface KreirajZahtev {
