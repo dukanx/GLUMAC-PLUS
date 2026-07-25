@@ -24,6 +24,9 @@ import java.util.Set;
 @BatchSize(size = 100)
 public class Proizvod {
 
+    /** Naziv kategorije ({@code tip}) pod kojom se vode dodaci. */
+    public static final String TIP_DODACI = "Dodaci";
+
     /** Jedinstveni identifikator proizvoda. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

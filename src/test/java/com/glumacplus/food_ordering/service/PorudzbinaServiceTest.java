@@ -2,6 +2,7 @@ package com.glumacplus.food_ordering.service;
 
 import com.glumacplus.food_ordering.dto.PorudzbinaDto;
 import com.glumacplus.food_ordering.dto.PorudzbinaViewDto;
+import com.glumacplus.food_ordering.dto.StavkaDodatakDto;
 import com.glumacplus.food_ordering.dto.StavkaPorudzbineDto;
 import com.glumacplus.food_ordering.model.*;
 import com.glumacplus.food_ordering.repository.*;
@@ -199,6 +200,113 @@ class PorudzbinaServiceTest {
                 () -> porudzbinaService.create(dto)
         );
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        verify(porudzbinaRepo, never()).save(any());
+    }
+
+    // SO: create sa dodacima
+
+    private Proizvod proizvod(Long id, String naziv, String tip, Ukus ukus, String cena) {
+        Proizvod p = new Proizvod();
+        p.setId(id);
+        p.setNaziv(naziv);
+        p.setTip(tip);
+        p.setUkus(ukus);
+        p.setCena(new BigDecimal(cena));
+        return p;
+    }
+
+    private StavkaPorudzbineDto stavkaSaDodacima(Long proizvodId, double kolicina, Long... dodatakIds) {
+        StavkaPorudzbineDto s = new StavkaPorudzbineDto();
+        s.setProizvodId(proizvodId);
+        s.setKolicina(kolicina);
+        s.setDodaci(java.util.Arrays.stream(dodatakIds).map(id -> {
+            StavkaDodatakDto d = new StavkaDodatakDto();
+            d.setProizvodId(id);
+            d.setKolicina(1);
+            return d;
+        }).toList());
+        return s;
+    }
+
+    @Test
+    void testCreateSaDodacimaUracunavaCenuDodataka() {
+        setupSecurityContext("korisnik@gmail.com");
+
+        Korisnik k = korisnik(1L, "korisnik@gmail.com");
+        k.setLoyaltyProgram(null);
+
+        Proizvod palacinka = proizvod(1L, "Prazna", "Slatke", Ukus.SLATKO, "500.00");
+        Proizvod nutela = proizvod(2L, "Nutela", Proizvod.TIP_DODACI, Ukus.SLATKO, "120.00");
+
+        PorudzbinaDto dto = new PorudzbinaDto();
+        dto.setStavke(List.of(stavkaSaDodacima(1L, 2, 2L)));
+
+        when(korisnikRepo.findByEmail("korisnik@gmail.com")).thenReturn(Optional.of(k));
+        mockRestoranOtvoren();
+        when(porudzbinaRepo.existsByKorisnik_IdAndStatusIn(eq(1L), any())).thenReturn(false);
+        when(proizvodRepo.findById(1L)).thenReturn(Optional.of(palacinka));
+        when(proizvodRepo.findById(2L)).thenReturn(Optional.of(nutela));
+        when(porudzbinaRepo.save(any(Porudzbina.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PorudzbinaViewDto result = porudzbinaService.create(dto);
+
+        // (500 osnovna + 120 dodatak) * 2 komada = 1240
+        assertEquals(new BigDecimal("1240.00"), result.getUkupanIznos());
+        assertEquals(1, result.getStavke().size());
+        assertEquals(1, result.getStavke().get(0).getDodaci().size());
+        assertEquals("Nutela", result.getStavke().get(0).getDodaci().get(0).getNazivProizvoda());
+    }
+
+    @Test
+    void testCreateDodatakPogresnogUkusaBaca400() {
+        setupSecurityContext("korisnik@gmail.com");
+
+        Korisnik k = korisnik(1L, "korisnik@gmail.com");
+
+        Proizvod slanaPalacinka = proizvod(1L, "Pavlaka, kačkavalj", "Slane", Ukus.SLANO, "550.00");
+        Proizvod nutela = proizvod(2L, "Nutela", Proizvod.TIP_DODACI, Ukus.SLATKO, "120.00");
+
+        PorudzbinaDto dto = new PorudzbinaDto();
+        dto.setStavke(List.of(stavkaSaDodacima(1L, 1, 2L)));
+
+        when(korisnikRepo.findByEmail("korisnik@gmail.com")).thenReturn(Optional.of(k));
+        mockRestoranOtvoren();
+        when(porudzbinaRepo.existsByKorisnik_IdAndStatusIn(eq(1L), any())).thenReturn(false);
+        when(proizvodRepo.findById(1L)).thenReturn(Optional.of(slanaPalacinka));
+        when(proizvodRepo.findById(2L)).thenReturn(Optional.of(nutela));
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> porudzbinaService.create(dto)
+        );
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(porudzbinaRepo, never()).save(any());
+    }
+
+    @Test
+    void testCreateNedostupanDodatakBaca409() {
+        setupSecurityContext("korisnik@gmail.com");
+
+        Korisnik k = korisnik(1L, "korisnik@gmail.com");
+
+        Proizvod palacinka = proizvod(1L, "Prazna", "Slatke", Ukus.SLATKO, "500.00");
+        Proizvod nutela = proizvod(2L, "Nutela", Proizvod.TIP_DODACI, Ukus.SLATKO, "120.00");
+        nutela.setDostupan(false);
+
+        PorudzbinaDto dto = new PorudzbinaDto();
+        dto.setStavke(List.of(stavkaSaDodacima(1L, 1, 2L)));
+
+        when(korisnikRepo.findByEmail("korisnik@gmail.com")).thenReturn(Optional.of(k));
+        mockRestoranOtvoren();
+        when(porudzbinaRepo.existsByKorisnik_IdAndStatusIn(eq(1L), any())).thenReturn(false);
+        when(proizvodRepo.findById(1L)).thenReturn(Optional.of(palacinka));
+        when(proizvodRepo.findById(2L)).thenReturn(Optional.of(nutela));
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> porudzbinaService.create(dto)
+        );
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
         verify(porudzbinaRepo, never()).save(any());
     }
 

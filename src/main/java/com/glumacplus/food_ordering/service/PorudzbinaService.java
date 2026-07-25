@@ -154,7 +154,7 @@ public class PorudzbinaService {
 
             prava.setPorudzbina(por);
 
-
+            dodajDodatke(prava, p, stavkaDto.getDodaci());
 
             por.dodajStavku(prava);
             ukIznos = ukIznos.add(prava.getIznosStavke());
@@ -422,6 +422,50 @@ public class PorudzbinaService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return korisnikRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Niste ulogovani"));
+    }
+
+    /**
+     * Dodaje izabrane dodatke na stavku porudžbine. Svaki dodatak mora biti
+     * proizvod iz kategorije {@link Proizvod#TIP_DODACI}, dostupan i
+     * odgovarajućeg ukusa (slatki dodaci idu uz slatke stavke, slani uz slane).
+     * Cena dodatka se pamti kao snapshot.
+     *
+     * @param stavka stavka na koju se dodaci vezuju
+     * @param osnovni osnovni proizvod stavke (za proveru ukusa)
+     * @param dodaciDto izabrani dodaci; može biti {@code null} ili prazno
+     * @throws ResponseStatusException sa statusom 404 ako dodatak ne postoji,
+     *         409 ako nije dostupan, ili 400 ako nije dodatak odnosno ne
+     *         odgovara ukusu stavke
+     */
+    private void dodajDodatke(StavkaPorudzbine stavka, Proizvod osnovni, List<StavkaDodatakDto> dodaciDto) {
+        if (dodaciDto == null || dodaciDto.isEmpty()) {
+            return;
+        }
+
+        for (StavkaDodatakDto dodatakDto : dodaciDto) {
+            Proizvod dodatak = proizvodRepo.findById(dodatakDto.getProizvodId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Dodatak ne postoji"));
+
+            if (!Proizvod.TIP_DODACI.equalsIgnoreCase(dodatak.getTip())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "'" + dodatak.getNaziv() + "' nije dodatak.");
+            }
+
+            if (!dodatak.isDostupan()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Dodatak '" + dodatak.getNaziv() + "' trenutno nije dostupan.");
+            }
+
+            // Ukus se proverava samo kad je poznat za oba (npr. piće nema ukus).
+            if (dodatak.getUkus() != null && osnovni.getUkus() != null
+                    && dodatak.getUkus() != osnovni.getUkus()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Dodatak '" + dodatak.getNaziv() + "' ne ide uz '" + osnovni.getNaziv() + "'.");
+            }
+
+            double kolicina = dodatakDto.getKolicina() > 0 ? dodatakDto.getKolicina() : 1;
+            stavka.dodajDodatak(new StavkaDodatak(dodatak, kolicina, dodatak.getCena()));
+        }
     }
 
     /**

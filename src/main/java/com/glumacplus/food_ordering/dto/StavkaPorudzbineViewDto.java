@@ -1,6 +1,8 @@
 package com.glumacplus.food_ordering.dto;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StavkaPorudzbineViewDto {
 
@@ -8,6 +10,16 @@ public class StavkaPorudzbineViewDto {
     private double kolicina;
     private BigDecimal cena;
     private BigDecimal iznosStavke;
+    /** Dodaci izabrani uz ovu stavku (prazno ako ih nema). */
+    private List<StavkaDodatakViewDto> dodaci = new ArrayList<>();
+
+    public List<StavkaDodatakViewDto> getDodaci() {
+        return dodaci;
+    }
+
+    public void setDodaci(List<StavkaDodatakViewDto> dodaci) {
+        this.dodaci = dodaci == null ? new ArrayList<>() : dodaci;
+    }
 
 
 

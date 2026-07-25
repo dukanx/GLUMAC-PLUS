@@ -5,12 +5,16 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Predstavlja jednu stavku porudžbine — konkretan proizvod sa količinom.
+ * Predstavlja jednu stavku porudžbine — konkretan proizvod sa količinom
+ * i opcionim dodacima.
  *
  * <p>Iznos stavke ({@code iznosStavke}) se automatski preračunava kao
- * {@code kolicina * cena} pri svakoj izmeni količine ili cene.</p>
+ * {@code kolicina * (cena + zbir dodataka)} pri svakoj izmeni količine,
+ * cene ili liste dodataka.</p>
  *
  * @author Nikola Dukić
  * @version 1.0
@@ -49,6 +53,10 @@ public class StavkaPorudzbine {
     @JoinColumn(name = "proizvod_id", nullable = false)
     @NotNull
     private Proizvod proizvod;
+
+    /** Dodaci izabrani uz ovu stavku (npr. Nutela uz palačinku). */
+    @OneToMany(mappedBy = "stavka", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StavkaDodatak> dodaci = new ArrayList<>();
 
     /**
      * Podrazumevani konstruktor.
@@ -188,8 +196,49 @@ public class StavkaPorudzbine {
     }
 
     /**
-     * Preračunava iznos stavke kao {@code kolicina * cena}. Ako cena nije
-     * postavljena, iznos se postavlja na {@code null}.
+     * Vraća dodatke izabrane uz ovu stavku.
+     *
+     * @return lista dodataka
+     */
+    public List<StavkaDodatak> getDodaci() { return dodaci; }
+
+    /**
+     * Postavlja dodatke uz ovu stavku i preračunava iznos stavke.
+     *
+     * @param dodaci lista dodataka
+     */
+    public void setDodaci(List<StavkaDodatak> dodaci) {
+        this.dodaci = dodaci == null ? new ArrayList<>() : dodaci;
+        this.dodaci.forEach(d -> d.setStavka(this));
+        recalculateIznosStavke();
+    }
+
+    /**
+     * Dodaje dodatak uz ovu stavku, povezuje ga sa stavkom i preračunava
+     * iznos stavke.
+     *
+     * @param dodatak dodatak koji se dodaje
+     */
+    public void dodajDodatak(StavkaDodatak dodatak) {
+        dodaci.add(dodatak);
+        dodatak.setStavka(this);
+        recalculateIznosStavke();
+    }
+
+    /**
+     * Vraća zbir iznosa svih dodataka po jednoj jedinici osnovnog proizvoda.
+     *
+     * @return zbir dodataka
+     */
+    public BigDecimal getIznosDodataka() {
+        return dodaci.stream()
+                .map(StavkaDodatak::getIznos)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Preračunava iznos stavke kao {@code kolicina * (cena + zbir dodataka)}.
+     * Ako cena nije postavljena, iznos se postavlja na {@code null}.
      */
     private void recalculateIznosStavke() {
         if (this.cena == null) {
@@ -197,7 +246,7 @@ public class StavkaPorudzbine {
             return;
         }
         this.iznosStavke = BigDecimal.valueOf(this.kolicina)
-                .multiply(this.cena)
+                .multiply(this.cena.add(getIznosDodataka()))
                 .setScale(2, RoundingMode.HALF_UP);
     }
 

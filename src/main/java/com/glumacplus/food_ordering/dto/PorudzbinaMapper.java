@@ -1,6 +1,7 @@
 package com.glumacplus.food_ordering.dto;
 
 import com.glumacplus.food_ordering.model.Porudzbina;
+import com.glumacplus.food_ordering.model.StavkaDodatak;
 import com.glumacplus.food_ordering.model.StavkaPorudzbine;
 
 import java.util.List;
@@ -32,6 +33,17 @@ public class PorudzbinaMapper {
         dto.setKolicina(s.getKolicina());
         dto.setIznosStavke(s.getIznosStavke());
         dto.setNazivProizvoda(s.getProizvod().getNaziv());
+        dto.setDodaci(s.getDodaci().stream()
+                .map(PorudzbinaMapper::toViewDto)
+                .collect(Collectors.toList()));
+        return dto;
+    }
+
+    public static StavkaDodatakViewDto toViewDto(StavkaDodatak d){
+        StavkaDodatakViewDto dto=new StavkaDodatakViewDto();
+        dto.setNazivProizvoda(d.getProizvod().getNaziv());
+        dto.setKolicina(d.getKolicina());
+        dto.setCena(d.getCena());
         return dto;
     }
 
