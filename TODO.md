@@ -34,6 +34,10 @@ Fix: `/moje` da vraća `Page<PorudzbinaViewDto>` (kao što `/page` već radi —
 **🟡 0g. Ime kupca (i telefon) u `PorudzbinaViewDto` za panel**
 Panel zaposlenog bi trebalo da prikaže ime kupca ("čija je porudžbina"). Frontend je već spreman (`{p.korisnikIme && ...}` u kartici), ali DTO ne sadrži `korisnikIme`. Dodati `korisnikIme` (i opciono `brojTelefona`) u `PorudzbinaViewDto` — proradiće bez frontend izmene.
 
+**🟠 0i. Testovi se kače na pravu (Neon) bazu — treba izolovana test konfiguracija**
+Ne postoji `src/test/resources/`, pa testovi koriste isti `application.properties` + `.env` kao aplikacija → `mvn test` se povezuje na **produkcionu Neon bazu**. Konkretno: `FoodOrderingApplicationTests` (diže ceo Spring context) pri svakom ranu pokrene Flyway na Neon-u — tako je V14 primenjena „usput", pre nego što je namerno puštena. Rizik: test-ran može da menja/zaključa pravu bazu, spor je (~10s samo na konekciju), i ne radi offline.
+Fix: dodati `src/test/resources/application-test.properties` + `@ActiveProfiles("test")` (ili `application.properties` u test resources) sa H2 in-memory (`jdbc:h2:mem:...;MODE=PostgreSQL`) ili Testcontainers (`postgres:16`) ako treba pravi Postgres. Uz to `spring.flyway.enabled=true` da migracije prođu i na test bazi — ujedno postaje provera da migracije rade od nule. Unit testovi (Mockito) su već izolovani; ovo pogađa samo context/integracione testove.
+
 **🟡 0h. Popuniti opise proizvoda (`Proizvod.opis`)**
 `Proizvod` u modelu ima polje `opis`, ali je prazno/null za većinu (Glumac, Dubai palačinka...). Zbog toga MeniPage (ProizvodKartica) i HomePage preporuke nemaju šta da prikažu kao opis. Popuniti opise kroz seed/admin (npr. "Eurokrem, plazma, višnja"). Frontend je već spreman da ih prikaže čim postoje.
 
