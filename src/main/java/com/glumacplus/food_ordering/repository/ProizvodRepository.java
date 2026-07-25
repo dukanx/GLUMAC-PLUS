@@ -25,9 +25,15 @@ public interface ProizvodRepository extends JpaRepository<Proizvod, Long> {
 
     List<Proizvod> findAllByNedostupanRazlog(RazlogNedostupnosti razlog);
 
-    /** Dostupni dodaci zadatog ukusa (za konfigurator uz palačinku). */
+    /**
+     * Dostupni dodaci zadatog ukusa (za konfigurator uz palačinku).
+     * {@code @EntityGraph} povlači alergene u istom upitu — bez toga mapper
+     * lazy-učitava alergene za svaki dodatak posebno (N+1 upita).
+     */
+    @EntityGraph(attributePaths = "alergeni")
     List<Proizvod> findByTipAndUkusAndDostupanTrueOrderByNazivAsc(String tip, Ukus ukus);
 
     /** Svi dostupni dodaci (kad ukus nije poznat/bitan). */
+    @EntityGraph(attributePaths = "alergeni")
     List<Proizvod> findByTipAndDostupanTrueOrderByNazivAsc(String tip);
 }
