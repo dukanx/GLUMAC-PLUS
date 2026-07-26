@@ -424,10 +424,9 @@
     overflow: hidden;
 }
 
+/* Kolona (a ne red) da bi dodaci stali ispod naziva, a tačkasta linija
+   razdvajala celu stavku sa svojim dodacima. */
 .stavR {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
     padding: 7px 2px;
     border-bottom: 2px dotted var(--ink12);
     font-family: var(--font-cav);
@@ -436,6 +435,37 @@
 
 .stavR:last-child {
     border-bottom: 0;
+}
+
+.stavRGlava {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.dodaci {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-left: 44px;
+    margin-top: 3px;
+}
+
+.dodatak {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 17px;
+    line-height: 1.2;
+    color: var(--ink55);
+}
+
+.dodatakCena {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink40);
+    white-space: nowrap;
 }
 
 .stavK {

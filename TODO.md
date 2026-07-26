@@ -41,6 +41,11 @@ Fix: dodati `src/test/resources/application-test.properties` + `@ActiveProfiles(
 **🟡 0h. Popuniti opise proizvoda (`Proizvod.opis`)**
 `Proizvod` u modelu ima polje `opis`, ali je prazno/null za većinu (Glumac, Dubai palačinka...). Zbog toga MeniPage (ProizvodKartica) i HomePage preporuke nemaju šta da prikažu kao opis. Popuniti opise kroz seed/admin (npr. "Eurokrem, plazma, višnja"). Frontend je već spreman da ih prikaže čim postoje.
 
+**🟡 0j. N+1 upiti pri mapiranju porudžbina (stavke → dodaci)**
+`PorudzbinaMapper.toViewDto` čita `p.getStavke()` i `s.getDodaci()` lenjo, a `PorudzbinaRepository` nema ni jedan `@EntityGraph`. Za listu porudžbina to znači: 1 upit za porudžbine + 1 po porudžbini za stavke + 1 po stavci za dodatke. Panel povlači `page?size=100`, pa pri punom danu (100 porudžbina × ~3 stavke) to ide na ~400 upita po osvežavanju — a panel se osvežava periodično. Na trenutnom obimu (nekoliko porudžbina) se ne oseti.
+Fix nije samo `@EntityGraph(attributePaths = {"stavke", "stavke.dodaci"})` — sa `Page` i fetch-om kolekcije Hibernate pređe na paginaciju u memoriji (`HHH000104`), što je gore. Ispravno: dohvatiti stranu ID-jeva (`Page<Long>`), pa drugim upitom `join fetch` stavke i dodatke za te ID-jeve, ili uključiti `@BatchSize` na kolekcijama (`stavke`, `dodaci`) što svede N upita na `N/batch`. `@BatchSize(size = 25)` je najmanja izmena za najveći efekat.
+Isti obrazac važi i za `/moje` (istorija kupca) i `findAllByStatus`.
+
 ---
 
 ## Frontend — po prioritetu
@@ -121,7 +126,10 @@ Zaposleni skida/vraća proizvode iz ponude preko **panela** (tab "PROIZVODI"). I
 
 **⚠️ Za primenu:** restartovati backend da Flyway primeni `V11` + `V12` na Neon (i da scheduler krene).
 
-### 🧇 Dodaci na palačinke (Wolt-stil konfigurator)
+### 🧇 Dodaci na palačinke (Wolt-stil konfigurator) — URAĐENO osim omiljenih (grana `dodaci`)
+Stanje: model, migracije (V13 `ukus`, V14 `stavka_dodatak`), validacija, endpoint `/api/proizvodi/dodaci?ukus=`, konfigurator u detalju proizvoda, korpa po varijantama i prikaz u panelu/istoriji/statusu su gotovi. **Ostaje samo tačka 6 (omiljene) i „poruči ponovo" koji tiho izgubi dodatke** (`IstorijaPage.poruciPonovo` zove `dodaj(proizvod, s.kolicina)` bez dodataka — treba mapirati `s.dodaci` naziv→`Proizvod` iz kataloga). Umesto limita dogovoreno: bez limita, ali dodaci su podeljeni po `Ukus` (SLATKO/SLANO) pa slatki idu samo uz slatke palačinke.
+
+Originalni plan (za istoriju):
 Trenutno su palačinke fiksne komponovane stavke. Cilj: zadržati gotove palačinke, ali dozvoliti kupcu da doda **opcione ekstra dodatke**, svaki sa svojom cenom — kao Wolt:
 ```
 Nutela, plazma, višnja              RSD 820
@@ -146,8 +154,8 @@ Dodaci su `Proizvod` sa `tip = "dodaci"` (već postoje u bazi), samo se sada vez
 2. `CartContext` stavka mora da nosi izabrane dodatke (ne više samo `{proizvod, kolicina}` — sada `{proizvod, dodaci[], kolicina}`); dve iste palačinke sa različitim dodacima su **različite stavke** u korpi.
 3. Preračun cene u korpi (baza + dodaci), uskladiti sa zaokruživanjem (TODO 0d).
 4. POST payload nosi `dodaci` po stavci.
-5. Prikaz dodataka svuda gde se prikazuju stavke: korpa, CartDrawer, MiniKorpa, IstorijaPage, OmiljenePage, PanelPorudzbina, StatusPorudzbine.
-6. Omiljene: `OmiljenaPorudzbinaStavka` takođe mora da pamti dodatke (backend + front).
+5. Prikaz dodataka svuda gde se prikazuju stavke: korpa, CartDrawer, MiniKorpa, IstorijaPage, OmiljenePage, PanelPorudzbina, StatusPorudzbine. — urađeno svuda osim OmiljenePage (čeka tačku 6).
+6. **PREOSTALO** — Omiljene: `OmiljenaPorudzbinaStavka` takođe mora da pamti dodatke (backend + front).
 
 **Obim:** najveći feature u projektu — dira model, servis, korpa-arhitekturu i ~7 mesta prikaza. Raditi tek posle odbrane, u zasebnom branchu.
 

@@ -173,10 +173,25 @@ function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
                     >
                         {p.stavke.map((s, i) => (
                             <div key={i} className={styles.stavR}>
-                                <span className={styles.stavK}>{s.kolicina}×</span>
-                                <span>{s.nazivProizvoda}</span>
-                                <span className={styles.stavDots} />
-                                <span>{s.iznosStavke.toLocaleString('sr-RS')} RSD</span>
+                                <div className={styles.stavRGlava}>
+                                    <span className={styles.stavK}>{s.kolicina}×</span>
+                                    <span>{s.nazivProizvoda}</span>
+                                    <span className={styles.stavDots} />
+                                    <span>{s.iznosStavke.toLocaleString('sr-RS')} RSD</span>
+                                </div>
+                                {/* Cena dodatka je po komadu proizvoda — iznos stavke ih već sabira. */}
+                                {s.dodaci && s.dodaci.length > 0 && (
+                                    <div className={styles.dodaci}>
+                                        {s.dodaci.map((d, j) => (
+                                            <span key={j} className={styles.dodatak}>
+                                                <span>+ {d.nazivProizvoda}{d.kolicina > 1 && ` ×${d.kolicina}`}</span>
+                                                <span className={styles.dodatakCena}>
+                                                    {Math.round(d.cena * d.kolicina).toLocaleString('sr-RS')}
+                                                </span>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         ))}
 

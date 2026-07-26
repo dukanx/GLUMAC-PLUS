@@ -149,7 +149,21 @@ function PorudzbinaKartica({ p, azurira, onPrihvati, onSpremno, onPreuzeto, onOt
                 {vidljiveStavke.map((s, i) => (
                     <li key={i} className={styles.stavka}>
                         <span className={styles.stavkaKolicina}>{s.kolicina}×</span>
-                        <span className={styles.stavkaNaziv}>{s.nazivProizvoda}</span>
+                        <span className={styles.stavkaTelo}>
+                            <span className={styles.stavkaNaziv}>{s.nazivProizvoda}</span>
+                            {/* Dodaci moraju biti čitljivi — po njima se sprema porudžbina. */}
+                            {s.dodaci && s.dodaci.length > 0 && (
+                                <span className={styles.dodaci}>
+                                    {s.dodaci.map((d, j) => (
+                                        <span key={j} className={styles.dodatak}>
+                                            <span className={styles.dodatakPlus}>+</span>
+                                            {d.nazivProizvoda}
+                                            {d.kolicina > 1 && ` ×${d.kolicina}`}
+                                        </span>
+                                    ))}
+                                </span>
+                            )}
+                        </span>
                     </li>
                 ))}
                 {skrivenoStavki > 0 && (

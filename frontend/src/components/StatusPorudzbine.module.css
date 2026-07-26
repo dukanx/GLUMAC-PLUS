@@ -194,10 +194,9 @@
     padding-top: 8px;
 }
 
+/* Kolona (a ne red) da bi dodaci stali ispod naziva, a linija razdvajanja
+   ostala oko cele stavke sa njenim dodacima. */
 .stavka {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
     padding: 6px 2px;
     border-bottom: 2px dotted var(--ink12);
     font-family: var(--font-cav);
@@ -208,10 +207,30 @@
     border-bottom: 0;
 }
 
+.stavkaGlava {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
 .stavkaKol {
     color: var(--rust);
     font-weight: 600;
     min-width: 32px;
+}
+
+.dodaci {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-left: 44px;
+    margin-top: 2px;
+}
+
+.dodatak {
+    font-size: 17px;
+    line-height: 1.2;
+    color: var(--ink55);
 }
 
 /* Dno */

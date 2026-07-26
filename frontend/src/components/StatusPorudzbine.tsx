@@ -136,8 +136,20 @@ export default function StatusPorudzbine() {
                             <div className={styles.stavke}>
                                 {porudzbina.stavke.map((s, i) => (
                                     <div key={i} className={styles.stavka}>
-                                        <span className={styles.stavkaKol}>{s.kolicina}×</span>
-                                        <span>{s.nazivProizvoda}</span>
+                                        <div className={styles.stavkaGlava}>
+                                            <span className={styles.stavkaKol}>{s.kolicina}×</span>
+                                            <span>{s.nazivProizvoda}</span>
+                                        </div>
+                                        {s.dodaci && s.dodaci.length > 0 && (
+                                            <div className={styles.dodaci}>
+                                                {s.dodaci.map((d, j) => (
+                                                    <span key={j} className={styles.dodatak}>
+                                                        + {d.nazivProizvoda}
+                                                        {d.kolicina > 1 && ` ×${d.kolicina}`}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

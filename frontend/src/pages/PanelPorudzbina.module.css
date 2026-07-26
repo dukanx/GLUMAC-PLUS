@@ -854,9 +854,38 @@
     line-height: 1;
 }
 
+.stavkaTelo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
 .stavkaNaziv {
     color: var(--ink);
     font-weight: 700;
+}
+
+/* Dodaci uz stavku — uvučeni ispod naziva, dovoljno krupni da se pročitaju
+   sa razdaljine tableta u kuhinji. */
+.dodaci {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-left: 2px;
+}
+
+.dodatak {
+    font-family: var(--font-cav);
+    font-size: 21px;
+    line-height: 1.15;
+    color: var(--ink70);
+}
+
+.dodatakPlus {
+    color: var(--rust);
+    font-weight: 700;
+    margin-right: 5px;
 }
 
 .stavkeToggle {
