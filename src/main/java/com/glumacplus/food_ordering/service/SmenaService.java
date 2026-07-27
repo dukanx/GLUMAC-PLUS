@@ -132,9 +132,16 @@ public class SmenaService {
      *   <li>kad je zatvoreno (kraj radnog vremena ili start dok je zatvoreno) —
      *       vraća proizvode skinute "do kraja smene";</li>
      *   <li>kad je otvoreno (prelaz u otvoreno ILI prvi tik pri pokretanju u toku
-     *       radnog vremena) — skida eventualnu ručnu pauzu, tako da se smena sama
-     *       "upali" i ako je backend prespavao pa se probudio ujutru.</li>
+     *       radnog vremena) — počinje nova smena: vraća proizvode skinute "do kraja
+     *       smene" i skida eventualnu ručnu pauzu, tako da se smena sama "upali"
+     *       i ako je backend prespavao pa se probudio ujutru.</li>
      * </ul>
+     *
+     * <p>Vraćanje proizvoda namerno stoji na <b>oba</b> kraja. Da stoji samo na
+     * zatvaranju, roba skinuta "do kraja smene" ostala bi skinuta zauvek kad god
+     * backend nije živ u trenutku kad radno vreme istekne (ugašen preko noći,
+     * restart, uspavan server). Poziv je idempotentan — ako nema šta da vrati,
+     * ne radi ništa.</p>
      */
     @Scheduled(fixedRate = 60_000)
     @Transactional
@@ -148,13 +155,19 @@ public class SmenaService {
             log.info("Smena automatski zatvorena (kraj radnog vremena) — vraćeno {} proizvoda 'do kraja smene'.", vraceno);
         } else if (otvoreno && (prviTik || !biloOtvoreno)) {
             // Prelaz zatvoreno -> otvoreno, ili start u toku radnog vremena: nova smena.
-            // Skini eventualnu ručnu pauzu (npr. zaostalu od jučerašnjeg zatvaranja).
+            // Vrati robu skinutu prethodne smene i skini eventualnu ručnu pauzu
+            // (npr. zaostalu od jučerašnjeg zatvaranja).
+            int vraceno = vratiProizvodeDoKrajaSmene();
             SmenaStanje s = stanjeEntitet();
-            if (s.isPauzirano()) {
+            boolean skinutaPauza = s.isPauzirano();
+            if (skinutaPauza) {
                 s.setPauzirano(false);
                 smenaStanjeRepo.save(s);
-                log.info("Smena automatski otvorena ({}) — skinuta pauza, poručivanje aktivno.",
-                        prviTik ? "pokretanje u toku radnog vremena" : "početak radnog vremena");
+            }
+            if (vraceno > 0 || skinutaPauza) {
+                log.info("Smena automatski otvorena ({}) — vraćeno {} proizvoda 'do kraja smene', pauza {}.",
+                        prviTik ? "pokretanje u toku radnog vremena" : "početak radnog vremena",
+                        vraceno, skinutaPauza ? "skinuta" : "nije bila aktivna");
             }
         }
 

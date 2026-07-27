@@ -41,6 +41,12 @@ Fix: dodati `src/test/resources/application-test.properties` + `@ActiveProfiles(
 **🟡 0h. Popuniti opise proizvoda (`Proizvod.opis`)**
 `Proizvod` u modelu ima polje `opis`, ali je prazno/null za većinu (Glumac, Dubai palačinka...). Zbog toga MeniPage (ProizvodKartica) i HomePage preporuke nemaju šta da prikažu kao opis. Popuniti opise kroz seed/admin (npr. "Eurokrem, plazma, višnja"). Frontend je već spreman da ih prikaže čim postoje.
 
+**🟢 0k. Smena nema identitet u bazi — ručno „Zatvori smenu" ne preživi restart**
+`SmenaStanje` ima samo `pauzirano`, bez datuma, a `biloOtvoreno` u `SmenaService` je polje u memoriji koje se resetuje pri svakom pokretanju. Zato prvi tik posle restarta ne može da razlikuje pauzu zaostalu od juče od one koju je radnica napravila pre deset minuta, pa je skine. Posledica: ručno zatvorena smena se sama „otvori" ako se backend restartuje u toku radnog vremena.
+Fix: kolona `datum_smene DATE` na `smena_stanje` (migracija V16) kao identitet smene. U `automatskaSmena`: kad je otvoreno i `datumSmene != danas` → nova smena (vrati robu, skini pauzu, upiši datum); kad je `datumSmene == danas` → ista smena, ne dirati ništa. Time ručno zatvaranje preživi restart, a vraćanje robe „do kraja smene" se dešava tačno jednom po smeni bez oslanjanja na to da li je proces bio živ u trenutku zatvaranja (što je trenutno rešeno vraćanjem i na početku smene, vidi `SmenaServiceTest`).
+Ograničenje koje treba imati u vidu: ako smena ikad pređe ponoć (npr. 20:00–02:00), datum se promeni usred smene. Tad umesto `DATE` pamtiti vreme početka smene.
+Nije prioritet — pogađa samo scenario restarta usred ručno zatvorene smene.
+
 **✅ 0j. N+1 upiti pri mapiranju porudžbina (stavke → dodaci) — URAĐENO 2026-07-27**
 Rešeno sa `@BatchSize(size = 100)` na `StavkaPorudzbine.dodaci`, `OmiljenaPorudzbinaStavka.dodaci` i `OmiljenaPorudzbina.stavke` (konvencija je već postojala na `Porudzbina.stavke` i `Proizvod`). Mereno preko Hibernate `Statistics` na pravim podacima: istorija (8 porudžbina) **13 → 4 upita, 496 → 159 ms**; omiljene (7 sačuvanih) **24 → 3 upita, 865 → 108 ms**. Baza je Neon u Frankfurtu, RTT ~45–60 ms po upitu, pa je broj mrežnih putovanja bio ceo problem, ne količina podataka.
 Opis problema (zadržan jer objašnjava zašto `@EntityGraph` nije bio rešenje):
