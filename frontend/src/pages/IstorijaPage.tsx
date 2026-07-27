@@ -107,6 +107,59 @@ function OmiljenaModal({ porudzbinaId, token, onZatvori, onUspeh }: {
     );
 }
 
+/* ─── Modal "korpa nije prazna" ──────────────────────────── */
+
+/** Srpska množina za „stavka" (1 stavku, 2–4 stavke, ostalo stavki). */
+function stavkeRec(n: number): string {
+    const zadnja = n % 10;
+    const zadnjeDve = n % 100;
+    if (zadnja === 1 && zadnjeDve !== 11) return 'stavku';
+    if (zadnja >= 2 && zadnja <= 4 && (zadnjeDve < 12 || zadnjeDve > 14)) return 'stavke';
+    return 'stavki';
+}
+
+/**
+ * Pita pre nego što dirne već sastavljenu korpu. Brisanje korpe se ne može
+ * poništiti, pa se ne radi bez potvrde.
+ */
+function ZameniKorpuModal({ brojStavki, onZameni, onDodaj, onZatvori }: {
+    brojStavki: number;
+    onZameni: () => void;
+    onDodaj: () => void;
+    onZatvori: () => void;
+}) {
+    return (
+        <motion.div
+            className={styles.modalOverlay}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onZatvori}
+        >
+            <motion.div
+                className={styles.modal}
+                initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                onClick={e => e.stopPropagation()}
+            >
+                <span className={styles.modalTape} />
+                <h3 className={styles.modalNaslov}>Korpa nije prazna</h3>
+                <p className={styles.modalPod}>
+                    U korpi već imaš {brojStavki} {stavkeRec(brojStavki)}. Šta da radim
+                    sa ovom porudžbinom?
+                </p>
+                <div className={styles.modalDugmad}>
+                    <button className={styles.modalOtkazi} onClick={onDodaj}>
+                        dodaj na postojeće
+                    </button>
+                    <button className={styles.modalSacuvaj} onClick={onZameni}>
+                        Zameni korpu
+                    </button>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+}
+
 /* ─── Istorijska priznanica ──────────────────────────────── */
 
 function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
@@ -243,7 +296,7 @@ function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
 
 export default function IstorijaPage() {
     const { korisnik, token } = useAuth();
-    const { dodaj, otvoriDrawer, postaviPorukuKorpe } = useCart();
+    const { korpa, dodaj, isprazni, otvoriDrawer, postaviPorukuKorpe } = useCart();
     const { aktivnaId, preostaloMin, otvoriPracenje } = useAktivnaPorudzbina();
 
     const [porudzbine, setPorudzbine] = useState<Porudzbina[]>([]);
@@ -254,6 +307,7 @@ export default function IstorijaPage() {
     const [loading, setLoading] = useState(true);
     const [greska, setGreska] = useState('');
     const [omiljenaModal, setOmiljenaModal] = useState<number | null>(null);
+    const [zameniModal, setZameniModal] = useState<Porudzbina | null>(null);
     const [sacuvane, setSacuvane] = useState<number[]>([]);
     const [toast, setToast] = useState('');
 
@@ -300,7 +354,9 @@ export default function IstorijaPage() {
         return p && p.dostupan !== false ? p : null;
     };
 
-    const poruciPonovo = (p: Porudzbina) => {
+    const napuniKorpu = (p: Porudzbina, zameni: boolean) => {
+        if (zameni) isprazni();
+
         let dodato = 0;
         let preskoceno = 0;
         let dodaciPreskoceni = 0;
@@ -337,6 +393,16 @@ export default function IstorijaPage() {
                 : null
         );
         otvoriDrawer();
+    };
+
+    // Prazna korpa se puni bez pitanja; ako u njoj već nešto stoji, kupac bira
+    // da li da je zameni ili dopuni — brisanje korpe se ne može poništiti.
+    const poruciPonovo = (p: Porudzbina) => {
+        if (korpa.length > 0) {
+            setZameniModal(p);
+            return;
+        }
+        napuniKorpu(p, false);
     };
 
 
@@ -534,6 +600,17 @@ export default function IstorijaPage() {
                             setOmiljenaModal(null);
                             prikaziToast('Sačuvano kao omiljena porudžbina!');
                         }}
+                    />
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {zameniModal && (
+                    <ZameniKorpuModal
+                        brojStavki={korpa.length}
+                        onZameni={() => { napuniKorpu(zameniModal, true); setZameniModal(null); }}
+                        onDodaj={() => { napuniKorpu(zameniModal, false); setZameniModal(null); }}
+                        onZatvori={() => setZameniModal(null)}
                     />
                 )}
             </AnimatePresence>
