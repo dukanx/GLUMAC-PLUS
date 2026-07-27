@@ -41,10 +41,12 @@ Fix: dodati `src/test/resources/application-test.properties` + `@ActiveProfiles(
 **🟡 0h. Popuniti opise proizvoda (`Proizvod.opis`)**
 `Proizvod` u modelu ima polje `opis`, ali je prazno/null za većinu (Glumac, Dubai palačinka...). Zbog toga MeniPage (ProizvodKartica) i HomePage preporuke nemaju šta da prikažu kao opis. Popuniti opise kroz seed/admin (npr. "Eurokrem, plazma, višnja"). Frontend je već spreman da ih prikaže čim postoje.
 
-**🟡 0j. N+1 upiti pri mapiranju porudžbina (stavke → dodaci)**
-`PorudzbinaMapper.toViewDto` čita `p.getStavke()` i `s.getDodaci()` lenjo, a `PorudzbinaRepository` nema ni jedan `@EntityGraph`. Za listu porudžbina to znači: 1 upit za porudžbine + 1 po porudžbini za stavke + 1 po stavci za dodatke. Panel povlači `page?size=100`, pa pri punom danu (100 porudžbina × ~3 stavke) to ide na ~400 upita po osvežavanju — a panel se osvežava periodično. Na trenutnom obimu (nekoliko porudžbina) se ne oseti.
-Fix nije samo `@EntityGraph(attributePaths = {"stavke", "stavke.dodaci"})` — sa `Page` i fetch-om kolekcije Hibernate pređe na paginaciju u memoriji (`HHH000104`), što je gore. Ispravno: dohvatiti stranu ID-jeva (`Page<Long>`), pa drugim upitom `join fetch` stavke i dodatke za te ID-jeve, ili uključiti `@BatchSize` na kolekcijama (`stavke`, `dodaci`) što svede N upita na `N/batch`. `@BatchSize(size = 25)` je najmanja izmena za najveći efekat.
-Isti obrazac važi i za `/moje` (istorija kupca) i `findAllByStatus`.
+**✅ 0j. N+1 upiti pri mapiranju porudžbina (stavke → dodaci) — URAĐENO 2026-07-27**
+Rešeno sa `@BatchSize(size = 100)` na `StavkaPorudzbine.dodaci`, `OmiljenaPorudzbinaStavka.dodaci` i `OmiljenaPorudzbina.stavke` (konvencija je već postojala na `Porudzbina.stavke` i `Proizvod`). Mereno preko Hibernate `Statistics` na pravim podacima: istorija (8 porudžbina) **13 → 4 upita, 496 → 159 ms**; omiljene (7 sačuvanih) **24 → 3 upita, 865 → 108 ms**. Baza je Neon u Frankfurtu, RTT ~45–60 ms po upitu, pa je broj mrežnih putovanja bio ceo problem, ne količina podataka.
+Opis problema (zadržan jer objašnjava zašto `@EntityGraph` nije bio rešenje):
+`PorudzbinaMapper.toViewDto` čita `p.getStavke()` i `s.getDodaci()` lenjo. Stavke su bile pokrivene `@BatchSize`-om, ali dodaci (dodati uz feature dodataka) nisu — pa je svaka stavka slala poseban upit za svoje dodatke, i kad ih nema. Panel povlači `page?size=100`, pa bi pri punom danu (100 porudžbina × ~3 stavke) to bilo ~300 suvišnih upita po osvežavanju, a panel se osvežava periodično.
+Zašto ne `@EntityGraph(attributePaths = {"stavke", "stavke.dodaci"})`: sa `Page` i fetch-om kolekcije Hibernate pređe na paginaciju u memoriji (`HHH000104`), što je gore od N+1. Alternativa bi bila strana ID-jeva (`Page<Long>`) pa `join fetch` za te ID-jeve, ali `@BatchSize` daje isti efekat bez ijedne izmene u upitima.
+Isti obrazac je važio i za `/moje` (istorija kupca) i `findAllByStatus` — pokriveno istom izmenom.
 
 ---
 

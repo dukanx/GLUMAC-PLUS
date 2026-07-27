@@ -1,6 +1,7 @@
 package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,7 +39,10 @@ public class OmiljenaPorudzbina {
     private LocalDateTime datumKreiranja;
 
     /** Lista stavki omiljene porudžbine. */
+    //@BatchSize kao na `Porudzbina.stavke` — sve omiljene se učitavaju odjednom,
+    // pa bi bez njega svaka slala poseban upit za svoje stavke.
     @OneToMany(mappedBy = "omiljenaPorudzbina", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 100)
     private List<OmiljenaPorudzbinaStavka> stavke = new ArrayList<>();
 
     /**

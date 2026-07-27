@@ -3,6 +3,8 @@ package com.glumacplus.food_ordering.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.hibernate.annotations.BatchSize;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -55,7 +57,10 @@ public class StavkaPorudzbine {
     private Proizvod proizvod;
 
     /** Dodaci izabrani uz ovu stavku (npr. Nutela uz palačinku). */
+    //@BatchSize iz istog razloga kao na `Porudzbina.stavke` — bez njega mapiranje
+    // liste porudžbina šalje poseban upit za dodatke svake pojedinačne stavke.
     @OneToMany(mappedBy = "stavka", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 100)
     private List<StavkaDodatak> dodaci = new ArrayList<>();
 
     /**
