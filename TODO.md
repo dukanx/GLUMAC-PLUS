@@ -2,14 +2,15 @@
 
 ## Backend — kritično
 
-**🔴 0. Zaštita od duplih porudžbina + `/api/porudzbine/aktivna` endpoint**
-Trenutno `PorudzbinaService.create()` nema validaciju — korisnik može spamovati POST-ove i napraviti N istovremenih porudžbina u `U_PRIPREMI`. Takođe ne postoji način da frontend nakon refresha potvrdi da li je porudžbina iz `localStorage` još uvek aktivna.
+**✅ 0. Zaštita od duplih porudžbina + `/api/porudzbine/aktivna` endpoint — URAĐENO**
+`PorudzbinaService.create()` ima proveru `existsByKorisnik_IdAndStatusIn` i baca 409 sa dogovorenom porukom; `GET /api/porudzbine/aktivna` postoji i `AktivnaPorudzbinaContext` ga koristi. Originalni opis ispod.
+~~Trenutno `PorudzbinaService.create()` nema validaciju — korisnik može spamovati POST-ove i napraviti N istovremenih porudžbina u `U_PRIPREMI`. Takođe ne postoji način da frontend nakon refresha potvrdi da li je porudžbina iz `localStorage` još uvek aktivna.
 
 Potrebno:
 1. Repository: `existsByKorisnik_IdAndStatusIn(...)` i `findFirstByKorisnik_IdAndStatusInOrderByIdDesc(...)` za statuse `[U_PRIPREMI, SPREMNA]`.
 2. Validacija u `PorudzbinaService.create()` — ako postoji aktivna, baci `409 CONFLICT` sa porukom "Već imaš aktivnu porudžbinu. Sačekaj da bude gotova pre nego što naručiš ponovo."
 3. Novi endpoint `GET /api/porudzbine/aktivna` (KORISNIK role): vraća `AktivnaPorudzbinaDto(id, status, procenjenoVreme, tipPorudzbine)` ili `204 No Content`.
-4. Frontend follow-up: `AktivnaPorudzbinaContext` poziva taj endpoint pri startup-u da validira ID iz `localStorage` (trenutno se slepo veruje storage-u, što može da pokaže "aktivnu" porudžbinu koja je već `REALIZOVANA`); CartDrawer i MiniKorpa hvataju 409 i prikazuju jasnu poruku.
+4. Frontend follow-up: `AktivnaPorudzbinaContext` poziva taj endpoint pri startup-u da validira ID iz `localStorage` (trenutno se slepo veruje storage-u, što može da pokaže "aktivnu" porudžbinu koja je već `REALIZOVANA`); CartDrawer i MiniKorpa hvataju 409 i prikazuju jasnu poruku.~~
 
 **🟡 0b. Prepoznavanje da li je porudžbina već sačuvana kao omiljena**
 Frontend trenutno prati "Sačuvano" stanje samo per-sesija (resetuje se na refresh) jer backend nema vezu omiljena → izvorna porudžbina. NE rešavati kao `boolean omiljena` na `Porudzbina` (ne hvata više omiljenih iz iste porudžbine + raspada se na brisanje omiljene). Umesto toga:
@@ -27,9 +28,10 @@ RSD nema podjedinicu, ali `ukupanIznos` izlazi sa .5 (npr. 5% od 590 = 560.5). P
 Panel ima countdown za U_PRIPREMI (sada prikaz u minutima, Space Mono). Trenutna implementacija: start odbrojavanja se pamti **lokalno** (`localStorage: panel_vreme_start`, po porudžbini, stamp pri prihvatanju). Radi tačno i preko hard-reload-a (localStorage persistira) — potvrđeno u praksi 2026-07-23.
 Backend verzija je potrebna SAMO ako: (a) panel se koristi na **više uređaja/tableta istovremeno** (localStorage se ne deli), ili (b) treba da preživi čišćenje storage-a / rad iz incognita. Tada dodati `vremePrihvatanja: LocalDateTime` (kad pređe U NOVA→U_PRIPREMI) ili `rokGotovo` na `Porudzbina` + `PorudzbinaViewDto`, i računati countdown od servera. Za sada nije prioritet.
 
-**🔴 0f. BUG: `/api/porudzbine/moje` vraća `List` umesto `Page` — nepristupačne porudžbine**
-`getMyOrders` prima `page`/`size` i interno seče rezultat, ali vraća `List<PorudzbinaViewDto>` (ne `Page`). Posledica: frontend ne dobija `totalPages`/`totalElements`, pa IstorijaPage uvek misli da postoji 1 strana — pager se nikad ne prikaže. **Korisnik sa >8 porudžbina ne može da vidi 9. i dalje** (tihi bug; ne aktivira se dok ima malo porudžbina).
-Fix: `/moje` da vraća `Page<PorudzbinaViewDto>` (kao što `/page` već radi — servis vrati `repo.findBy...(pageable)` umesto `.getContent()/.toList()`). Frontend NE treba menjati — `else` grana u `ucitaj` već hvata `content`/`totalPages`/`totalElements`.
+**✅ 0f. BUG: `/api/porudzbine/moje` vraćao `List` umesto `Page` — URAĐENO**
+`PorudzbinaController.getMyOrders` sada vraća `ResponseEntity<Page<PorudzbinaViewDto>>`, servis prosleđuje `Pageable` repozitorijumu. Pager u istoriji radi. Originalni opis ispod.
+~~`getMyOrders` prima `page`/`size` i interno seče rezultat, ali vraća `List<PorudzbinaViewDto>` (ne `Page`). Posledica: frontend ne dobija `totalPages`/`totalElements`, pa IstorijaPage uvek misli da postoji 1 strana — pager se nikad ne prikaže. **Korisnik sa >8 porudžbina ne može da vidi 9. i dalje** (tihi bug; ne aktivira se dok ima malo porudžbina).
+Fix: `/moje` da vraća `Page<PorudzbinaViewDto>` (kao što `/page` već radi — servis vrati `repo.findBy...(pageable)` umesto `.getContent()/.toList()`). Frontend NE treba menjati — `else` grana u `ucitaj` već hvata `content`/`totalPages`/`totalElements`.~~
 
 **🟡 0g. Ime kupca (i telefon) u `PorudzbinaViewDto` za panel**
 Panel zaposlenog bi trebalo da prikaže ime kupca ("čija je porudžbina"). Frontend je već spreman (`{p.korisnikIme && ...}` u kartici), ali DTO ne sadrži `korisnikIme`. Dodati `korisnikIme` (i opciono `brojTelefona`) u `PorudzbinaViewDto` — proradiće bez frontend izmene.
@@ -58,10 +60,9 @@ Isti obrazac je važio i za `/moje` (istorija kupca) i `findAllByStatus` — pok
 
 ## Frontend — po prioritetu
 
-**🔴 1. Zameniti hardkodovane API URL-ove**
-`http://localhost:8080` je direktno upisan u 8 fajlova. Treba kreirati `.env.local` sa `VITE_API_URL=http://localhost:8080` i koristiti `import.meta.env.VITE_API_URL` svuda (kao što `LoyaltyPage` i `IstorijaPage` već rade).
-Fajlovi koji još imaju hardkodovan URL: `AuthContext.tsx`, `LoginPage.tsx`, `RegisterPage.tsx`, `MeniPage.tsx`, `CartDrawer.tsx`, `MiniKorpa.tsx`, `StatusPorudzbine.tsx`.
-Već koriste `API` env var (obrazac za kopirati): `IstorijaPage.tsx`, `OmiljenePage.tsx`, `AdminPage.tsx`.
+**✅ 1. Zameniti hardkodovane API URL-ove — URAĐENO**
+Nigde više nema golog `http://localhost:8080`. Preostalih pet pojava (`api/client.ts`, `hooks/useRadnoVreme.ts`, `pages/IstorijaPage.tsx`, `pages/OmiljenePage.tsx`, `pages/PanelPorudzbina.tsx`) su oblika `import.meta.env.VITE_API_URL ?? 'http://localhost:8080'`, dakle env vrednost sa lokalnim fallback-om. Većina poziva ionako ide kroz `apiFetch` iz `api/client.ts`.
+Eventualno kasnije: svesti i tih pet na jedan izvor (npr. izvezti `API` iz `api/client.ts`), ali to je kozmetika.
 
 **🔴 2. Auto-logout na istekao token (401/403)**
 Trenutno kada JWT istekne, zaštićeni pozivi vrate 403 i frontend samo prikaže sirovu grešku ("Forbidden" / "Nije moguće učitati..."). Treba centralno hvatanje 401/403 → `logout()` + redirect na `/login` sa porukom "Sesija je istekla, prijavite se ponovo." Najčistije kroz wrapper oko `fetch` (npr. `apiFetch` helper) ili interceptor. Pogađa sve zaštićene pozive (porudžbine, omiljene, /me...).
