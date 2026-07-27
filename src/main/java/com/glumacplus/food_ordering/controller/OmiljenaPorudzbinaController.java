@@ -1,7 +1,7 @@
 package com.glumacplus.food_ordering.controller;
 
 import com.glumacplus.food_ordering.dto.OmiljenaPorudzbinaViewDto;
-import com.glumacplus.food_ordering.dto.PorudzbinaViewDto;
+import com.glumacplus.food_ordering.dto.PonoviOmiljenuViewDto;
 import com.glumacplus.food_ordering.model.TipPorudzbine;
 import com.glumacplus.food_ordering.service.OmiljenaPorudzbinaService;
 import org.springframework.http.HttpStatus;
@@ -36,13 +36,19 @@ public class OmiljenaPorudzbinaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createFromOrder(porudzbinaId, naziv));
     }
 
+    /**
+     * Uz {@code preskociNedostupno=true} nedostupne stavke i dodaci se izostave
+     * umesto da obore celu porudžbinu; odgovor nosi listu preskočenog.
+     */
     @PostMapping("/{omiljenaPorudzbinaId}/ponovi")
-    public ResponseEntity<PorudzbinaViewDto> repeatMyFavorite(
+    public ResponseEntity<PonoviOmiljenuViewDto> repeatMyFavorite(
             @PathVariable Long omiljenaPorudzbinaId,
             @RequestParam(required = false) TipPorudzbine tipPorudzbine,
-            @RequestParam(required = false) String napomena
+            @RequestParam(required = false) String napomena,
+            @RequestParam(defaultValue = "false") boolean preskociNedostupno
     ) {
-        return ResponseEntity.ok(service.repeatMyFavorite(omiljenaPorudzbinaId, tipPorudzbine, napomena));
+        return ResponseEntity.ok(
+                service.repeatMyFavorite(omiljenaPorudzbinaId, tipPorudzbine, napomena, preskociNedostupno));
     }
 
     @DeleteMapping("/{omiljenaPorudzbinaId}")

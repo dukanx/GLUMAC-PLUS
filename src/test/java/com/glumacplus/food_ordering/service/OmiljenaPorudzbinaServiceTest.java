@@ -1,6 +1,10 @@
 package com.glumacplus.food_ordering.service;
 
 import com.glumacplus.food_ordering.dto.OmiljenaPorudzbinaViewDto;
+import com.glumacplus.food_ordering.dto.PonoviOmiljenuViewDto;
+import com.glumacplus.food_ordering.dto.PorudzbinaDto;
+import com.glumacplus.food_ordering.dto.PorudzbinaViewDto;
+import com.glumacplus.food_ordering.dto.StavkaPorudzbineDto;
 import com.glumacplus.food_ordering.model.*;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
 import com.glumacplus.food_ordering.repository.OmiljenaPorudzbinaRepository;
@@ -18,9 +22,11 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -166,6 +172,170 @@ class OmiljenaPorudzbinaServiceTest {
         );
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
         verify(omiljenaPorudzbinaRepo, never()).save(any());
+    }
+
+    @Test
+    void testCreateFromOrderPrenosiDodatke() {
+        setupSecurityContext("korisnik@gmail.com");
+
+        Korisnik korisnik = new Korisnik("Nikola", "korisnik@gmail.com", "hash", 0, Uloga.KORISNIK);
+        korisnik.setId(1L);
+
+        Proizvod palacinka = new Proizvod();
+        palacinka.setId(1L);
+        palacinka.setNaziv("Nutela");
+
+        Proizvod banana = new Proizvod();
+        banana.setId(2L);
+        banana.setNaziv("Banana");
+
+        StavkaPorudzbine stavka = new StavkaPorudzbine();
+        stavka.setProizvod(palacinka);
+        stavka.setKolicina(2);
+        stavka.dodajDodatak(new StavkaDodatak(banana, 3, new BigDecimal("100.00")));
+
+        Porudzbina por = new Porudzbina();
+        por.setId(5L);
+        por.setKorisnik(korisnik);
+        por.dodajStavku(stavka);
+
+        when(korisnikRepo.findByEmail("korisnik@gmail.com")).thenReturn(Optional.of(korisnik));
+        when(porudzbinaRepo.findById(5L)).thenReturn(Optional.of(por));
+        when(omiljenaPorudzbinaRepo.save(any(OmiljenaPorudzbina.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        omiljenaPorudzbinaService.createFromOrder(5L, "Sa dodatkom");
+
+        ArgumentCaptor<OmiljenaPorudzbina> captor = ArgumentCaptor.forClass(OmiljenaPorudzbina.class);
+        verify(omiljenaPorudzbinaRepo).save(captor.capture());
+        OmiljenaPorudzbinaStavka sacuvana = captor.getValue().getStavke().getFirst();
+
+        assertEquals(1, sacuvana.getDodaci().size());
+        OmiljenaStavkaDodatak dodatak = sacuvana.getDodaci().getFirst();
+        assertEquals("Banana", dodatak.getProizvod().getNaziv());
+        assertEquals(3, dodatak.getKolicina());
+        // Bidirekciona veza mora biti postavljena, inače cascade ne snimi dodatak.
+        assertSame(sacuvana, dodatak.getStavka());
+    }
+
+    @Test
+    void testRepeatMyFavoritePrenosiDodatke() {
+        setupSecurityContext("korisnik@gmail.com");
+
+        Korisnik korisnik = new Korisnik("Nikola", "korisnik@gmail.com", "hash", 0, Uloga.KORISNIK);
+        korisnik.setId(1L);
+
+        Proizvod palacinka = new Proizvod();
+        palacinka.setId(1L);
+        palacinka.setNaziv("Nutela");
+
+        Proizvod banana = new Proizvod();
+        banana.setId(2L);
+        banana.setNaziv("Banana");
+
+        OmiljenaPorudzbinaStavka stavka = new OmiljenaPorudzbinaStavka();
+        stavka.setProizvod(palacinka);
+        stavka.setKolicina(2);
+        stavka.dodajDodatak(new OmiljenaStavkaDodatak(banana, 3));
+
+        OmiljenaPorudzbina omiljena = new OmiljenaPorudzbina();
+        omiljena.setId(7L);
+        omiljena.setKorisnik(korisnik);
+        omiljena.dodajStavku(stavka);
+
+        when(korisnikRepo.findByEmail("korisnik@gmail.com")).thenReturn(Optional.of(korisnik));
+        when(omiljenaPorudzbinaRepo.findByIdAndKorisnik_Id(7L, 1L)).thenReturn(Optional.of(omiljena));
+        when(porudzbinaService.create(any(PorudzbinaDto.class))).thenReturn(new PorudzbinaViewDto());
+
+        omiljenaPorudzbinaService.repeatMyFavorite(7L, TipPorudzbine.ZA_PONETI, null);
+
+        ArgumentCaptor<PorudzbinaDto> captor = ArgumentCaptor.forClass(PorudzbinaDto.class);
+        verify(porudzbinaService).create(captor.capture());
+        StavkaPorudzbineDto poslata = captor.getValue().getStavke().getFirst();
+
+        assertEquals(1L, poslata.getProizvodId());
+        assertEquals(1, poslata.getDodaci().size());
+        assertEquals(2L, poslata.getDodaci().getFirst().getProizvodId());
+        assertEquals(3, poslata.getDodaci().getFirst().getKolicina());
+    }
+
+    @Test
+    void testRepeatMyFavoritePreskaceNedostupanDodatak() {
+        setupSecurityContext("korisnik@gmail.com");
+
+        Korisnik korisnik = new Korisnik("Nikola", "korisnik@gmail.com", "hash", 0, Uloga.KORISNIK);
+        korisnik.setId(1L);
+
+        Proizvod palacinka = new Proizvod();
+        palacinka.setId(1L);
+        palacinka.setNaziv("Nutela");
+
+        Proizvod ananas = new Proizvod();
+        ananas.setId(2L);
+        ananas.setNaziv("Ananas");
+        ananas.setDostupan(false);
+
+        Proizvod jagode = new Proizvod();
+        jagode.setId(3L);
+        jagode.setNaziv("Jagode");
+
+        OmiljenaPorudzbinaStavka stavka = new OmiljenaPorudzbinaStavka();
+        stavka.setProizvod(palacinka);
+        stavka.setKolicina(1);
+        stavka.dodajDodatak(new OmiljenaStavkaDodatak(ananas, 1));
+        stavka.dodajDodatak(new OmiljenaStavkaDodatak(jagode, 1));
+
+        OmiljenaPorudzbina omiljena = new OmiljenaPorudzbina();
+        omiljena.setId(7L);
+        omiljena.setKorisnik(korisnik);
+        omiljena.dodajStavku(stavka);
+
+        when(korisnikRepo.findByEmail("korisnik@gmail.com")).thenReturn(Optional.of(korisnik));
+        when(omiljenaPorudzbinaRepo.findByIdAndKorisnik_Id(7L, 1L)).thenReturn(Optional.of(omiljena));
+        when(porudzbinaService.create(any(PorudzbinaDto.class))).thenReturn(new PorudzbinaViewDto());
+
+        PonoviOmiljenuViewDto rezultat =
+                omiljenaPorudzbinaService.repeatMyFavorite(7L, TipPorudzbine.ZA_PONETI, null, true);
+
+        assertEquals(List.of("Ananas"), rezultat.getPreskoceno());
+
+        ArgumentCaptor<PorudzbinaDto> captor = ArgumentCaptor.forClass(PorudzbinaDto.class);
+        verify(porudzbinaService).create(captor.capture());
+        StavkaPorudzbineDto poslata = captor.getValue().getStavke().getFirst();
+
+        assertEquals(1, poslata.getDodaci().size());
+        assertEquals(3L, poslata.getDodaci().getFirst().getProizvodId());
+    }
+
+    @Test
+    void testRepeatMyFavoriteSveNedostupnoBaca409() {
+        setupSecurityContext("korisnik@gmail.com");
+
+        Korisnik korisnik = new Korisnik("Nikola", "korisnik@gmail.com", "hash", 0, Uloga.KORISNIK);
+        korisnik.setId(1L);
+
+        Proizvod palacinka = new Proizvod();
+        palacinka.setId(1L);
+        palacinka.setNaziv("Nutela");
+        palacinka.setDostupan(false);
+
+        OmiljenaPorudzbinaStavka stavka = new OmiljenaPorudzbinaStavka();
+        stavka.setProizvod(palacinka);
+        stavka.setKolicina(1);
+
+        OmiljenaPorudzbina omiljena = new OmiljenaPorudzbina();
+        omiljena.setId(7L);
+        omiljena.setKorisnik(korisnik);
+        omiljena.dodajStavku(stavka);
+
+        when(korisnikRepo.findByEmail("korisnik@gmail.com")).thenReturn(Optional.of(korisnik));
+        when(omiljenaPorudzbinaRepo.findByIdAndKorisnik_Id(7L, 1L)).thenReturn(Optional.of(omiljena));
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> omiljenaPorudzbinaService.repeatMyFavorite(7L, TipPorudzbine.ZA_PONETI, null, true)
+        );
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
+        verify(porudzbinaService, never()).create(any());
     }
 
     @Test

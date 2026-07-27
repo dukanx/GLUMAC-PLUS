@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,6 +104,14 @@ public class OmiljenaPorudzbinaService {
             OmiljenaPorudzbinaStavka stavka = new OmiljenaPorudzbinaStavka();
             stavka.setProizvod(stavkaPorudzbine.getProizvod());
             stavka.setKolicina(stavkaPorudzbine.getKolicina());
+
+            // Dodaci se prenose bez cene — kad se šablon iskoristi, uzima se
+            // cena koja tad važi (vidi OmiljenaStavkaDodatak).
+            for (StavkaDodatak dodatak : stavkaPorudzbine.getDodaci()) {
+                stavka.dodajDodatak(new OmiljenaStavkaDodatak(
+                        dodatak.getProizvod(), dodatak.getKolicina()));
+            }
+
             omiljenaPorudzbina.dodajStavku(stavka);
         }
 
@@ -121,6 +130,24 @@ public class OmiljenaPorudzbinaService {
      *         ne pripada korisniku ili ne postoji, ili 400 ako nema stavke
      */
     public PorudzbinaViewDto repeatMyFavorite(Long omiljenaPorudzbinaId, TipPorudzbine tipPorudzbine, String napomena) {
+        return repeatMyFavorite(omiljenaPorudzbinaId, tipPorudzbine, napomena, false).getPorudzbina();
+    }
+
+    /**
+     * Kreira novu porudžbinu na osnovu sačuvane omiljene porudžbine.
+     *
+     * @param omiljenaPorudzbinaId identifikator omiljene porudžbine
+     * @param tipPorudzbine tip nove porudžbine
+     * @param napomena napomena uz novu porudžbinu
+     * @param preskociNedostupno ako je {@code true}, stavke i dodaci koji trenutno
+     *        nisu dostupni se izostavljaju umesto da obore celu porudžbinu
+     * @return kreirana porudžbina uz nazive preskočenih stavki i dodataka
+     * @throws ResponseStatusException sa statusom 404 ako omiljena porudžbina
+     *         ne pripada korisniku ili ne postoji, 400 ako nema stavke, ili
+     *         409 ako je preskakanjem ostala bez ijedne stavke
+     */
+    public PonoviOmiljenuViewDto repeatMyFavorite(
+            Long omiljenaPorudzbinaId, TipPorudzbine tipPorudzbine, String napomena, boolean preskociNedostupno) {
         Korisnik korisnik = getCurrentUserEntity();
         OmiljenaPorudzbina omiljenaPorudzbina = omiljenaPorudzbinaRepo.findByIdAndKorisnik_Id(omiljenaPorudzbinaId, korisnik.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Omiljena porudžbina nije pronađena"));
@@ -133,17 +160,42 @@ public class OmiljenaPorudzbinaService {
         dto.setTipPorudzbine(tipPorudzbine);
         dto.setNapomena(napomena);
 
-        List<StavkaPorudzbineDto> stavkeDto = omiljenaPorudzbina.getStavke().stream()
-                .map(stavka -> {
-                    StavkaPorudzbineDto stavkaDto = new StavkaPorudzbineDto();
-                    stavkaDto.setProizvodId(stavka.getProizvod().getId());
-                    stavkaDto.setKolicina(stavka.getKolicina());
-                    return stavkaDto;
-                })
-                .collect(Collectors.toList());
+        List<String> preskoceno = new ArrayList<>();
+        List<StavkaPorudzbineDto> stavkeDto = new ArrayList<>();
+
+        for (OmiljenaPorudzbinaStavka stavka : omiljenaPorudzbina.getStavke()) {
+            if (preskociNedostupno && !stavka.getProizvod().isDostupan()) {
+                preskoceno.add(stavka.getProizvod().getNaziv());
+                continue;
+            }
+
+            StavkaPorudzbineDto stavkaDto = new StavkaPorudzbineDto();
+            stavkaDto.setProizvodId(stavka.getProizvod().getId());
+            stavkaDto.setKolicina(stavka.getKolicina());
+
+            List<StavkaDodatakDto> dodaciDto = new ArrayList<>();
+            for (OmiljenaStavkaDodatak dodatak : stavka.getDodaci()) {
+                if (preskociNedostupno && !dodatak.getProizvod().isDostupan()) {
+                    preskoceno.add(dodatak.getProizvod().getNaziv());
+                    continue;
+                }
+                StavkaDodatakDto dodatakDto = new StavkaDodatakDto();
+                dodatakDto.setProizvodId(dodatak.getProizvod().getId());
+                dodatakDto.setKolicina(dodatak.getKolicina());
+                dodaciDto.add(dodatakDto);
+            }
+
+            stavkaDto.setDodaci(dodaciDto);
+            stavkeDto.add(stavkaDto);
+        }
+
+        if (stavkeDto.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Nijedna stavka iz ove omiljene porudžbine trenutno nije dostupna.");
+        }
 
         dto.setStavke(stavkeDto);
-        return porudzbinaService.create(dto);
+        return new PonoviOmiljenuViewDto(porudzbinaService.create(dto), preskoceno);
     }
 
     /**
