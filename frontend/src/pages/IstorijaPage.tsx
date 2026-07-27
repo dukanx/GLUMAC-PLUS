@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { tipLabela, type Porudzbina } from '../types/porudzbina';
-import type { Proizvod } from '../types/proizvod';
+import type { DodatakKorpe, Proizvod } from '../types/proizvod';
 import { Klose, Sat, ChevronDole, Refresh, Srce } from '../components/Doodle';
 import * as porudzbineApi from '../api/porudzbine';
 import * as proizvodiApi from '../api/proizvodi';
@@ -243,7 +243,7 @@ function Priznanica({ p, popust, onPoruciPonovo, onSacuvaj, sacuvana }: {
 
 export default function IstorijaPage() {
     const { korisnik, token } = useAuth();
-    const { dodaj, otvoriDrawer } = useCart();
+    const { dodaj, otvoriDrawer, postaviPorukuKorpe } = useCart();
     const { aktivnaId, preostaloMin, otvoriPracenje } = useAktivnaPorudzbina();
 
     const [porudzbine, setPorudzbine] = useState<Porudzbina[]>([]);
@@ -293,20 +293,50 @@ export default function IstorijaPage() {
             .catch(() => { });
     }, []);
 
+    // Katalog nosi i dodatke (tip=Dodaci), pa se i oni traže po nazivu.
+    // Nedostupno se preskače ovde — inače bi backend odbio celu porudžbinu na kasi.
+    const nadjiDostupan = (naziv: string): Proizvod | null => {
+        const p = proizvodiPoNazivu.get(naziv);
+        return p && p.dostupan !== false ? p : null;
+    };
+
     const poruciPonovo = (p: Porudzbina) => {
         let dodato = 0;
         let preskoceno = 0;
+        let dodaciPreskoceni = 0;
+
         for (const s of p.stavke) {
-            const proizvod = proizvodiPoNazivu.get(s.nazivProizvoda);
-            if (proizvod) { dodaj(proizvod, s.kolicina); dodato++; }
-            else preskoceno++;
+            const proizvod = nadjiDostupan(s.nazivProizvoda);
+            if (!proizvod) { preskoceno++; continue; }
+
+            const dodaci: DodatakKorpe[] = [];
+            for (const d of s.dodaci ?? []) {
+                const dodatak = nadjiDostupan(d.nazivProizvoda);
+                if (dodatak) dodaci.push({ proizvod: dodatak, kolicina: d.kolicina });
+                else dodaciPreskoceni++;
+            }
+
+            dodaj(proizvod, s.kolicina, dodaci);
+            dodato++;
         }
+
         if (dodato === 0) {
             prikaziToast('Nijedan proizvod iz ove porudžbine nije dostupan danas.');
             return;
         }
+
+        // Šta je izostavljeno ide u korpu, ne u toast: korpa se odmah otvara
+        // preko toasta, a i sama je korak provere pre naručivanja.
+        const izostavljeno = [
+            ...(preskoceno > 0 ? [`${preskoceno} proizvod(a) više nije na meniju`] : []),
+            ...(dodaciPreskoceni > 0 ? [`${dodaciPreskoceni} dodatak(a) trenutno nema`] : []),
+        ];
+        postaviPorukuKorpe(
+            izostavljeno.length > 0
+                ? `Dodato bez onoga čega nema: ${izostavljeno.join(', ')}.`
+                : null
+        );
         otvoriDrawer();
-        if (preskoceno > 0) prikaziToast(`${preskoceno} proizvod(a) više nije na meniju — dodato ostalo.`);
     };
 
 

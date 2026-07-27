@@ -351,6 +351,32 @@
     gap: 1px;
 }
 
+/* Napomena na vrhu korpe (npr. da je nešto izostavljeno pri ponavljanju). */
+.napomenaKorpe {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: var(--font-cav);
+    font-size: 18px;
+    line-height: 1.25;
+    color: hsl(45 80% 30%);
+    background: hsl(48 90% 68% / .35);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin-bottom: 14px;
+}
+
+.napomenaZatvori {
+    flex: 0 0 auto;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    color: inherit;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px;
+}
+
 .dodatakStavka {
     display: flex;
     justify-content: space-between;

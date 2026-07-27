@@ -20,6 +20,13 @@ interface CartContextTip {
     drawerOtvoren: boolean;
     otvoriDrawer: () => void;
     zatvoriDrawer: () => void;
+    /**
+     * Napomena koja stoji u korpi dok je kupac pregleda (npr. da je pri
+     * ponavljanju porudžbine nešto izostavljeno). Toast ovde ne radi — korpa
+     * ga prekriva, a i nestao bi pre nego što kupac stigne da pročita.
+     */
+    porukaKorpe: string | null;
+    postaviPorukuKorpe: (poruka: string | null) => void;
 }
 
 const CartContext = createContext<CartContextTip | null>(null);
@@ -50,6 +57,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
 
     const [drawerOtvoren, setDrawerOtvoren] = useState(false);
+    const [porukaKorpe, setPorukaKorpe] = useState<string | null>(null);
 
     useEffect(() => {
         try {
@@ -113,7 +121,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             ukupnaCena, ukupnoStavki,
             drawerOtvoren,
             otvoriDrawer: () => setDrawerOtvoren(true),
-            zatvoriDrawer: () => setDrawerOtvoren(false),
+            // Napomena važi za jedno otvaranje korpe — zatvaranjem se briše.
+            zatvoriDrawer: () => { setDrawerOtvoren(false); setPorukaKorpe(null); },
+            porukaKorpe,
+            postaviPorukuKorpe: setPorukaKorpe,
         }}>
             {children}
         </CartContext.Provider>

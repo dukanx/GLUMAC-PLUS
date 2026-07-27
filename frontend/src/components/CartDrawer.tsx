@@ -18,6 +18,7 @@ export default function CartDrawer() {
         korpa, povecaj, smanji, ukloni, isprazni,
         ukupnaCena, ukupnoStavki,
         drawerOtvoren, zatvoriDrawer,
+        porukaKorpe, postaviPorukuKorpe,
     } = useCart();
 
     const [tipPorudzbine, setTipPorudzbine] = useState<TipPorudzbine>('U_LOKALU');
@@ -127,6 +128,19 @@ export default function CartDrawer() {
                                 </div>
 
                             ) : (
+                                <>
+                                {porukaKorpe && (
+                                    <div className={styles.napomenaKorpe}>
+                                        <span>{porukaKorpe}</span>
+                                        <button
+                                            className={styles.napomenaZatvori}
+                                            onClick={() => postaviPorukuKorpe(null)}
+                                            aria-label="Sakrij napomenu"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                )}
                                 <AnimatePresence initial={false}>
                                     {korpa.map(item => (
                                         <motion.div
@@ -187,6 +201,7 @@ export default function CartDrawer() {
                                         </motion.div>
                                     ))}
                                 </AnimatePresence>
+                                </>
                             )}
                         </div>
 
