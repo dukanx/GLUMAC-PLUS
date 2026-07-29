@@ -6,29 +6,11 @@ import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
 import type { Proizvod } from '../types/proizvod';
 import { Kanta, Srce } from '../components/Doodle';
+import * as omiljeneApi from '../api/omiljene';
+import type { Omiljena } from '../api/omiljene';
+import * as proizvodiApi from '../api/proizvodi';
+import { ApiError } from '../api/client';
 import styles from './OmiljenePage.module.css';
-
-// Dodatak zapamćen uz stavku — bez cene, jer se cena čita iz aktuelnog kataloga.
-interface OmiljenaStavkaDodatak {
-    proizvodId: number;
-    nazivProizvoda: string;
-    kolicina: number;
-}
-
-interface OmiljenaStavka {
-    proizvodId: number;
-    nazivProizvoda: string;
-    kolicina: number;
-    dodaci?: OmiljenaStavkaDodatak[];
-}
-
-interface Omiljena {
-    id: number;
-    naziv: string;
-    stavke: OmiljenaStavka[];
-}
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 // Boje čioda po redosledu (rust · zelena · žuta), pa ciklično.
 const PIN_BOJE = [
@@ -39,9 +21,8 @@ const PIN_BOJE = [
 
 /* ─── Modal "ponovi porudžbinu" ──────────────────────────── */
 
-function PonoviModal({ omiljena, token, popust, ukupno, sazetak, nedostupni, onZatvori, onUspeh }: {
+function PonoviModal({ omiljena, popust, ukupno, sazetak, nedostupni, onZatvori, onUspeh }: {
     omiljena: Omiljena;
-    token: string;
     popust: number;
     ukupno: number;
     /** Sažetak stavki sa dodacima — pravi ga kartica, jer ona zna dostupnost. */
@@ -62,25 +43,16 @@ function PonoviModal({ omiljena, token, popust, ukupno, sazetak, nedostupni, onZ
         setLoading(true);
         setGreska('');
         try {
-            const params = new URLSearchParams({ tipPorudzbine: tip });
-            if (napomena.trim()) params.set('napomena', napomena.trim());
             // Preskakanje tražimo samo kad je kupac video šta fali i potvrdio.
             // Ako se dostupnost promeni u međuvremenu, server vrati grešku
             // sa nazivom — bolje nego da tiho izbaci nešto bez pitanja.
-            if (nedostupni.length > 0) params.set('preskociNedostupno', 'true');
-            const res = await fetch(
-                `${API}/api/omiljene-porudzbine/${omiljena.id}/ponovi?${params.toString()}`,
-                { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.ok) {
-                const data = await res.json().catch(() => null);
-                onUspeh(data?.porudzbina?.porudzbinaId ?? null, data?.preskoceno ?? []);
-            } else {
-                const err = await res.json().catch(() => ({}));
-                setGreska(err.message ?? 'Nije moguće poručiti. Možda je lokal zatvoren.');
-            }
-        } catch {
-            setGreska('Greška u mreži.');
+            const data = await omiljeneApi.ponovi(
+                omiljena.id, tip, napomena, nedostupni.length > 0);
+            onUspeh(data?.porudzbina?.porudzbinaId ?? null, data?.preskoceno ?? []);
+        } catch (e) {
+            setGreska(e instanceof ApiError
+                ? e.message
+                : 'Nije moguće poručiti. Možda je lokal zatvoren.');
         } finally {
             setLoading(false);
         }
@@ -343,15 +315,10 @@ export default function OmiljenePage() {
         setLoading(true);
         setGreska('');
         try {
-            const [omiljeneRes, proizvodiRes] = await Promise.all([
-                fetch(`${API}/api/omiljene-porudzbine/moje`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                }),
-                fetch(`${API}/api/proizvodi`),
+            const [omiljeneData, proizvodiData] = await Promise.all([
+                omiljeneApi.getMoje(),
+                proizvodiApi.getSvi().catch(() => [] as Proizvod[]),
             ]);
-            if (!omiljeneRes.ok) throw new Error();
-            const omiljeneData: Omiljena[] = await omiljeneRes.json();
-            const proizvodiData: Proizvod[] = proizvodiRes.ok ? await proizvodiRes.json() : [];
             setOmiljene(omiljeneData);
             setProizvodiMap(new Map(proizvodiData.map(p => [p.id, p])));
         } catch {
@@ -367,16 +334,11 @@ export default function OmiljenePage() {
         if (!token) return;
         setBrisanje(id);
         try {
-            const res = await fetch(`${API}/api/omiljene-porudzbine/${id}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) {
-                setOmiljene(prev => prev.filter(o => o.id !== id));
-                prikaziToast('Omiljena je obrisana.');
-            } else prikaziToast('Nije moguće obrisati.');
+            await omiljeneApi.obrisi(id);
+            setOmiljene(prev => prev.filter(o => o.id !== id));
+            prikaziToast('Omiljena je obrisana.');
         } catch {
-            prikaziToast('Greška u mreži.');
+            prikaziToast('Nije moguće obrisati.');
         } finally {
             setBrisanje(null);
         }
@@ -460,7 +422,6 @@ export default function OmiljenePage() {
                 {ponoviModal && (
                     <PonoviModal
                         omiljena={ponoviModal.o}
-                        token={token}
                         popust={popust}
                         ukupno={ponoviModal.ukupno}
                         sazetak={ponoviModal.sazetak}

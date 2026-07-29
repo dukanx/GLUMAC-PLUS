@@ -26,6 +26,16 @@ export class ApiError extends Error {
     }
 }
 
+/**
+ * Ime događaja koji se emituje kad backend odbije zahtev zbog isteklog/nevažećeg
+ * tokena (401). `AuthContext` ga sluša i odjavljuje korisnika.
+ *
+ * <p>Ide preko događaja, a ne preko direktnog poziva, jer je ovo običan modul
+ * bez pristupa React kontekstu. 403 se namerno NE hvata: to znači da je korisnik
+ * prijavljen ali nema ulogu za tu akciju, pa odjava ne bi imala smisla.</p>
+ */
+export const DOGADJAJ_SESIJA_ISTEKLA = 'sesija-istekla';
+
 function napraviQuery(query?: ApiOpcije['query']): string {
     if (!query) return '';
     const par = new URLSearchParams();
@@ -56,6 +66,13 @@ export async function apiFetch<T>(path: string, opcije: ApiOpcije = {}): Promise
         // Pokušaj da izvučeš telo greške (message/errors sa backenda); ako nije JSON, ostaje null.
         const telo = await res.json().catch(() => null);
         const poruka = telo?.message ?? `Greška ${res.status}`;
+
+        // Samo na zaštićenim pozivima: 401 znači da token više ne važi.
+        // Bez ovoga korisnik ostane "ulogovan" i vidi sirovu grešku na svakom ekranu.
+        if (res.status === 401 && auth) {
+            window.dispatchEvent(new CustomEvent(DOGADJAJ_SESIJA_ISTEKLA));
+        }
+
         throw new ApiError(res.status, poruka, telo);
     }
 

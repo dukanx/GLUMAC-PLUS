@@ -9,11 +9,11 @@ import type { DodatakKorpe, Proizvod } from '../types/proizvod';
 import { Klose, Sat, ChevronDole, Refresh, Srce } from '../components/Doodle';
 import * as porudzbineApi from '../api/porudzbine';
 import * as proizvodiApi from '../api/proizvodi';
+import * as omiljeneApi from '../api/omiljene';
+import { ApiError } from '../api/client';
 import styles from './IstorijaPage.module.css';
 
 const PAGE_SIZE = 8;
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
-
 // Koraci narudžbenice: backend status → indeks aktivnog koraka.
 const KORACI = ['PRIMLJENO', 'U PRIPREMI', 'SPREMNA'];
 
@@ -39,8 +39,8 @@ function sazetakStavki(p: Porudzbina): string {
 
 /* ─── Modal "sačuvaj kao omiljenu" ───────────────────────── */
 
-function OmiljenaModal({ porudzbinaId, token, onZatvori, onUspeh }: {
-    porudzbinaId: number; token: string; onZatvori: () => void; onUspeh: () => void;
+function OmiljenaModal({ porudzbinaId, onZatvori, onUspeh }: {
+    porudzbinaId: number; onZatvori: () => void; onUspeh: () => void;
 }) {
     const [naziv, setNaziv] = useState('');
     const [loading, setLoading] = useState(false);
@@ -51,17 +51,10 @@ function OmiljenaModal({ porudzbinaId, token, onZatvori, onUspeh }: {
         setLoading(true);
         setGreska('');
         try {
-            const res = await fetch(
-                `${API}/api/omiljene-porudzbine/iz-porudzbine/${porudzbinaId}?naziv=${encodeURIComponent(naziv.trim())}`,
-                { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.ok) onUspeh();
-            else {
-                const err = await res.json().catch(() => ({}));
-                setGreska(err.message ?? 'Greška pri čuvanju');
-            }
-        } catch {
-            setGreska('Greška u mreži');
+            await omiljeneApi.sacuvajIzPorudzbine(porudzbinaId, naziv.trim());
+            onUspeh();
+        } catch (e) {
+            setGreska(e instanceof ApiError ? e.message : 'Greška u mreži');
         } finally {
             setLoading(false);
         }
@@ -593,7 +586,6 @@ export default function IstorijaPage() {
                 {omiljenaModal !== null && (
                     <OmiljenaModal
                         porudzbinaId={omiljenaModal}
-                        token={token}
                         onZatvori={() => setOmiljenaModal(null)}
                         onUspeh={() => {
                             setSacuvane(prev => [...prev, omiljenaModal]);

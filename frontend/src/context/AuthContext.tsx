@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import type { Korisnik, LoyaltyProgram } from '../types/korisnik';
 import * as authApi from '../api/auth';
+import { DOGADJAJ_SESIJA_ISTEKLA } from '../api/client';
 
 // ── Tipovi ──
 interface AuthContextTip {
@@ -57,6 +58,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setKorisnik(null);
         setToken(null);
     };
+
+    // Istekao token: `apiFetch` javi 401 kroz događaj, ovde se odjavljuje.
+    // Zastavica u sessionStorage preživi redirect na /login, gde se pročita
+    // i obriše, pa korisnik vidi zašto je izbačen.
+    useEffect(() => {
+        const naIstek = () => {
+            if (!localStorage.getItem('token')) return;   // već odjavljen
+            sessionStorage.setItem('sesijaIstekla', '1');
+            logout();
+        };
+        window.addEventListener(DOGADJAJ_SESIJA_ISTEKLA, naIstek);
+        return () => window.removeEventListener(DOGADJAJ_SESIJA_ISTEKLA, naIstek);
+    }, []);
 
     // Osvežavanje podatke o korisniku sa servera
     const osvezi = async () => {

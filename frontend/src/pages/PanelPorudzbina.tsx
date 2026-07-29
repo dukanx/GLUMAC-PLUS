@@ -6,11 +6,10 @@ import { tipLabela, type Porudzbina, type StatusPorudzbine } from '../types/poru
 import { Zvono, Refresh, Sat } from '../components/Doodle';
 import ZatvoriSmenuModal from '../components/ZatvoriSmenuModal';
 import * as smenaApi from '../api/smena';
+import * as porudzbineApi from '../api/porudzbine';
 import styles from './PanelPorudzbina.module.css';
 
 type Tab = 'PRIPREMA' | 'ZAVRSENE' | 'OTKAZANE';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 const PRESET_VREMENA = [10, 15, 20, 30];
 
@@ -337,15 +336,10 @@ export default function PanelPorudzbina() {
         if (!force && Date.now() - poslednjaAkcija.current < 4000) return;
         const pokrenuto = Date.now();
         try {
-            const res = await fetch(`${API}/api/porudzbine/page?page=0&size=100`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) {
-                const data = await res.json();
-                // Gledalo najskoriju akciju, time resavamo konflikt autoresresh vs rucna promena
-                if (!force && poslednjaAkcija.current >= pokrenuto) return;
-                setPorudzbine(data.content ?? data);
-            }
+            const data = await porudzbineApi.getStranica();
+            // Gledalo najskoriju akciju, time resavamo konflikt autoresresh vs rucna promena
+            if (!force && poslednjaAkcija.current >= pokrenuto) return;
+            setPorudzbine(data.content ?? data);
         } catch {
             // tiho — auto-refresh će pokušati ponovo
         } finally {
@@ -361,11 +355,12 @@ export default function PanelPorudzbina() {
 
     const patchStatus = async (id: number, noviStatus: StatusPorudzbine): Promise<boolean> => {
         if (!token) return false;
-        const res = await fetch(`${API}/api/porudzbine/${id}/status?status=${noviStatus}`, {
-            method: 'PATCH',
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        return res.ok;
+        try {
+            await porudzbineApi.promeniStatus(id, noviStatus);
+            return true;
+        } catch {
+            return false;
+        }
     };
 
     // Optimistički update: UI se menja ODMAH, mreža ide u pozadini.
@@ -390,11 +385,11 @@ export default function PanelPorudzbina() {
     const prihvati = (id: number, vreme: number) => {
         stampStart(id); // start odbrojavanja = trenutak prihvatanja
         return izvrsi(id, { status: 'U_PRIPREMI', procenjenoVreme: vreme }, async () => {
-            const vremeRes = await fetch(
-                `${API}/api/porudzbine/${id}/procenjeno-vreme?procenjenoVreme=${vreme}`,
-                { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (!vremeRes.ok) return false;
+            try {
+                await porudzbineApi.postaviProcenjenoVreme(id, vreme);
+            } catch {
+                return false;
+            }
             return patchStatus(id, 'U_PRIPREMI');
         });
     };

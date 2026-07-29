@@ -58,3 +58,29 @@ export function otkazi(id: number) {
         auth: true,
     });
 }
+
+/* ── Panel zaposlenog ── */
+
+/** Sve porudžbine za panel (jedna velika strana; panel sam grupiše po statusu). */
+export function getStranica(page = 0, size = 100) {
+    return apiFetch<StranicaOdgovor<Porudzbina>>('/api/porudzbine/page', {
+        auth: true,
+        query: { page, size },
+    });
+}
+
+export function promeniStatus(id: number, status: string) {
+    return apiFetch<void>(`/api/porudzbine/${id}/status`, {
+        method: 'PATCH',
+        auth: true,
+        query: { status },
+    });
+}
+
+export function postaviProcenjenoVreme(id: number, procenjenoVreme: number) {
+    return apiFetch<void>(`/api/porudzbine/${id}/procenjeno-vreme`, {
+        method: 'PATCH',
+        auth: true,
+        query: { procenjenoVreme },
+    });
+}

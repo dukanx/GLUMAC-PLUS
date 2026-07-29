@@ -15,6 +15,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [lozinka, setLozinka] = useState('');
   const [greska, setGreska] = useState('');
+  // Postavlja je AuthContext kad backend vrati 401 na istekao token. Čita se
+  // jednom pa briše, da poruka ne ostane na sledećoj poseti login strane.
+  const [sesijaIstekla] = useState(() => {
+    const bila = sessionStorage.getItem('sesijaIstekla') === '1';
+    if (bila) sessionStorage.removeItem('sesijaIstekla');
+    return bila;
+  });
   const [ucitava, setUcitava] = useState(false);
   const { login } = useAuth();
 
@@ -58,6 +65,11 @@ export default function LoginPage() {
         {justRegistered && (
           <div className={styles.uspeh} style={{ marginTop: 22 }}>
             ✓ nalog je kreiran — prijavi se
+          </div>
+        )}
+        {sesijaIstekla && !greska && (
+          <div className={styles.srvErr} style={{ marginTop: 22 }}>
+            Sesija je istekla — prijavi se ponovo.
           </div>
         )}
         {greska && <div className={styles.srvErr} style={{ marginTop: 22 }}>{greska}</div>}
