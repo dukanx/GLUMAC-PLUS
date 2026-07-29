@@ -1,6 +1,7 @@
 package com.glumacplus.food_ordering.config;
 
 import com.glumacplus.food_ordering.security.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +23,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -68,11 +70,30 @@ public class SecurityConfig {
                 // Kazemo Springu da NE cuva sesiju (jer koristimo tokene, svaki request je
                 // poseban)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Bez ovoga Spring na oba slučaja vraća 403, pa frontend ne može da
+                // razlikuje istekao token (treba odjava) od nedovoljne uloge (ne treba).
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) -> posaljiGresku(res,
+                                HttpServletResponse.SC_UNAUTHORIZED,
+                                "Sesija je istekla. Prijavi se ponovo."))
+                        .accessDeniedHandler((req, res, e) -> posaljiGresku(res,
+                                HttpServletResponse.SC_FORBIDDEN,
+                                "Nemaš dozvolu za ovu akciju.")))
                 .authenticationProvider(authenticationProvider())
                 // Ubacujemo nas filter pre standardnog filtera
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * Piše grešku u istom JSON obliku kakav frontend čita iz ostalih odgovora
+     * ({@code message}), da klijent ne mora posebno da barata sigurnosnim greškama.
+     */
+    private static void posaljiGresku(HttpServletResponse res, int status, String poruka) throws IOException {
+        res.setStatus(status);
+        res.setContentType("application/json;charset=UTF-8");
+        res.getWriter().write("{\"status\":" + status + ",\"message\":\"" + poruka + "\"}");
     }
 
     @Bean
