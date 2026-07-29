@@ -36,12 +36,23 @@ Fix: `/moje` da vraća `Page<PorudzbinaViewDto>` (kao što `/page` već radi —
 **🟡 0g. Ime kupca (i telefon) u `PorudzbinaViewDto` za panel**
 Panel zaposlenog bi trebalo da prikaže ime kupca ("čija je porudžbina"). Frontend je već spreman (`{p.korisnikIme && ...}` u kartici), ali DTO ne sadrži `korisnikIme`. Dodati `korisnikIme` (i opciono `brojTelefona`) u `PorudzbinaViewDto` — proradiće bez frontend izmene.
 
-**🟠 0i. Testovi se kače na pravu (Neon) bazu — treba izolovana test konfiguracija**
+**🟢 0i. Testovi se kače na pravu (Neon) bazu — treba izolovana test konfiguracija (NIJE HITNO)**
+Obim je uži nego što je prvo delovalo: **16 od 17 test klasa su čisti Mockito unit testovi** i uopšte ne diraju bazu. Pogađa samo `FoodOrderingApplicationTests`, jedini `@SpringBootTest`. Zato nije hitno, ali treba da postoji: svaki `mvn test` dodirne pravu bazu i troši ~12s samo na konekciju, a Flyway se pusti kao nusprodukt (tako su V14 i V15 ušle pre nego što su namerno puštene).
 Ne postoji `src/test/resources/`, pa testovi koriste isti `application.properties` + `.env` kao aplikacija → `mvn test` se povezuje na **produkcionu Neon bazu**. Konkretno: `FoodOrderingApplicationTests` (diže ceo Spring context) pri svakom ranu pokrene Flyway na Neon-u — tako je V14 primenjena „usput", pre nego što je namerno puštena. Rizik: test-ran može da menja/zaključa pravu bazu, spor je (~10s samo na konekciju), i ne radi offline.
 Fix: dodati `src/test/resources/application-test.properties` + `@ActiveProfiles("test")` (ili `application.properties` u test resources) sa H2 in-memory (`jdbc:h2:mem:...;MODE=PostgreSQL`) ili Testcontainers (`postgres:16`) ako treba pravi Postgres. Uz to `spring.flyway.enabled=true` da migracije prođu i na test bazi — ujedno postaje provera da migracije rade od nule. Unit testovi (Mockito) su već izolovani; ovo pogađa samo context/integracione testove.
 
 **🟡 0h. Popuniti opise proizvoda (`Proizvod.opis`)**
 `Proizvod` u modelu ima polje `opis`, ali je prazno/null za većinu (Glumac, Dubai palačinka...). Zbog toga MeniPage (ProizvodKartica) i HomePage preporuke nemaju šta da prikažu kao opis. Popuniti opise kroz seed/admin (npr. "Eurokrem, plazma, višnja"). Frontend je već spreman da ih prikaže čim postoje.
+
+**🟡 0m. Refresh token (opoziv pristupa) — za produkciju, nije hitno**
+Sada postoji jedan JWT koji i autentifikuje i drži sesiju, sa rokom od 30 dana (`JWT_EXPIRATION_MS=2592000000`, podignuto sa 24h 2026-07-28). Posledica: **pristup se ne može opozvati pre isteka.** Nema „odjavi me sa svih uređaja", izgubljen telefon ostaje prijavljen do 30 dana, a radnici koja ode iz lokala panel radi dok token ne istekne.
+Fix: razdvojiti na kratak access token (~15 min, ide uz svaki zahtev) i dug refresh token (30 dana, čuva se u bazi, šalje se samo na `POST /api/auth/refresh`). Pošto refresh živi u bazi, može da se obriše — time se dobija opoziv. Potrebno: tabela `refresh_token(token PK, korisnik_id, istice, opozvan)`, endpoint za obnovu, rotacija pri svakoj upotrebi (da ukraden refresh ne radi paralelno sa pravim), i na frontendu presretanje 401 u `apiFetch` koje tiho obnovi token i ponovi pali zahtev umesto da odjavi.
+Kad se ovo uradi, auto-logout iz `apiFetch` postaje krajnji slučaj (kad i refresh padne), a ne prva reakcija na 401.
+
+**🟢 0l. Prava idempotentnost pri kreiranju porudžbine (`Idempotency-Key`) — NIJE HITNO**
+Ono što danas postoji NIJE idempotentnost, nego poslovno pravilo „jedan aktivan nalog po korisniku": `PorudzbinaService.create()` proverava `existsByKorisnik_IdAndStatusIn` i baca 409. To pokriva glavni slučaj (dupli klik), ali ne i ovaj: prvi zahtev **uspe a odgovor se izgubi** (mreža pukne, tablet ispadne sa wifija). Klijent ponovi, dobije 409, kupac vidi grešku iako porudžbina postoji.
+Prava idempotentnost: klijent šalje `Idempotency-Key` header (UUID po pokušaju naručivanja, isti kroz retry-jeve), server pamti ključ → id kreirane porudžbine i na ponovljeni zahtev vrati **istu** porudžbinu sa 200 umesto da baci 409. Tabela `idempotency_kljuc(kljuc PK, korisnik_id, porudzbina_id, kreirano)` uz čišćenje starijih od npr. 24h.
+Prioritet nizak dok je lokal na stabilnom wifiju i dok je jedan tablet — rizik je izgubljen odgovor, ne dupla porudžbina. Pominjano na časovima iz .NET-a kao standardni obrazac za POST koji menja stanje.
 
 **🟢 0k. Smena nema identitet u bazi — ručno „Zatvori smenu" ne preživi restart**
 `SmenaStanje` ima samo `pauzirano`, bez datuma, a `biloOtvoreno` u `SmenaService` je polje u memoriji koje se resetuje pri svakom pokretanju. Zato prvi tik posle restarta ne može da razlikuje pauzu zaostalu od juče od one koju je radnica napravila pre deset minuta, pa je skine. Posledica: ručno zatvorena smena se sama „otvori" ako se backend restartuje u toku radnog vremena.
