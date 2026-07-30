@@ -1,0 +1,122 @@
+/* 404 — papirić otkinut iz bloka, isti rukopisni jezik kao ostatak sajta. */
+
+.stranica {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 110px 5% 80px;
+}
+
+.papir {
+    background: #fff;
+    box-shadow: 0 18px 50px hsl(22 30% 14% / .18);
+    padding: 42px 40px 34px;
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+    position: relative;
+}
+
+.tape {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    width: 118px;
+    height: 26px;
+    background: hsl(48 90% 68% / .55);
+    transform: translateX(-50%) rotate(-2deg);
+}
+
+.eyeb {
+    font-family: var(--font-cav);
+    font-size: 22px;
+    color: var(--rust);
+    display: block;
+    transform: rotate(-1.2deg);
+}
+
+.broj {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: clamp(96px, 18vw, 148px);
+    line-height: .8;
+    letter-spacing: .04em;
+    color: var(--ink12);
+    margin: 4px 0 0;
+    user-select: none;
+}
+
+.naslov {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: clamp(38px, 6vw, 50px);
+    line-height: .95;
+    letter-spacing: .02em;
+    margin: 14px 0 0;
+}
+
+.tekst {
+    font-family: var(--font-cav);
+    font-size: 21px;
+    color: var(--ink70);
+    margin: 10px auto 0;
+    max-width: 34ch;
+}
+
+.putanja {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--ink55);
+    background: var(--ink07);
+    border-radius: 8px;
+    padding: 5px 12px;
+    margin-top: 16px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.dugmad {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 26px;
+}
+
+.primarno {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: .06em;
+    padding: 12px 26px 8px;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: var(--wob);
+    line-height: 1;
+}
+
+.sekundarno {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: .06em;
+    padding: 12px 26px 8px;
+    background: transparent;
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: var(--wob);
+    line-height: 1;
+}
+
+@media (max-width: 640px) {
+    .stranica {
+        padding: 90px 5% 60px;
+    }
+
+    .papir {
+        padding: 34px 24px 28px;
+    }
+}

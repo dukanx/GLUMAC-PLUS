@@ -84,9 +84,9 @@ Trenutno kada JWT istekne, zaštićeni pozivi vrate 403 i frontend samo prikaže
 **🟢 3. Stilizovati preostale stranice u Calm Editorial dizajn**
 Sve glavne korisničke/admin stranice gotove: `MeniPage`, `IstorijaPage`, `OmiljenePage`, `AdminPage`. (Proveriti još `HomePage` i `LoyaltyPage` da li su usklađene.)
 
-**🟡 3. Dodati 404 stranicu**
-Nema fallback rute — pogrešan URL vraća praznu stranicu.
-Fix: `<Route path="*" element={<NotFoundPage />} />` na kraj ruta u `App.tsx`.
+**✅ 3. Dodati 404 stranicu — URAĐENO 2026-07-30**
+`NotFoundPage.tsx` + `.module.css` u papirnom stilu (traka, veliki bledi "404", ispisana putanja koja je pokušana, linkovi na `/meni` i `/`), i `<Route path="*" element={<NotFoundPage />} />` kao poslednja ruta u `App.tsx`.
+Napomena za produkciju: backend ne servira frontend, pa hosting `dist/`-a mora da radi SPA rewrite (svaki nepoznat put → `index.html`), inače korisnik dobije hostingov 404 pre nego što React uopšte krene.
 
 **🟡 4. Show/hide lozinka na Login/Register**
 Password inputi nemaju dugme za prikaz lozinke.

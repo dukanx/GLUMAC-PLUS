@@ -14,6 +14,7 @@ import FloatingBubble from './components/FloatingBubble';
 import PanelPorudzbina from './pages/PanelPorudzbina';
 import PanelProizvodi from './components/PanelProizvodi';
 import OmiljenePage from './pages/OmiljenePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
   return (
@@ -41,6 +42,8 @@ export default function App() {
         <Route path="/panel/proizvodi" element={
           <PrivateRoute><PanelProizvodi /></PrivateRoute>
         } />
+        {/* Mora ostati poslednja — hvata sve što nijedna ruta iznad nije uparila. */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
   );
