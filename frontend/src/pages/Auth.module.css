@@ -105,6 +105,45 @@
     box-shadow: 0 0 0 3px hsl(22 30% 14% / .07);
 }
 
+/* ── Lozinka sa okom ── */
+.lozOmot {
+    position: relative;
+    display: flex;
+}
+
+/* Mesto za dugme, da tekst lozinke ne prođe ispod oka. */
+.inpLoz {
+    padding-right: 46px;
+}
+
+.oko {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--ink40);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: color .15s;
+}
+
+.oko:hover {
+    color: var(--ink70);
+}
+
+.oko:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
+}
+
 .inpErr {
     border-color: var(--rust);
 }

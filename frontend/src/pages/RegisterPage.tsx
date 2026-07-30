@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import styles from './Auth.module.css';
 import { NalogPlus } from '../components/Doodle';
+import PoljeLozinke from '../components/PoljeLozinke';
 import * as authApi from '../api/auth';
 import { ApiError } from '../api/client';
 
@@ -111,31 +112,23 @@ export default function RegisterPage() {
                         {greske.email && <span className={styles.err}>{greske.email}</span>}
                     </div>
 
-                    <div className={styles.polje}>
-                        <label htmlFor="lozinka" className={styles.lab}>lozinka</label>
-                        <input
-                            id="lozinka" name="lozinka" type="password"
-                            value={forma.lozinka}
-                            onChange={handlePromena}
-                            placeholder="minimum 8 karaktera"
-                            className={`${styles.inp} ${greske.lozinka ? styles.inpErr : ''}`}
-                            autoComplete="new-password"
-                        />
-                        {greske.lozinka && <span className={styles.err}>{greske.lozinka}</span>}
-                    </div>
+                    <PoljeLozinke
+                        id="lozinka" name="lozinka" label="lozinka"
+                        value={forma.lozinka}
+                        onChange={handlePromena}
+                        placeholder="minimum 8 karaktera"
+                        autoComplete="new-password"
+                        greska={greske.lozinka}
+                    />
 
-                    <div className={styles.polje}>
-                        <label htmlFor="potvrda" className={styles.lab}>potvrdi lozinku</label>
-                        <input
-                            id="potvrda" name="potvrda" type="password"
-                            value={forma.potvrda}
-                            onChange={handlePromena}
-                            placeholder="ponovi lozinku"
-                            className={`${styles.inp} ${greske.potvrda ? styles.inpErr : ''}`}
-                            autoComplete="new-password"
-                        />
-                        {greske.potvrda && <span className={styles.err}>{greske.potvrda}</span>}
-                    </div>
+                    <PoljeLozinke
+                        id="potvrda" name="potvrda" label="potvrdi lozinku"
+                        value={forma.potvrda}
+                        onChange={handlePromena}
+                        placeholder="ponovi lozinku"
+                        autoComplete="new-password"
+                        greska={greske.potvrda}
+                    />
 
                     <button type="submit" className={styles.dugme} disabled={ucitava}>
                         {ucitava ? 'Kreiram nalog…' : <>Kreiraj nalog <NalogPlus size={24} strokeWidth={2.4} /></>}

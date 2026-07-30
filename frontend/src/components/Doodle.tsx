@@ -107,6 +107,27 @@ export function Lupa(props: IkonaProps) {
     );
 }
 
+// Oko — prikaz lozinke. Kapci su namerno malo neravni, kao povučeni rukom.
+export function Oko(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props, 2)}>
+            <path d="M2.5 12 C 6.2 7, 11 6.2, 12 6.2 C 13 6.2, 17.8 7, 21.5 12 C 17.8 17, 13 17.8, 12 17.8 C 11 17.8, 6.2 17, 2.5 12 Z" />
+            <circle cx="12" cy="12" r="3.1" />
+        </svg>
+    );
+}
+
+// Precrtano oko — lozinka je sakrivena.
+export function OkoPrecrtano(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props, 2)}>
+            <path d="M2.5 12 C 6.2 7, 11 6.2, 12 6.2 C 13 6.2, 17.8 7, 21.5 12 C 17.8 17, 13 17.8, 12 17.8 C 11 17.8, 6.2 17, 2.5 12 Z" />
+            <circle cx="12" cy="12" r="3.1" />
+            <path d="M4.2 20.2 C 9 15.2, 15 8.8, 19.8 3.8" />
+        </svg>
+    );
+}
+
 export function Refresh(props: IkonaProps) {
     return (
         <svg {...svgProps(props)}>

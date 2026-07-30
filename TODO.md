@@ -88,8 +88,8 @@ Sve glavne korisničke/admin stranice gotove: `MeniPage`, `IstorijaPage`, `Omilj
 `NotFoundPage.tsx` + `.module.css` u papirnom stilu (traka, veliki bledi "404", ispisana putanja koja je pokušana, linkovi na `/meni` i `/`), i `<Route path="*" element={<NotFoundPage />} />` kao poslednja ruta u `App.tsx`.
 Napomena za produkciju: backend ne servira frontend, pa hosting `dist/`-a mora da radi SPA rewrite (svaki nepoznat put → `index.html`), inače korisnik dobije hostingov 404 pre nego što React uopšte krene.
 
-**🟡 4. Show/hide lozinka na Login/Register**
-Password inputi nemaju dugme za prikaz lozinke.
+**✅ 4. Show/hide lozinka na Login/Register — URAĐENO 2026-07-31**
+Komponenta `components/PoljeLozinke.tsx` (label + input + oko + greška), koriste je `LoginPage` (jedno polje) i `RegisterPage` (dva, svako sa svojim stanjem — potvrda se otkriva nezavisno). Ikonice `Oko`/`OkoPrecrtano` dodate u `Doodle.tsx`. Dugme je `type="button"` da klik ne pošalje formu, sa `aria-label`/`aria-pressed` koji prate stanje.
 
 **🟠 4b. Izvući dupliranu logiku kreiranja porudžbine**
 `handleNaruci` u `CartDrawer.tsx` i `MiniKorpa.tsx` su skoro identični (isti `POST /api/porudzbine`, isti payload `{tipPorudzbine, napomena, stavke}`, isti `otvoriStatus`). Razlikuju se samo u UX-u (drawer se zatvara / prikaz greške kroz `alert` vs `setGreska`). Izvući mrežni poziv u helper (npr. `kreirajPorudzbinu(token, payload)` u `src/api/` ili `usePorudzbina()` hook), a svaka komponenta zadrži svoj UX. Uklanja pravu duplikaciju. (Zajednički `TipPorudzbine`/`TIP_LABELE` su već izvučeni u `src/types/porudzbina.ts`.)

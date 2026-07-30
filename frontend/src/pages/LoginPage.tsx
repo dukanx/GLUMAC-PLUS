@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import styles from './Auth.module.css';
 import { useAuth } from '../context/AuthContext';
 import { Kljuc } from '../components/Doodle';
+import PoljeLozinke from '../components/PoljeLozinke';
 import * as authApi from '../api/auth';
 import { ApiError } from '../api/client';
 
@@ -89,19 +90,15 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className={styles.polje}>
-            <label htmlFor="lozinka" className={styles.lab}>lozinka</label>
-            <input
-              id="lozinka"
-              type="password"
-              value={lozinka}
-              onChange={e => setLozinka(e.target.value)}
-              placeholder="••••••••"
-              className={styles.inp}
-              autoComplete="current-password"
-              required
-            />
-          </div>
+          <PoljeLozinke
+            id="lozinka"
+            label="lozinka"
+            value={lozinka}
+            onChange={e => setLozinka(e.target.value)}
+            placeholder="••••••••"
+            autoComplete="current-password"
+            required
+          />
 
           <button type="submit" className={styles.dugme} disabled={ucitava}>
             {ucitava ? 'Prijavljujem…' : <>Prijavi se <Kljuc size={24} strokeWidth={2.4} /></>}
