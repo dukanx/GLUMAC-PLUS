@@ -232,7 +232,6 @@ export default function MeniPage() {
                                         key={p.id}
                                         proizvod={p}
                                         kolicina={kolicinaProizvoda(p.id)}
-                                        popust={popust}
                                         onDodaj={handleDodaj}
                                         onPovecaj={handlePovecaj}
                                         onSmanji={handleSmanji}

@@ -26,5 +26,29 @@ export function cenaJedinice(proizvod: Proizvod, dodaci: DodatakKorpe[]): number
 
 /** Ukupna cena stavke: (osnovni proizvod + dodaci) × količina. */
 export function cenaStavke(stavka: StavkaKorpe): number {
-    return cenaJedinice(stavka.proizvod, stavka.dodaci) * stavka.kolicina;
+    return zaokruzi(cenaJedinice(stavka.proizvod, stavka.dodaci) * stavka.kolicina);
+}
+
+/* ── Novac ─────────────────────────────────────────────────────────────────
+   RSD nema podjedinicu, pa svaki iznos koji kupac vidi mora biti ceo dinar.
+   Isto pravilo je i na backendu (util/Novac.java) — korpa i račun moraju da
+   pokažu isti broj.
+
+   Popust se NIKAD ne računa direktno, nego kao razlika, jer
+   round(a − b) ≠ a − round(b). Tako `osnovica = zaPlacanje + popust` važi uvek. */
+
+/** Zaokružuje na ceo dinar (560.5 → 561). */
+export function zaokruzi(iznos: number): number {
+    return Math.round(iznos);
+}
+
+/** Iznos za plaćanje: osnovica sa popustom, zaokružena na ceo dinar. */
+export function cenaSaPopustom(osnovica: number, popustProcenat: number): number {
+    if (popustProcenat <= 0) return zaokruzi(osnovica);
+    return zaokruzi(osnovica * (1 - popustProcenat / 100));
+}
+
+/** Koliko je popust oduzeo — izvedeno, da se zbir uvek poklapa. */
+export function iznosPopusta(osnovica: number, popustProcenat: number): number {
+    return zaokruzi(osnovica) - cenaSaPopustom(osnovica, popustProcenat);
 }

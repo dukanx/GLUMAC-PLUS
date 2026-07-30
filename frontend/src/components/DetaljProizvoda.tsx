@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TIP_DODACI, type DodatakKorpe, type Proizvod } from '../types/proizvod';
-import { cenaJedinice } from '../utils/korpa';
+import { cenaJedinice, zaokruzi } from '../utils/korpa';
 import { useDodaci } from '../hooks/useDodaci';
 import { Klose } from './Doodle';
 import styles from './DetaljProizvoda.module.css';
@@ -68,9 +68,9 @@ export default function DetaljProizvoda({ proizvod, popust, onDodaj, onZatvori }
     const toggleDodatak = (id: number) =>
         setIzabrani(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
-    // Cena po jedinici uključuje izabrane dodatke; popust se primenjuje na finalnu.
-    const cena = proizvod ? Math.round(cenaJedinice(proizvod, izabraniDodaci)) : 0;
-    const cenaSaPopustom = popust > 0 ? Math.round(cena * (1 - popust / 100)) : null;
+    // Cena po jedinici uključuje izabrane dodatke. Bez popusta — on se primenjuje
+    // jednom na ukupan iznos u korpi, kao i na kasi.
+    const cena = proizvod ? zaokruzi(cenaJedinice(proizvod, izabraniDodaci)) : 0;
 
     return (
         <AnimatePresence>
@@ -162,15 +162,12 @@ export default function DetaljProizvoda({ proizvod, popust, onDodaj, onZatvori }
 
                         <div className={styles.dno}>
                             <span>
-                                {cenaSaPopustom !== null && (
-                                    <span className={styles.cenaStara}>{cena}</span>
-                                )}
                                 <span className={styles.cena}>
-                                    {cenaSaPopustom ?? cena}<span className={styles.rsd}>RSD</span>
+                                    {cena}<span className={styles.rsd}>RSD</span>
                                 </span>
-                                {cenaSaPopustom !== null && (
+                                {popust > 0 && (
                                     <span className={styles.popustNapomena}>
-                                        loyalty popust −{popust}%
+                                        tvoj popust −{popust}% ide na ukupan račun
                                     </span>
                                 )}
                             </span>

@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
-import { cenaStavke } from '../utils/korpa';
+import { cenaStavke, cenaSaPopustom, iznosPopusta } from '../utils/korpa';
 import { Korpa } from './Doodle';
 import * as porudzbineApi from '../api/porudzbine';
 import { ApiError } from '../api/client';
@@ -24,8 +24,8 @@ export default function MiniKorpa() {
     const [greska, setGreska] = useState('');
 
     // Zaokruživanje finalne cene, isto kao na meniju
-    const zaPlacanje = popust > 0 ? Math.round(ukupnaCena * (1 - popust / 100)) : ukupnaCena;
-    const popustIznos = ukupnaCena - zaPlacanje;
+    const zaPlacanje = cenaSaPopustom(ukupnaCena, popust);
+    const popustIznos = iznosPopusta(ukupnaCena, popust);
 
     const handleNaruci = async () => {
         if (!korisnik || !token) {

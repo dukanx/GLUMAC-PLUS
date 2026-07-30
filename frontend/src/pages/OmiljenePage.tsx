@@ -6,6 +6,7 @@ import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
 import type { Proizvod } from '../types/proizvod';
 import { Kanta, Srce } from '../components/Doodle';
+import { cenaSaPopustom, zaokruzi } from '../utils/korpa';
 import * as omiljeneApi from '../api/omiljene';
 import type { Omiljena } from '../api/omiljene';
 import * as proizvodiApi from '../api/proizvodi';
@@ -37,7 +38,7 @@ function PonoviModal({ omiljena, popust, ukupno, sazetak, nedostupni, onZatvori,
     const [loading, setLoading] = useState(false);
     const [greska, setGreska] = useState('');
 
-    const zaPlacanje = popust > 0 ? Math.round(ukupno * (1 - popust / 100)) : ukupno;
+    const zaPlacanje = cenaSaPopustom(ukupno, popust);
 
     const ponovi = async () => {
         setLoading(true);
@@ -175,8 +176,8 @@ function Papiric({ o, proizvodiMap, popust, pinIndex, onPonovi, onObrisi, brisan
             iznos: dostupno ? ((proizvod?.cena ?? 0) + cenaDodataka) * s.kolicina : 0,
         };
     });
-    const ukupno = Math.round(stavkeSaCenom.reduce((sum, s) => sum + s.iznos, 0));
-    const zaPlacanje = popust > 0 ? Math.round(ukupno * (1 - popust / 100)) : ukupno;
+    const ukupno = zaokruzi(stavkeSaCenom.reduce((sum, s) => sum + s.iznos, 0));
+    const zaPlacanje = cenaSaPopustom(ukupno, popust);
     const imaNedostupnih = stavkeSaCenom.some(s => !s.dostupno || s.dodaci.some(d => !d.dostupno));
     const rot = (o.id % 3) - 1; // -1, 0, 1 → blaga rotacija
 
@@ -234,7 +235,7 @@ function Papiric({ o, proizvodiMap, popust, pinIndex, onPonovi, onObrisi, brisan
                             <span className={styles.stavDots} />
                             {s.dostupno ? (
                                 <span className={styles.stavCena}>
-                                    {Math.round(s.iznos).toLocaleString('sr-RS')} RSD
+                                    {zaokruzi(s.iznos).toLocaleString('sr-RS')} RSD
                                 </span>
                             ) : (
                                 <span className={`${styles.stavNedostupno} ${styles.stavCena}`}>nedostupno</span>
@@ -249,7 +250,7 @@ function Papiric({ o, proizvodiMap, popust, pinIndex, onPonovi, onObrisi, brisan
                                         </span>
                                         {d.dostupno ? (
                                             <span className={styles.dodatakCena}>
-                                                {Math.round((d.cena ?? 0) * d.kolicina).toLocaleString('sr-RS')}
+                                                {zaokruzi((d.cena ?? 0) * d.kolicina).toLocaleString('sr-RS')}
                                             </span>
                                         ) : (
                                             <span className={styles.stavNedostupno}>nedostupno</span>

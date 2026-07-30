@@ -2,13 +2,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import styles from './ProizvodKartica.module.css';
 import React from 'react';
 import { TIP_DODACI, type Proizvod } from '../types/proizvod';
+import { zaokruzi } from '../utils/korpa';
 import { Klose } from './Doodle';
 
 interface Props {
     proizvod: Proizvod;
     /** Ukupno komada u korpi, kroz sve varijante dodataka. */
     kolicina: number;
-    popust: number;
     onDodaj: (proizvod: Proizvod) => void;
     onPovecaj: (proizvod: Proizvod) => void;
     onSmanji: (proizvod: Proizvod) => void;
@@ -17,11 +17,13 @@ interface Props {
 
 // Red u meniju ostaje čist (bez alergena) — klik na red otvara detalj proizvoda.
 function ProizvodKartica({
-    proizvod, kolicina, popust,
+    proizvod, kolicina,
     onDodaj, onPovecaj, onSmanji, onOtvoriDetalj,
 }: Props) {
-    const cena = Math.round(proizvod.cena);
-    const cenaSaPopustom = popust > 0 ? Math.round(cena * (1 - popust / 100)) : null;
+    // Puna cena, bez sniženja po komadu. Popust se primenjuje jednom na ukupan
+    // iznos u korpi — isto kao što ga kasa računa. Da kartica pokazuje sniženu
+    // cenu, zbir komada se ne bi poklopio sa iznosom na računu.
+    const cena = zaokruzi(proizvod.cena);
     const dostupan = proizvod.dostupan !== false;
     // Dodatke primaju samo stavke sa ukusom (piće ih nema), i sami dodaci ne.
     const primaDodatke = !!proizvod.ukus && proizvod.tip !== TIP_DODACI;
@@ -51,11 +53,8 @@ function ProizvodKartica({
 
             <span className={styles.dots} />
 
-            {cenaSaPopustom !== null && (
-                <span className={styles.cenaStara}>{cena}</span>
-            )}
             <span className={styles.cena}>
-                {cenaSaPopustom ?? cena}<span className={styles.rsd}>RSD</span>
+                {cena}<span className={styles.rsd}>RSD</span>
             </span>
 
             {!dostupan ? (
