@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import * as proizvodiApi from '../api/proizvodi';
 import type { Proizvod, RazlogNedostupnosti } from '../types/proizvod';
 import { Lupa } from './Doodle';
+import { sadrzi } from '../utils/tekst';
 import styles from '../pages/PanelPorudzbina.module.css';
 
 /* ─── PROIZVODI stranica ("86 lista") ──────────────────────── */
@@ -33,9 +34,9 @@ export default function PanelProizvodi() {
     );
 
     const grupe = useMemo(() => {
-        const q = pretraga.trim().toLowerCase();
+        // Bez kvačica — u smeni se kuca brzo, "sunka" mora da nađe "Šunka".
         const filtrirani = proizvodi.filter(p =>
-            (!q || p.naziv.toLowerCase().includes(q)) &&
+            sadrzi(p.naziv, pretraga) &&
             (!filterTip || (p.tip || 'ostalo') === filterTip)
         );
         const m = new Map<string, Proizvod[]>();

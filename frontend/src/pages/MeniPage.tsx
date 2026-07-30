@@ -11,6 +11,7 @@ import { Zvezda } from '../components/Doodle';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
 import { TIP_DODACI, type Proizvod } from '../types/proizvod';
 import { prefetchDodatke } from '../hooks/useDodaci';
+import { sadrzi } from '../utils/tekst';
 import * as proizvodiApi from '../api/proizvodi';
 import deliveryDoodle from '../assets/DeliveryDoodle.png';
 
@@ -20,15 +21,6 @@ const ADRESA = 'Dositejeva 1a';
 const MAPS_URL = 'https://www.google.com/maps/place/glumac+plus/data=!4m2!3m1!1s0x475a7bc2e551cbab:0xb7899385a5114972?sa=X&ved=1t:242&ictx=111';
 const WOLT_URL = 'https://wolt.com/en/srb/belgrade/restaurant/palainkarnica-glumac-plus';
 const GLOVO_URL = 'https://glovoapp.com/en/rs/belgrade/stores/glumac-plus-beg';
-
-// Normalizacija teksta za pretragu (uklanjanje dijakritičkih znakova, mala slova)
-function normalizuj(tekst: string): string {
-    return tekst
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
-        .replace(/đ/g, 'dj');
-}
 
 // ── Komponenta ─────────────────────────────────────────────────────────────
 export default function MeniPage() {
@@ -64,7 +56,7 @@ export default function MeniPage() {
     const filtrirani = useMemo(() =>
         proizvodi.filter(p => {
             const okTab = aktivniTab === 'Sve' || p.tip === aktivniTab;
-            const okPretraga = normalizuj(p.naziv).includes(normalizuj(pretraga));
+            const okPretraga = sadrzi(p.naziv, pretraga);
             return okTab && okPretraga;
         }),
         [proizvodi, aktivniTab, pretraga]
