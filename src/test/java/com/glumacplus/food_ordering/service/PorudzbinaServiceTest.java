@@ -107,7 +107,50 @@ class PorudzbinaServiceTest {
         PorudzbinaViewDto result = porudzbinaService.create(dto);
 
 
-        assertEquals(new BigDecimal("900.00"), result.getUkupanIznos());
+        assertEquals(new BigDecimal("900"), result.getUkupanIznos());
+    }
+
+    /**
+     * 590 sa 5% popusta je 560.50 — jedini slučaj koji je ranije puštao pola
+     * dinara na račun. Iznos mora biti ceo dinar, a popust izveden kao razlika,
+     * pa {@code originalnaCena = ukupanIznos + popust} važi bez ostatka.
+     */
+    @Test
+    void testCreateZaokruzujeNaCeoDinarIPopustSeIzvodiKaoRazlika() {
+        setupSecurityContext("korisnik@gmail.com");
+
+        LoyaltyProgram nivo = new LoyaltyProgram("Srebro", 5.0, 200);
+        Korisnik k = korisnik(1L, "korisnik@gmail.com");
+        k.setLoyaltyProgram(nivo);
+
+        Proizvod p = new Proizvod();
+        p.setId(1L);
+        p.setNaziv("Glumac");
+        p.setCena(new BigDecimal("590.00"));
+
+        StavkaPorudzbineDto stavkaDto = new StavkaPorudzbineDto();
+        stavkaDto.setProizvodId(1L);
+        stavkaDto.setKolicina(1);
+
+        PorudzbinaDto dto = new PorudzbinaDto();
+        dto.setStavke(List.of(stavkaDto));
+
+        when(korisnikRepo.findByEmail("korisnik@gmail.com")).thenReturn(Optional.of(k));
+        mockRestoranOtvoren();
+        when(porudzbinaRepo.existsByKorisnik_IdAndStatusIn(eq(1L), any())).thenReturn(false);
+        when(proizvodRepo.findById(1L)).thenReturn(Optional.of(p));
+        when(porudzbinaRepo.save(any(Porudzbina.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PorudzbinaViewDto result = porudzbinaService.create(dto);
+
+        assertEquals(new BigDecimal("590"), result.getOriginalnaCena());
+        assertEquals(new BigDecimal("561"), result.getUkupanIznos());   // 560.50 -> 561
+        assertEquals(0, result.getUkupanIznos().scale(), "iznos mora biti ceo dinar");
+        assertEquals(0, result.getStavke().getFirst().getIznosStavke().scale(),
+                "i linija računa mora biti ceo dinar");
+
+        BigDecimal popust = result.getOriginalnaCena().subtract(result.getUkupanIznos());
+        assertEquals(new BigDecimal("29"), popust);
     }
 
     @Test
@@ -139,7 +182,7 @@ class PorudzbinaServiceTest {
         PorudzbinaViewDto result = porudzbinaService.create(dto);
 
 
-        assertEquals(new BigDecimal("1000.00"), result.getUkupanIznos());
+        assertEquals(new BigDecimal("1000"), result.getUkupanIznos());
     }
 
     @Test
@@ -251,7 +294,7 @@ class PorudzbinaServiceTest {
         PorudzbinaViewDto result = porudzbinaService.create(dto);
 
         // (500 osnovna + 120 dodatak) * 2 komada = 1240
-        assertEquals(new BigDecimal("1240.00"), result.getUkupanIznos());
+        assertEquals(new BigDecimal("1240"), result.getUkupanIznos());
         assertEquals(1, result.getStavke().size());
         assertEquals(1, result.getStavke().get(0).getDodaci().size());
         assertEquals("Nutela", result.getStavke().get(0).getDodaci().get(0).getNazivProizvoda());

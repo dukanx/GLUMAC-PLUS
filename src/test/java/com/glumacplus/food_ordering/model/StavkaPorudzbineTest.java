@@ -27,7 +27,7 @@ class StavkaPorudzbineTest {
         s.setCena(new BigDecimal("300.00"));
         s.setKolicina(3);
 
-        assertEquals(new BigDecimal("900.00"), s.getIznosStavke());
+        assertEquals(new BigDecimal("900"), s.getIznosStavke());
     }
 
     @Test
@@ -45,15 +45,16 @@ class StavkaPorudzbineTest {
         s.setKolicina(2);
         s.setCena(new BigDecimal("590.00"));
 
-        assertEquals(new BigDecimal("1180.00"), s.getIznosStavke());
+        assertEquals(new BigDecimal("1180"), s.getIznosStavke());
     }
 
     @Test
-    void testIznosStavkeSkaliraNaDveDecimale() {
-        s.setCena(new BigDecimal("100.005"));
+    void testIznosStavkeZaokruzujeNaCeoDinar() {
+        // Linija računa je ceo dinar, da zbir linija tačno daje osnovicu.
+        s.setCena(new BigDecimal("100.50"));
         s.setKolicina(3);
 
-        assertEquals(new BigDecimal("300.03"), s.getIznosStavke());
+        assertEquals(new BigDecimal("302"), s.getIznosStavke());   // 301.50 -> 302
     }
 
     @Test

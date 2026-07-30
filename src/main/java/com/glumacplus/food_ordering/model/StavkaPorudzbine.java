@@ -3,6 +3,7 @@ package com.glumacplus.food_ordering.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import com.glumacplus.food_ordering.util.Novac;
 import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
@@ -152,12 +153,12 @@ public class StavkaPorudzbine {
     public BigDecimal getIznosStavke() { return iznosStavke; }
 
     /**
-     * Postavlja ukupan iznos stavke, zaokružen na dve decimale (HALF_UP).
+     * Postavlja ukupan iznos stavke, zaokružen na ceo dinar (HALF_UP).
      *
      * @param iznosStavke iznos stavke
      */
     public void setIznosStavke(BigDecimal iznosStavke) {
-        this.iznosStavke = iznosStavke == null ? null : iznosStavke.setScale(2, RoundingMode.HALF_UP);
+        this.iznosStavke = Novac.zaokruzi(iznosStavke);
     }
 
     /**
@@ -250,9 +251,9 @@ public class StavkaPorudzbine {
             this.iznosStavke = null;
             return;
         }
-        this.iznosStavke = BigDecimal.valueOf(this.kolicina)
-                .multiply(this.cena.add(getIznosDodataka()))
-                .setScale(2, RoundingMode.HALF_UP);
+        // Ceo dinar, da zbir linija na računu tačno daje osnovicu (vidi Novac).
+        this.iznosStavke = Novac.zaokruzi(BigDecimal.valueOf(this.kolicina)
+                .multiply(this.cena.add(getIznosDodataka())));
     }
 
 }

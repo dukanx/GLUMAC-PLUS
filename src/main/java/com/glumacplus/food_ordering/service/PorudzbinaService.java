@@ -3,6 +3,7 @@ package com.glumacplus.food_ordering.service;
 import com.glumacplus.food_ordering.dto.*;
 import com.glumacplus.food_ordering.model.*;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
+import com.glumacplus.food_ordering.util.Novac;
 import com.glumacplus.food_ordering.repository.LoyaltyProgramRepository;
 import com.glumacplus.food_ordering.repository.PorudzbinaRepository;
 import com.glumacplus.food_ordering.repository.ProizvodRepository;
@@ -162,19 +163,18 @@ public class PorudzbinaService {
 
 
 
-        por.setOriginalnaCena(ukIznos);
+        // Osnovica je zbir već zaokruženih linija, pa je i sama ceo dinar.
+        por.setOriginalnaCena(Novac.zaokruzi(ukIznos));
 
         double popust = 0.0;
         if (trenutniKorisnik.getLoyaltyProgram() != null) {
             popust = trenutniKorisnik.getLoyaltyProgram().getPopust();
         }
 
-        BigDecimal popustFaktor = BigDecimal.valueOf(100.0 - popust)
-                .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-        BigDecimal cenaSaPopustom = ukIznos.multiply(popustFaktor)
-                .setScale(2, RoundingMode.HALF_UP);
-
-        por.setUkupanIznos(cenaSaPopustom);
+        // Zaokružuje se FINALNA cena, popust se nikad ne računa zasebno — inače
+        // `originalnaCena = ukupanIznos + popust` ne bi važilo. Isto pravilo je i
+        // na frontendu (utils/korpa.ts), pa korpa i račun uvek pokazuju isti broj.
+        por.setUkupanIznos(Novac.saPopustom(por.getOriginalnaCena(), popust));
         por = porudzbinaRepo.save(por);
 
         return PorudzbinaMapper.toViewDto(por);

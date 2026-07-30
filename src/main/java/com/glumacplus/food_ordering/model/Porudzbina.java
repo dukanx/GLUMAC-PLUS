@@ -1,6 +1,7 @@
 
 package com.glumacplus.food_ordering.model;
 
+import com.glumacplus.food_ordering.util.Novac;
 import jakarta.persistence.*;
 import org.hibernate.annotations.BatchSize;
 import java.math.BigDecimal;
@@ -186,7 +187,8 @@ public class Porudzbina {
         if (ukupanIznos.signum() < 0) {
             throw new IllegalArgumentException("Ukupan iznos ne sme biti negativan");
         }
-        this.ukupanIznos = ukupanIznos.setScale(2, RoundingMode.HALF_UP);
+        // Ceo dinar — RSD nema podjedinicu (vidi Novac).
+        this.ukupanIznos = Novac.zaokruzi(ukupanIznos);
     }
 
     /**
@@ -233,7 +235,7 @@ public class Porudzbina {
         if (originalnaCena.signum() < 0) {
             throw new IllegalArgumentException("Originalna cena ne sme biti negativna");
         }
-        this.originalnaCena = originalnaCena.setScale(2, RoundingMode.HALF_UP);
+        this.originalnaCena = Novac.zaokruzi(originalnaCena);
     }
 
     /**

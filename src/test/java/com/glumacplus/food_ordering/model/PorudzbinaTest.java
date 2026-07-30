@@ -34,9 +34,13 @@ class PorudzbinaTest {
     }
 
     @Test
-    void testSetUkupanIznosSkalira() {
-        por.setUkupanIznos(new BigDecimal("560.555"));
-        assertEquals(new BigDecimal("560.56"), por.getUkupanIznos());
+    void testSetUkupanIznosZaokruzujeNaCeoDinar() {
+        // RSD nema podjedinicu — iznos koji ide na račun je ceo broj (HALF_UP).
+        por.setUkupanIznos(new BigDecimal("560.50"));
+        assertEquals(new BigDecimal("561"), por.getUkupanIznos());
+
+        por.setUkupanIznos(new BigDecimal("560.49"));
+        assertEquals(new BigDecimal("560"), por.getUkupanIznos());
     }
 
     @Test
@@ -52,13 +56,13 @@ class PorudzbinaTest {
     @Test
     void testSetUkupanIznosNulaDozvoljena() {
         por.setUkupanIznos(BigDecimal.ZERO);
-        assertEquals(new BigDecimal("0.00"), por.getUkupanIznos());
+        assertEquals(new BigDecimal("0"), por.getUkupanIznos());
     }
 
     @Test
-    void testSetOriginalnaCenaSkalira() {
+    void testSetOriginalnaCenaZaokruzujeNaCeoDinar() {
         por.setOriginalnaCena(new BigDecimal("590.999"));
-        assertEquals(new BigDecimal("591.00"), por.getOriginalnaCena());
+        assertEquals(new BigDecimal("591"), por.getOriginalnaCena());
     }
 
     @Test
