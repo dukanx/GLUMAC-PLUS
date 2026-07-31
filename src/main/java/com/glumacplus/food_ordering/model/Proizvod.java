@@ -39,6 +39,14 @@ public class Proizvod {
     /** Tip (kategorija) proizvoda. */
     private String tip;
 
+    /**
+     * Kratak opis sastojaka — samo tamo gde naziv ne kaže šta je unutra
+     * („Palačinka Glumac"). Većina stavki nabraja sastojke već u nazivu
+     * („Nutela, plazma, višnja"), pa im opis ostaje {@code null}.
+     */
+    @Column(columnDefinition = "TEXT")
+    private String opis;
+
     /** Cena proizvoda, zaokružena na dve decimale. */
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal cena;
@@ -157,6 +165,23 @@ public class Proizvod {
      * @param tip tip proizvoda
      */
     public void setTip(String tip) { this.tip = tip; }
+
+    /**
+     * Vraća opis sastojaka, ili {@code null} ako naziv već sve kaže.
+     *
+     * @return opis proizvoda
+     */
+    public String getOpis() { return opis; }
+
+    /**
+     * Postavlja opis proizvoda. Prazan tekst se pamti kao {@code null}, da bi
+     * prikaz imao samo jedno stanje „nema opisa".
+     *
+     * @param opis opis proizvoda
+     */
+    public void setOpis(String opis) {
+        this.opis = (opis == null || opis.isBlank()) ? null : opis.trim();
+    }
 
     /**
      * Vraća cenu proizvoda.

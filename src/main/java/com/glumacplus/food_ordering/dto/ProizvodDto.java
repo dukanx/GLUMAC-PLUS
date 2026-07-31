@@ -10,6 +10,10 @@ public class ProizvodDto {
     @NotBlank(message = "Tip je obavezan")
     private String tip;
 
+    /** Opis je opcion — većina stavki nabraja sastojke već u nazivu. */
+    @Size(max = 500, message = "Opis može imati najviše 500 karaktera")
+    private String opis;
+
     @NotNull(message = "Cena je obavezna")
     @DecimalMin(value = "0.01", message = "Cena mora biti pozitivna")
     private BigDecimal cena;
@@ -30,6 +34,8 @@ public class ProizvodDto {
     public void setNaziv(String naziv) { this.naziv = naziv; }
     public String getTip() { return tip; }
     public void setTip(String tip) { this.tip = tip; }
+    public String getOpis() { return opis; }
+    public void setOpis(String opis) { this.opis = opis; }
     public BigDecimal getCena() { return cena; }
     public void setCena(BigDecimal cena) { this.cena = cena; }
     public String getJedinicaMere() { return jedinicaMere; }

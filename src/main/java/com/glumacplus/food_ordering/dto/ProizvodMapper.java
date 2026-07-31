@@ -10,6 +10,7 @@ public class ProizvodMapper {
         dto.setId(p.getId());
         dto.setNaziv(p.getNaziv());
         dto.setTip(p.getTip());
+        dto.setOpis(p.getOpis());
         dto.setCena(p.getCena());
         dto.setJedinicaMere(p.getJedinicaMere());
         dto.setKalorije(p.getKalorije());
@@ -32,6 +33,7 @@ public class ProizvodMapper {
         Proizvod p = new Proizvod();
         p.setNaziv(dto.getNaziv());
         p.setTip(dto.getTip());
+        p.setOpis(dto.getOpis());
         p.setCena(dto.getCena());
         p.setJedinicaMere(dto.getJedinicaMere());
         p.setKalorije(dto.getKalorije());
