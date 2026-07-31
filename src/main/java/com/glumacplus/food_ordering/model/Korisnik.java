@@ -1,6 +1,8 @@
 package com.glumacplus.food_ordering.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
+
 import java.time.LocalDateTime;
 
 /**
@@ -13,8 +15,11 @@ import java.time.LocalDateTime;
  * @author Nikola Dukić
  * @version 1.0
  */
+// @BatchSize: porudžbina drži korisnika LAZY, a panel mapira celu stranu odjednom.
+// Bez ovoga bi ime kupca značilo jedan upit po porudžbini (isti N+1 kao kod dodataka).
 @Entity
 @Table(name = "korisnik")
+@BatchSize(size = 100)
 public class Korisnik {
 
     /** Jedinstveni identifikator korisnika. */

@@ -19,6 +19,8 @@ public class PorudzbinaViewDto {
     private String napomena;
     private TipPorudzbine tipPorudzbine;
     private Integer procenjenoVreme;
+    /** Ime kupca — panel zaposlenog prikazuje čija je porudžbina. */
+    private String korisnikIme;
 
     public BigDecimal getUkupanIznos() {
         return ukupanIznos;
@@ -90,5 +92,13 @@ public class PorudzbinaViewDto {
 
     public void setProcenjenoVreme(Integer procenjenoVreme) {
         this.procenjenoVreme = procenjenoVreme;
+    }
+
+    public String getKorisnikIme() {
+        return korisnikIme;
+    }
+
+    public void setKorisnikIme(String korisnikIme) {
+        this.korisnikIme = korisnikIme;
     }
 }

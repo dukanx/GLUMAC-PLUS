@@ -19,6 +19,9 @@ public class PorudzbinaMapper {
         dto.setNapomena(p.getNapomena());
         dto.setTipPorudzbine(p.getTipPorudzbine());
         dto.setProcenjenoVreme(p.getProcenjenoVreme());
+        // Korisnik je LAZY; @BatchSize na entitetu grupiše dohvat imena za celu
+        // stranu porudžbina, umesto jedan upit po porudžbini.
+        dto.setKorisnikIme(p.getKorisnik() != null ? p.getKorisnik().getIme() : null);
         List<StavkaPorudzbineViewDto> stavkeDto = p.getStavke().stream()
                 .map(stavka -> toViewDto(stavka))
                 .collect(Collectors.toList());
