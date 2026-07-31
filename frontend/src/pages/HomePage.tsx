@@ -14,11 +14,12 @@ import bg from '../assets/bg.png';
 import bg1 from '../assets/bg1.png';
 import CrtaniOkvir from '../components/CrtaniOkvir';
 import { Klose } from '../components/Doodle';
+import { Tackice } from '../components/Ucitavanje';
 import { flyToCart } from '../utils/flyToCart';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
-import type { Proizvod } from '../types/proizvod';
+import { uPonudi, type Proizvod } from '../types/proizvod';
 import * as proizvodiApi from '../api/proizvodi';
 
 const GLOVO_URL = 'https://glovoapp.com/en/rs/belgrade/stores/glumac-plus-beg';
@@ -78,7 +79,7 @@ function ZvezdaPuna() {
 function RadnoVreme() {
     const { raspored, loading, imaPodataka } = useRadnoVreme();
 
-    if (loading) return <p className={styles.rvVr}>učitavam…</p>;
+    if (loading) return <p className={styles.rvVr}>učitavam<Tackice /></p>;
     if (!imaPodataka) return <p className={styles.rvVr}>privremeno nedostupno</p>;
 
     const grupe: { od: string; do_: string; vreme: string | null }[] = [];
@@ -114,7 +115,8 @@ export default function HomePage() {
 
     useEffect(() => {
         proizvodiApi.getSvi()
-            .then(setProizvodi)
+            // Skinuto "do daljnjeg" ne ide pred kupca (vidi `uPonudi`).
+            .then(data => setProizvodi(data.filter(uPonudi)))
             .catch(() => setProizvodi([]));
     }, []);
 

@@ -8,8 +8,9 @@ import MeniSkeleton from '../components/MeniSkeleton';
 import MiniKorpa from '../components/MiniKorpa';
 import DetaljProizvoda from '../components/DetaljProizvoda';
 import { Zvezda } from '../components/Doodle';
+import { Tackice } from '../components/Ucitavanje';
 import { useRadnoVreme } from '../hooks/useRadnoVreme';
-import { TIP_DODACI, type Proizvod } from '../types/proizvod';
+import { TIP_DODACI, uPonudi, type Proizvod } from '../types/proizvod';
 import { prefetchDodatke } from '../hooks/useDodaci';
 import { sadrzi } from '../utils/tekst';
 import * as proizvodiApi from '../api/proizvodi';
@@ -38,8 +39,9 @@ export default function MeniPage() {
     useEffect(() => {
         proizvodiApi.getSvi()
             // Dodaci nisu zasebna stavka menija — biraju se uz proizvod u detalju.
+            // Skinuto "do daljnjeg" se ne prikazuje uopšte (vidi `uPonudi`).
             .then(data => {
-                setProizvodi(data.filter(p => p.tip !== TIP_DODACI));
+                setProizvodi(data.filter(p => p.tip !== TIP_DODACI && uPonudi(p)));
                 setUcitava(false);
                 // Dok kupac razgleda meni, u pozadini spremamo liste dodataka,
                 // pa je otvaranje detalja trenutno.
@@ -138,7 +140,7 @@ export default function MeniPage() {
                 <div className={`${styles.infoBl} ${styles.infoBlRadno}`}>
                     <span className={styles.infoBlH}>radno vreme</span>
                     {radnoVremeLoading ? (
-                        <span className={styles.rvFallback}>učitavam…</span>
+                        <span className={styles.rvFallback}>učitavam<Tackice /></span>
                     ) : !imaPodataka ? (
                         <span className={styles.rvFallback}>privremeno nedostupno</span>
                     ) : (
