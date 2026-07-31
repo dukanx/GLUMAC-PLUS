@@ -1,70 +1,21 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
-import { cenaStavke, cenaSaPopustom, iznosPopusta } from '../utils/korpa';
+import { cenaStavke } from '../utils/korpa';
+import { usePorucivanje } from '../hooks/usePorucivanje';
 import { Korpa } from './Doodle';
-import * as porudzbineApi from '../api/porudzbine';
-import { ApiError } from '../api/client';
 import styles from './MiniKorpa.module.css';
 
 export default function MiniKorpa() {
-    const navigate = useNavigate();
-    const { korisnik, token, osvezi, popust } = useAuth();
-    const { postaviAktivnu } = useAktivnaPorudzbina();
-    const { korpa, povecaj, smanji, ukloni, isprazni, ukupnaCena, ukupnoStavki } = useCart();
+    const { korpa, povecaj, smanji, ukloni, isprazni, ukupnoStavki } = useCart();
 
-    const [tipPorudzbine, setTipPorudzbine] = useState<TipPorudzbine>('U_LOKALU');
-    const [napomena, setNapomena] = useState('');
-    const [porucivanjeUToku, setPorucivanjeUToku] = useState(false);
-    const [uspesno, setUspesno] = useState(false);
-    const [greska, setGreska] = useState('');
-
-    // Zaokruživanje finalne cene, isto kao na meniju
-    const zaPlacanje = cenaSaPopustom(ukupnaCena, popust);
-    const popustIznos = iznosPopusta(ukupnaCena, popust);
-
-    const handleNaruci = async () => {
-        if (!korisnik || !token) {
-            navigate('/login');
-            return;
-        }
-
-        setPorucivanjeUToku(true);
-        setGreska('');
-        try {
-            const nova = await porudzbineApi.kreiraj({
-                tipPorudzbine,
-                napomena: napomena.trim() || null,
-                stavke: korpa.map(i => ({
-                    proizvodId: i.proizvod.id,
-                    kolicina: i.kolicina,
-                    dodaci: i.dodaci.map(d => ({
-                        proizvodId: d.proizvod.id,
-                        kolicina: d.kolicina,
-                    })),
-                })),
-            });
-            const novaPorudzbinaId: number | null = nova?.porudzbinaId ?? null;
-            isprazni();
-            setNapomena('');
-            setUspesno(true);
-            await osvezi();
-            setTimeout(() => {
-                setUspesno(false);
-                if (novaPorudzbinaId) postaviAktivnu(novaPorudzbinaId);
-            }, 2000);
-        } catch (e) {
-            setGreska(e instanceof ApiError
-                ? (e.body?.message ?? 'Greška prilikom naručivanja.')
-                : 'Server ne odgovara.');
-        } finally {
-            setPorucivanjeUToku(false);
-        }
-    };
+    const {
+        tipPorudzbine, setTipPorudzbine,
+        napomena, setNapomena,
+        porucivanjeUToku, uspesno, greska,
+        popust, ukupnaCena, zaPlacanje, popustIznos,
+        naruci,
+    } = usePorucivanje();
 
     return (
         <div className={styles.panel}>
@@ -204,7 +155,7 @@ export default function MiniKorpa() {
 
                     <button
                         className={styles.naruciBtn}
-                        onClick={handleNaruci}
+                        onClick={naruci}
                         disabled={porucivanjeUToku}
                     >
                         {porucivanjeUToku ? 'Šaljem…' : 'Naruči →'}

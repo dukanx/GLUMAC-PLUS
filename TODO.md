@@ -91,8 +91,8 @@ Napomena za produkciju: backend ne servira frontend, pa hosting `dist/`-a mora d
 **✅ 4. Show/hide lozinka na Login/Register — URAĐENO 2026-07-31**
 Komponenta `components/PoljeLozinke.tsx` (label + input + oko + greška), koriste je `LoginPage` (jedno polje) i `RegisterPage` (dva, svako sa svojim stanjem — potvrda se otkriva nezavisno). Ikonice `Oko`/`OkoPrecrtano` dodate u `Doodle.tsx`. Dugme je `type="button"` da klik ne pošalje formu, sa `aria-label`/`aria-pressed` koji prate stanje.
 
-**🟠 4b. Izvući dupliranu logiku kreiranja porudžbine**
-`handleNaruci` u `CartDrawer.tsx` i `MiniKorpa.tsx` su skoro identični (isti `POST /api/porudzbine`, isti payload `{tipPorudzbine, napomena, stavke}`, isti `otvoriStatus`). Razlikuju se samo u UX-u (drawer se zatvara / prikaz greške kroz `alert` vs `setGreska`). Izvući mrežni poziv u helper (npr. `kreirajPorudzbinu(token, payload)` u `src/api/` ili `usePorudzbina()` hook), a svaka komponenta zadrži svoj UX. Uklanja pravu duplikaciju. (Zajednički `TipPorudzbine`/`TIP_LABELE` su već izvučeni u `src/types/porudzbina.ts`.)
+**✅ 4b. Izvući dupliranu logiku kreiranja porudžbine — URAĐENO 2026-07-31**
+Hook `hooks/usePorucivanje.ts` drži sve što je bilo duplirano: stanje (tip, napomena, slanje, potvrda, greška), računicu sa popustom i `POST /api/porudzbine`. `CartDrawer` i `MiniKorpa` su ostali samo prikaz — zajedno kraći za ~100 linija. Jedina razlika među njima ide kroz opciju `zatvori` (drawer je prosleđuje da bi se sam zatvorio pri odlasku na prijavu i posle potvrde, MiniKorpa nema šta da zatvori).
 
 **🟢 5. Korpa i sessionStorage**
 `mojaKorpa` se gubi zatvaranjem taba (`sessionStorage`). Razmotriti `localStorage` ako treba da traje između sesija.
