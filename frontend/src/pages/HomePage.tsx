@@ -94,7 +94,7 @@ function ZvezdaPuna() {
 function RadnoVreme() {
     const { raspored, loading, imaPodataka } = useRadnoVreme();
 
-    if (loading) return <p className={styles.rvVr}>učitavam<Tackice /></p>;
+    if (loading) return <p className={styles.rvVr}><Tackice /></p>;
     if (!imaPodataka) return <p className={styles.rvVr}>privremeno nedostupno</p>;
 
     const grupe: { od: string; do_: string; vreme: string | null }[] = [];
@@ -326,12 +326,12 @@ export default function HomePage() {
                             <Rvl className={styles.dkart}>
                                 <CrtaniOkvir kasnjenje={0.1} />
                                 <img src={glovoLogo} alt="Glovo" className={styles.dlogo} />
-                                <a href={GLOVO_URL} target="_blank" rel="noopener noreferrer" className={styles.gbtn}>Poruči →</a>
+                                <a href={GLOVO_URL} target="_blank" rel="noopener noreferrer" className={styles.gbtn}>Poruči</a>
                             </Rvl>
                             <Rvl delay={0.15} className={styles.dkR}>
                                 <CrtaniOkvir kasnjenje={0.25} />
                                 <img src={woltLogo} alt="Wolt" className={styles.dlogo} />
-                                <a href={WOLT_URL} target="_blank" rel="noopener noreferrer" className={styles.wbtn}>Poruči →</a>
+                                <a href={WOLT_URL} target="_blank" rel="noopener noreferrer" className={styles.wbtn}>Poruči</a>
                             </Rvl>
                         </div>
                     </div>
@@ -368,8 +368,8 @@ export default function HomePage() {
                             </Rvl>
                         </ol>
                         <div className={styles.dostCtas}>
-                            <Link to="/meni" className={styles.hbtnPun} style={{ fontSize: 24 }}>Poruči sada →</Link>
-                            <Link to="/loyalty" className={styles.dostLoyLink}>Loyalty program →</Link>
+                            <Link to="/meni" className={styles.hbtnPun} style={{ fontSize: 24 }}>Poruči sada</Link>
+                            <Link to="/loyalty" className={styles.dostLoyLink}>Loyalty program</Link>
                         </div>
                     </div>
                 </div>
@@ -429,7 +429,7 @@ export default function HomePage() {
                         </div>
                         <div className={styles.mfoot}>
                             <span>Cela karta u meniju.</span>
-                            <Link to="/meni" className={styles.mfootBtn}>Otvori meni →</Link>
+                            <Link to="/meni" className={styles.mfootBtn}>Otvori meni</Link>
                         </div>
                     </div>
                 </section>
@@ -489,7 +489,7 @@ export default function HomePage() {
                             Naš najviši nivo nosi naziv koji zaslužuje.
                         </p>
                         <Link to="/loyalty" className={styles.tbtn}>
-                            {korisnik ? 'Pogledaj svoj status →' : 'Saznaj više →'}
+                            {korisnik ? 'Pogledaj svoj status' : 'Saznaj više'}
                         </Link>
                     </div>
                     <div>

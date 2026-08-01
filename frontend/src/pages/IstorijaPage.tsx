@@ -7,6 +7,7 @@ import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { tipLabela, type Porudzbina } from '../types/porudzbina';
 import type { DodatakKorpe, Proizvod } from '../types/proizvod';
 import { Klose, Sat, ChevronDole, Refresh, Srce } from '../components/Doodle';
+import { NatpisDugmeta } from '../components/Ucitavanje';
 import * as porudzbineApi from '../api/porudzbine';
 import * as proizvodiApi from '../api/proizvodi';
 import * as omiljeneApi from '../api/omiljene';
@@ -92,7 +93,7 @@ function OmiljenaModal({ porudzbinaId, onZatvori, onUspeh }: {
                         odustani
                     </button>
                     <button className={styles.modalSacuvaj} onClick={sacuvaj} disabled={loading || !naziv.trim()}>
-                        {loading ? 'Čuvam…' : 'Sačuvaj'}
+                        <NatpisDugmeta uToku={loading} opis="Čuvam">Sačuvaj</NatpisDugmeta>
                     </button>
                 </div>
             </motion.div>
@@ -529,7 +530,7 @@ export default function IstorijaPage() {
                         <p className={styles.praznoTekst}>
                             Kad naručiš prvi put, ovde ćeš pratiti status i celu istoriju.
                         </p>
-                        <Link to="/meni" className={styles.praznoLink}>Otvori meni →</Link>
+                        <Link to="/meni" className={styles.praznoLink}>Otvori meni</Link>
                     </motion.div>
                 )}
 

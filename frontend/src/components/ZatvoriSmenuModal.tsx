@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import * as smenaApi from '../api/smena';
+import { NatpisDugmeta } from './Ucitavanje';
 import styles from '../pages/PanelPorudzbina.module.css';
 
 /* ─── Modal: zatvori smenu ─────────────────────────────────── */
@@ -65,7 +66,7 @@ export default function ZatvoriSmenuModal({ onClose, onZatvoreno }: { onClose: (
                         <>
                             <button className={styles.smenaNazad} onClick={onClose} disabled={zatvara}>Ne još</button>
                             <button className={styles.smenaPotvrdi} onClick={potvrdi} disabled={zatvara}>
-                                {zatvara ? 'Zatvaram…' : 'Zatvori smenu'}
+                                <NatpisDugmeta uToku={zatvara} opis="Zatvaram smenu">Zatvori smenu</NatpisDugmeta>
                             </button>
                         </>
                     )}

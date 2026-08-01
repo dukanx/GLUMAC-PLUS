@@ -6,6 +6,7 @@ import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
 import type { Proizvod } from '../types/proizvod';
 import { Kanta, Srce } from '../components/Doodle';
+import { NatpisDugmeta } from '../components/Ucitavanje';
 import { cenaSaPopustom, zaokruzi } from '../utils/korpa';
 import * as omiljeneApi from '../api/omiljene';
 import type { Omiljena } from '../api/omiljene';
@@ -129,7 +130,9 @@ function PonoviModal({ omiljena, popust, ukupno, sazetak, nedostupni, onZatvori,
                         Odustani
                     </button>
                     <button className={styles.modalNaruci} onClick={ponovi} disabled={loading}>
-                        {loading ? 'Šaljem…' : nedostupni.length > 0 ? 'Naruči bez nedostupne stavke' : 'Naruči →'}
+                        <NatpisDugmeta uToku={loading} opis="Šaljem porudžbinu">
+                            {nedostupni.length > 0 ? 'Naruči bez nedostupne stavke' : 'Naruči'}
+                        </NatpisDugmeta>
                     </button>
                 </div>
             </motion.div>
@@ -394,7 +397,7 @@ export default function OmiljenePage() {
                         <p className={styles.praznoTekst}>
                             Sačuvaj porudžbinu iz istorije, pa je sledeći put poruči jednim klikom.
                         </p>
-                        <Link to="/istorija" className={styles.praznoLink}>Idi na porudžbine →</Link>
+                        <Link to="/istorija" className={styles.praznoLink}>Idi na porudžbine</Link>
                     </motion.div>
                 )}
 

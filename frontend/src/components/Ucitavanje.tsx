@@ -37,14 +37,35 @@ export function Spinner({ size = 28 }: { size?: number }) {
 }
 
 /**
- * Blok „radi se na tome" — spinner iznad teksta, za prazne stranice i sekcije
- * koje još nemaju podatke. Za sitna mesta u redu teksta koristiti `Tackice`.
+ * Natpis dugmeta koje nešto šalje — dok traje, vide se samo tačkice.
+ *
+ * `children` (normalan natpis) ostaje u toku, providan, da dugme ne bi
+ * poskočilo na širinu tri tačke; `opis` čuje samo čitač ekrana.
+ */
+export function NatpisDugmeta({ uToku, opis, children }: {
+    uToku: boolean;
+    opis: string;
+    children: React.ReactNode;
+}) {
+    if (!uToku) return <>{children}</>;
+    return (
+        <span className={styles.natpisOmot} role="status" aria-live="polite">
+            <span className={styles.natpisSkriven} aria-hidden="true">{children}</span>
+            <Tackice className={styles.natpisPreko} />
+            <span className={styles.samoZaCitac}>{opis}</span>
+        </span>
+    );
+}
+
+/**
+ * Blok „radi se na tome" — samo spinner, za prazne stranice i sekcije koje još
+ * nemaju podatke. Za sitna mesta u redu teksta koristiti `Tackice`.
  */
 export default function Ucitavanje({ tekst = 'učitavam', size = 28 }: { tekst?: string; size?: number }) {
     return (
         <div className={styles.blok} role="status" aria-live="polite">
             <Spinner size={size} />
-            <span className={styles.blokTekst}>{tekst}</span>
+            <span className={styles.samoZaCitac}>{tekst}</span>
         </div>
     );
 }

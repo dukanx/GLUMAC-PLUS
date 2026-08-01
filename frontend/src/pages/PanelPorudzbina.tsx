@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { tipLabela, type Porudzbina, type StatusPorudzbine } from '../types/porudzbina';
 import { Zvono, Refresh, Sat } from '../components/Doodle';
 import ZatvoriSmenuModal from '../components/ZatvoriSmenuModal';
+import Ucitavanje from '../components/Ucitavanje';
 import * as smenaApi from '../api/smena';
 import * as porudzbineApi from '../api/porudzbine';
 import styles from './PanelPorudzbina.module.css';
@@ -578,7 +579,7 @@ export default function PanelPorudzbina() {
 
             {/* Sadržaj izabranog taba */}
             {ucitava ? (
-                <div className={styles.poruka}>Učitavam porudžbine...</div>
+                <Ucitavanje tekst="učitavam porudžbine" size={34} />
             ) : tab === 'PRIPREMA' ? (
                 /* Dve jasno razdvojene kolone: levo u toku, desno spremne za preuzimanje */
                 <div className={styles.kolone}>

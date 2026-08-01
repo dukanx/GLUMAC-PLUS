@@ -140,7 +140,7 @@ export default function MeniPage() {
                 <div className={`${styles.infoBl} ${styles.infoBlRadno}`}>
                     <span className={styles.infoBlH}>radno vreme</span>
                     {radnoVremeLoading ? (
-                        <span className={styles.rvFallback}>učitavam<Tackice /></span>
+                        <span className={styles.rvFallback}><Tackice /></span>
                     ) : !imaPodataka ? (
                         <span className={styles.rvFallback}>privremeno nedostupno</span>
                     ) : (

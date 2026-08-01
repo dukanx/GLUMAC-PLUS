@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAktivnaPorudzbina } from '../context/AktivnaPorudzbinaContext';
 import { tipLabela } from '../types/porudzbina';
 import { Klose } from './Doodle';
+import { Tackice } from './Ucitavanje';
 import styles from './StatusPorudzbine.module.css';
 
 // Koraci mini-priznanice: backend status → indeks aktivnog koraka.
@@ -16,13 +17,14 @@ function korakIndex(status?: string): number {
     return 0;
 }
 
-function stikerTekst(status?: string): string {
+// Vraća JSX jer stanje bez statusa (još se učitava) dobija tačkice, a ne tekst.
+function stikerTekst(status?: string) {
     if (status === 'NOVA') return 'čekamo potvrdu kuhinje…';
     if (status === 'U_PRIPREMI') return 'upravo se sprema';
     if (status === 'SPREMNA') return 'spremna je — dođi po nju!';
     if (status === 'REALIZOVANA') return 'preuzeta — prijatno!';
     if (status === 'OTKAZANA') return 'otkazana';
-    return 'učitavanje…';
+    return <Tackice />;
 }
 
 function gotovoOko(preostaloMin: number): string {
@@ -162,10 +164,10 @@ export default function StatusPorudzbine() {
                                         <b>{porudzbina.ukupanIznos.toLocaleString('sr-RS')} RSD</b>
                                         {porudzbina.tipPorudzbine ? ` · ${tipLabela(porudzbina.tipPorudzbine)}` : ''}
                                     </>
-                                ) : 'učitavanje…'}
+                                ) : <Tackice />}
                             </span>
                             <Link to="/istorija" className={styles.sveLink} onClick={zatvoriPracenje}>
-                                sve porudžbine →
+                                sve porudžbine
                             </Link>
                         </div>
                     </motion.div>

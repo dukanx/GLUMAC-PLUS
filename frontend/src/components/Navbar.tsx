@@ -233,7 +233,7 @@ export default function Navbar() {
                         </button>
                     ) : (
                         <NavLink to="/login" className={styles.mobPrijava} onClick={zatvori}>
-                            <Profil size={28} /> Prijava →
+                            <Profil size={28} /> Prijava
                         </NavLink>
                     )}
                 </div>

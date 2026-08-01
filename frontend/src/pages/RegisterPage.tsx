@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import styles from './Auth.module.css';
 import { NalogPlus } from '../components/Doodle';
 import PoljeLozinke from '../components/PoljeLozinke';
+import { NatpisDugmeta } from '../components/Ucitavanje';
 import * as authApi from '../api/auth';
 import { ApiError } from '../api/client';
 
@@ -131,7 +132,7 @@ export default function RegisterPage() {
                     />
 
                     <button type="submit" className={styles.dugme} disabled={ucitava}>
-                        {ucitava ? 'Kreiram nalog…' : <>Kreiraj nalog <NalogPlus size={24} strokeWidth={2.4} /></>}
+                        <NatpisDugmeta uToku={ucitava} opis="Kreiram nalog">Kreiraj nalog <NalogPlus size={24} strokeWidth={2.4} /></NatpisDugmeta>
                     </button>
                 </form>
 

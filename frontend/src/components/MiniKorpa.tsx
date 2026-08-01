@@ -4,6 +4,7 @@ import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
 import { cenaStavke } from '../utils/korpa';
 import { usePorucivanje } from '../hooks/usePorucivanje';
 import { Korpa } from './Doodle';
+import { NatpisDugmeta } from './Ucitavanje';
 import styles from './MiniKorpa.module.css';
 
 export default function MiniKorpa() {
@@ -45,7 +46,7 @@ export default function MiniKorpa() {
 
             ) : korpa.length === 0 ? (
                 <div className={styles.prazna}>
-                    <p className={styles.praznaTekst}>korpa je prazna — dodaj nešto iz menija ←</p>
+                    <p className={styles.praznaTekst}>korpa je prazna — dodaj nešto iz menija</p>
                 </div>
 
             ) : (
@@ -158,7 +159,7 @@ export default function MiniKorpa() {
                         onClick={naruci}
                         disabled={porucivanjeUToku}
                     >
-                        {porucivanjeUToku ? 'Šaljem…' : 'Naruči →'}
+                        <NatpisDugmeta uToku={porucivanjeUToku} opis="Šaljem porudžbinu">Naruči</NatpisDugmeta>
                     </button>
 
                     <button className={styles.isprazniBtn} onClick={isprazni}>

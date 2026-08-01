@@ -60,7 +60,7 @@ export default function AdminPanel() {
 
                 <div className={styles.dno}>
                     <span className={styles.vlasnik}>vlasnik · {korisnik.ime}</span>
-                    <button type="button" className={styles.odjava} onClick={logout}>ODJAVA →</button>
+                    <button type="button" className={styles.odjava} onClick={logout}>ODJAVA</button>
                 </div>
             </aside>
 

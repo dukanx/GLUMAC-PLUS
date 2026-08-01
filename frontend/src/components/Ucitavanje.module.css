@@ -6,7 +6,6 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    margin-left: 4px;
     /* Da tačkice sednu uz osnovu slova, a ne uz sredinu reda. */
     vertical-align: baseline;
 }
@@ -59,10 +58,46 @@
     text-align: center;
 }
 
-.blokTekst {
-    font-family: var(--font-cav);
-    font-size: 21px;
-    color: var(--ink55);
+/* Vidi se samo čitaču ekrana. Animacija nosi značenje očima, ali bez teksta
+   bi `role="status"` najavio prazninu. */
+.samoZaCitac {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Natpis dugmeta dok traje slanje: tačkice preko originala koji je i dalje
+   tu, samo providan — inače bi se dugme skupilo na širinu tri tačke. */
+.natpisOmot {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Bez ovoga omot doda koji piksel visine u odnosu na goli tekst koji je
+       ranije stajao u dugmetu, pa dugme poskoči kad krene slanje. */
+    line-height: inherit;
+}
+
+.natpisSkriven {
+    visibility: hidden;
+    line-height: inherit;
+    white-space: nowrap;
+}
+
+.natpisPreko {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* margin-left sa .tackice bi ga odgurnuo od centra. */
+    margin-left: 0;
 }
 
 /* Ko je isključio animacije dobija mirne, ali i dalje vidljive indikatore. */

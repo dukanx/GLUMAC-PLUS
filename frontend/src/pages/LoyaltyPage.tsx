@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { Katanac, NalogPlus, Kesa } from '../components/Doodle';
+import Ucitavanje from '../components/Ucitavanje';
 import type { Porudzbina } from '../types/porudzbina';
 import * as porudzbineApi from '../api/porudzbine';
 import styles from './LoyaltyPage.module.css';
@@ -328,7 +329,7 @@ export default function LoyaltyPage() {
                         <span className={styles.kSekc}>— poslednje aktivnosti</span>
                         <div style={{ marginTop: 18 }}>
                             {loadingStats ? (
-                                <p className={styles.aktPrazno}>učitavam…</p>
+                                <Ucitavanje tekst="učitavam" size={24} />
                             ) : aktivnosti.length === 0 ? (
                                 <p className={styles.aktPrazno}>
                                     još nema aktivnosti — bodovi stižu sa prvom preuzetom porudžbinom
@@ -352,7 +353,7 @@ export default function LoyaltyPage() {
                                 ))
                             )}
                         </div>
-                        <Link to="/istorija" className={styles.aktLink}>sve porudžbine →</Link>
+                        <Link to="/istorija" className={styles.aktLink}>sve porudžbine</Link>
 
                         {popust > 0 && (
                             <div className={styles.popustPapiric}>

@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { TIP_LABELE, type TipPorudzbine } from '../types/porudzbina';
 import { cenaStavke } from '../utils/korpa';
 import { usePorucivanje } from '../hooks/usePorucivanje';
+import { NatpisDugmeta } from './Ucitavanje';
 import styles from './CartDrawer.module.css';
 
 export default function CartDrawer() {
@@ -73,7 +74,7 @@ export default function CartDrawer() {
                                         className={styles.idNaMeni}
                                         onClick={() => { zatvoriDrawer(); navigate('/meni'); }}
                                     >
-                                        pogledaj meni →
+                                        pogledaj meni
                                     </button>
                                 </div>
 
@@ -217,7 +218,7 @@ export default function CartDrawer() {
                                         disabled={porucivanjeUToku}
                                         whileTap={{ scale: 0.98 }}
                                     >
-                                        {porucivanjeUToku ? 'Šaljem…' : 'Naruči →'}
+                                        <NatpisDugmeta uToku={porucivanjeUToku} opis="Šaljem porudžbinu">Naruči</NatpisDugmeta>
                                     </motion.button>
 
                                     <button className={styles.isprazniBtn} onClick={isprazni}>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Tackice } from '../Ucitavanje';
+import { NatpisDugmeta } from '../Ucitavanje';
 import type { Proizvod, Ukus } from '../../types/proizvod';
 import type { Alergen } from '../../api/alergeni';
 import * as proizvodiApi from '../../api/proizvodi';
@@ -158,7 +158,7 @@ export default function ProizvodModal({ proizvod, alergeni, kategorije, onAlerge
                                     className={styles.podLink}
                                     onClick={() => { setNovaKat(false); setTip(proizvod?.tip ?? kategorije[0] ?? ''); }}
                                 >
-                                    ← nazad na postojeće
+                                    nazad na postojeće
                                 </button>
                             )}
                         </div>
@@ -257,7 +257,7 @@ export default function ProizvodModal({ proizvod, alergeni, kategorije, onAlerge
                         odustani
                     </button>
                     <button type="button" className={styles.dugme} onClick={sacuvaj} disabled={salje}>
-                        {salje ? <>Čuvam<Tackice /></> : 'SAČUVAJ'}
+                        <NatpisDugmeta uToku={salje} opis="Čuvam">SAČUVAJ</NatpisDugmeta>
                     </button>
                 </div>
             </motion.div>

@@ -5,6 +5,7 @@ import styles from './Auth.module.css';
 import { useAuth } from '../context/AuthContext';
 import { Kljuc } from '../components/Doodle';
 import PoljeLozinke from '../components/PoljeLozinke';
+import { NatpisDugmeta } from '../components/Ucitavanje';
 import * as authApi from '../api/auth';
 import { ApiError } from '../api/client';
 
@@ -101,7 +102,7 @@ export default function LoginPage() {
           />
 
           <button type="submit" className={styles.dugme} disabled={ucitava}>
-            {ucitava ? 'Prijavljujem…' : <>Prijavi se <Kljuc size={24} strokeWidth={2.4} /></>}
+            <NatpisDugmeta uToku={ucitava} opis="Prijavljujem">Prijavi se <Kljuc size={24} strokeWidth={2.4} /></NatpisDugmeta>
           </button>
         </form>
 
