@@ -15,6 +15,7 @@ import PanelPorudzbina from './pages/PanelPorudzbina';
 import PanelProizvodi from './components/PanelProizvodi';
 import OmiljenePage from './pages/OmiljenePage';
 import NotFoundPage from './pages/NotFoundPage';
+import AdminPanel from './pages/AdminPanel';
 
 export default function App() {
   return (
@@ -41,6 +42,10 @@ export default function App() {
         } />
         <Route path="/panel/proizvodi" element={
           <PrivateRoute><PanelProizvodi /></PrivateRoute>
+        } />
+        {/* Admin panel sam proverava ulogu i vraća kupca na početnu. */}
+        <Route path="/admin" element={
+          <PrivateRoute><AdminPanel /></PrivateRoute>
         } />
         {/* Mora ostati poslednja — hvata sve što nijedna ruta iznad nije uparila. */}
         <Route path="*" element={<NotFoundPage />} />

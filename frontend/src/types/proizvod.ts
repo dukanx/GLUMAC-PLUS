@@ -9,6 +9,8 @@ export interface Proizvod {
     nedostupanRazlog?: RazlogNedostupnosti | null;
     ukus?: Ukus | null;
     alergeniNazivi?: string[];
+    // ID-jevi alergena — admin forma njima označava već izabrane.
+    alergeniIds?: number[];
 }
 
 // Razlog zbog kog je proizvod skinut sa menija ("86 lista").

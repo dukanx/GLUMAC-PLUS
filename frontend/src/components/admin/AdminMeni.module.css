@@ -1,0 +1,424 @@
+/* Admin → Meni. Tabele su u Lato (brojevi moraju da se čitaju),
+   rukopis (Caveat, rust) samo za naslove sekcija i komentare. */
+
+.glava {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.eyeb {
+    font-family: var(--font-cav);
+    font-size: 21px;
+    color: var(--rust);
+    display: block;
+    transform: rotate(-1deg);
+    line-height: 1;
+}
+
+.naslov {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 46px;
+    line-height: 1;
+    margin: 0;
+}
+
+.alatke {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.pretragaOkvir {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid var(--ink20);
+    border-radius: var(--wob);
+    padding: 9px 16px;
+    background: #fff;
+    color: var(--ink40);
+    width: 240px;
+}
+
+.pretragaInput {
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--ink);
+    width: 100%;
+}
+
+.dugme {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 21px;
+    letter-spacing: .05em;
+    padding: 9px 20px 6px;
+    border: 2px solid var(--ink);
+    border-radius: var(--wob);
+    background: var(--ink);
+    color: var(--paper);
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dugme:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+.dugmeTiho {
+    composes: dugme;
+    background: transparent;
+    color: var(--ink70);
+    border-color: var(--ink40);
+}
+
+/* ── Tabela ── */
+.sekcija {
+    font-family: var(--font-cav);
+    font-size: 22px;
+    color: var(--rust);
+    transform: rotate(-1deg);
+    margin: 26px 0 10px;
+}
+
+.sekcijaBroj {
+    color: var(--ink40);
+}
+
+.kartica {
+    background: #fff;
+    box-shadow: 0 8px 24px hsl(22 30% 14% / .1);
+    /* Dugačka tabela sme da skroluje u sebi, strana ne sme bočno. */
+    overflow-x: auto;
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    /* Uz colgroup ispod: desne kolone drže istu širinu u svim sekcijama.
+       Prva kolona nema zadatu širinu pa uzima ostatak. */
+    table-layout: fixed;
+    min-width: 760px;
+}
+
+.kolAlergeni { width: 170px; }
+.kolCena { width: 80px; }
+.kolStatus { width: 120px; }
+.kolAkcije { width: 150px; }
+
+.th {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    color: var(--ink55);
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 2px solid var(--ink12);
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.th:first-child { padding-left: 20px; }
+.th:last-child { padding-right: 20px; }
+
+.td {
+    padding: 9px 10px;
+    border-bottom: 2px dotted var(--ink07);
+    font-size: 14px;
+    font-family: var(--font-body);
+    vertical-align: top;
+    /* table-layout: fixed ne pušta ćeliju da se raširi — dugačak naziv mora da prelomi. */
+    overflow-wrap: break-word;
+}
+
+.td:first-child { padding-left: 20px; }
+.td:last-child { padding-right: 20px; }
+
+tbody tr:last-child .td {
+    border-bottom: 0;
+}
+
+.desno {
+    text-align: right;
+}
+
+.naziv {
+    display: block;
+}
+
+.opis {
+    display: block;
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--ink55);
+    margin-top: 1px;
+}
+
+.alergeni {
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--ink55);
+}
+
+.tagDa {
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--zel);
+    border: 2px dashed hsl(150 35% 35% / .5);
+    border-radius: 999px;
+    padding: 0 10px 2px;
+    white-space: nowrap;
+}
+
+.tagNe {
+    composes: tagDa;
+    color: var(--rust);
+    border-color: hsl(14 65% 44% / .5);
+}
+
+.akcija {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    text-decoration: underline;
+    color: var(--ink70);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.akcijaTiha {
+    composes: akcija;
+    color: var(--ink40);
+}
+
+.akcijaTiha:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.akcijaSep {
+    color: var(--ink20);
+    margin: 0 6px;
+}
+
+.greska {
+    font-family: var(--font-cav);
+    font-size: 20px;
+    color: var(--rust);
+    transform: rotate(-.6deg);
+    margin: 16px 0 0;
+}
+
+.prazno,
+.brojac {
+    font-family: var(--font-cav);
+    font-size: 20px;
+    color: var(--ink55);
+    margin-top: 20px;
+}
+
+/* ── Modal ── */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: hsl(22 30% 14% / .45);
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.modal {
+    background: #fff;
+    box-shadow: var(--sen-modal);
+    padding: 28px 30px 24px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 88vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modalTape {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    width: 110px;
+    height: 24px;
+    background: hsl(48 90% 68% / .55);
+    transform: translateX(-50%) rotate(-2deg);
+}
+
+.modalZatvori {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-family: var(--font-cav);
+    font-size: 24px;
+    color: var(--ink55);
+    background: none;
+    border: 0;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.modalNaslov {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 36px;
+    letter-spacing: .02em;
+    line-height: 1.05;
+    margin: 0;
+}
+
+.polja {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.red {
+    display: flex;
+    gap: 14px;
+}
+
+.polje {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.poljeUsko {
+    composes: polje;
+    flex: 0 0 130px;
+}
+
+.lab {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    color: var(--ink55);
+    margin-bottom: 5px;
+}
+
+.unos {
+    border: 2px solid var(--ink20);
+    border-radius: var(--wob);
+    padding: 9px 16px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    background: #fff;
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+}
+
+.unos:focus {
+    border-color: var(--ink);
+}
+
+.podLink {
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--ink55);
+    background: none;
+    border: 0;
+    padding: 4px 0 0;
+    cursor: pointer;
+    align-self: flex-start;
+}
+
+.napomena {
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--ink40);
+    margin-bottom: 6px;
+}
+
+.noviAlergen {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.unosMali {
+    composes: unos;
+    padding: 3px 12px 5px;
+    font-size: 13px;
+    width: 130px;
+}
+
+.pilule {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.pilula {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    padding: 3px 13px 5px;
+    border: 2px dashed var(--ink20);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink70);
+    cursor: pointer;
+    line-height: 1.2;
+}
+
+.pilulaOn {
+    composes: pilula;
+    border-style: solid;
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+}
+
+.modalGreska {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--rust);
+    transform: rotate(-.6deg);
+    margin: 14px 0 0;
+}
+
+.modalDugmad {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 2px dashed var(--ink12);
+}
+
+@media (max-width: 640px) {
+    .alatke {
+        width: 100%;
+    }
+
+    .pretragaOkvir {
+        width: 100%;
+    }
+
+    .red {
+        flex-direction: column;
+    }
+
+    .poljeUsko {
+        flex: 1;
+    }
+}

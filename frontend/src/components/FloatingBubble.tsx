@@ -37,8 +37,9 @@ export default function FloatingBubble() {
 
     // Na Meniju (desktop) korpa već stoji desno — dugme se krije dok nema aktivne porudžbine.
     if (!aktivna && isDesktop && pathname === '/meni') return null;
-    // Na panelu zaposlenih (porudžbine i proizvodi) dugme nema smisla.
-    if (pathname.startsWith('/panel')) return null;
+    // Na panelu zaposlenih i u admin panelu dugme nema smisla — to su radni
+    // ekrani, ne kupovina.
+    if (pathname.startsWith('/panel') || pathname.startsWith('/admin')) return null;
 
     const badge = spremna
         ? 'spremna!'

@@ -216,3 +216,53 @@ export function Kesa(props: IkonaProps) {
         </svg>
     );
 }
+
+// ── Ikonice sidebara u admin panelu (path-ovi iz dizajn paketa) ──
+
+export function Grafikon(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props, 2.2)}>
+            <path d="M4 20 L 4 12 M 10 20 L 10 6 M 16 20 L 16 10 M 22 20 L 22 4" />
+        </svg>
+    );
+}
+
+export function Priznanica(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props, 2.2)}>
+            <path d="M5 4 C 10 3.5, 15 4.5, 19.5 4 L 19 21 C 14.5 20, 9.5 21.5, 5.5 20.5 Z" />
+            <path d="M9 9 L 16 9 M 9 13 L 16 13" />
+        </svg>
+    );
+}
+
+// Napomena: MENI koristi postojeći `Klose`, LOYALTY `Zvezdu`, a RADNO VREME
+// `Sat` — dizajn za njih ima iste path-ove kao ikonice koje već postoje gore.
+
+export function Kupon(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props, 2.2)}>
+            <path d="M4 10 C 8 9, 16 11, 20 9.5 L 20 15 C 16 16.5, 8 14.5, 4 16 Z" />
+            <path d="M9 8 L 9.5 17" />
+        </svg>
+    );
+}
+
+export function Ljudi(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props, 2.2)}>
+            <circle cx="9" cy="8" r="3.4" />
+            <path d="M3 20 C 4 16, 6.5 14.6, 9 14.6 C 11.5 14.6, 14 16, 15 20" />
+            <circle cx="17" cy="9" r="2.6" />
+            <path d="M16.5 14.4 C 18.8 14.4, 20.5 15.7, 21.2 18.6" />
+        </svg>
+    );
+}
+
+export function Osoba(props: IkonaProps) {
+    return (
+        <svg {...svgProps(props, 2.2)}>
+            <path d="M7 7 C 7 4.5, 9 3, 12 3 C 15 3, 17 4.5, 17 7 C 17 9.5, 15 11, 12 11 C 9 11, 7 9.5, 7 7 Z M 4 21 C 5 16.5, 8 14.5, 12 14.5 C 16 14.5, 19 16.5, 20 21" />
+        </svg>
+    );
+}

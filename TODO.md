@@ -36,16 +36,35 @@ Backend verzija je potrebna SAMO ako: (a) panel se koristi na **više uređaja/t
 ~~`getMyOrders` prima `page`/`size` i interno seče rezultat, ali vraća `List<PorudzbinaViewDto>` (ne `Page`). Posledica: frontend ne dobija `totalPages`/`totalElements`, pa IstorijaPage uvek misli da postoji 1 strana — pager se nikad ne prikaže. **Korisnik sa >8 porudžbina ne može da vidi 9. i dalje** (tihi bug; ne aktivira se dok ima malo porudžbina).
 Fix: `/moje` da vraća `Page<PorudzbinaViewDto>` (kao što `/page` već radi — servis vrati `repo.findBy...(pageable)` umesto `.getContent()/.toList()`). Frontend NE treba menjati — `else` grana u `ucitaj` već hvata `content`/`totalPages`/`totalElements`.~~
 
-**🟡 0g. Ime kupca (i telefon) u `PorudzbinaViewDto` za panel**
-Panel zaposlenog bi trebalo da prikaže ime kupca ("čija je porudžbina"). Frontend je već spreman (`{p.korisnikIme && ...}` u kartici), ali DTO ne sadrži `korisnikIme`. Dodati `korisnikIme` (i opciono `brojTelefona`) u `PorudzbinaViewDto` — proradiće bez frontend izmene.
+**✅ 0g. Ime kupca u `PorudzbinaViewDto` za panel — URAĐENO 2026-07-31**
+`korisnikIme` dodato u DTO i mapper; frontend nije menjan jer je već imao `{p.korisnikIme && ...}` u kartici i polje u tipu. Uz to `@BatchSize(size = 100)` na `Korisnik` — veza `Porudzbina.korisnik` je LAZY, pa bi bez toga ime značilo jedan upit po porudžbini (isti N+1 kao kod dodataka, vidi 0j). `PorudzbinaMapperTest` pokriva mapiranje imena i slučaj porudžbine bez korisnika.
+Telefon nije dodat — `Korisnik` uopšte nema to polje; ono dolazi tek sa SMS slojem (migracija + DTO), pa je zaseban posao.
 
 **🟢 0i. Testovi se kače na pravu (Neon) bazu — treba izolovana test konfiguracija (NIJE HITNO)**
 Obim je uži nego što je prvo delovalo: **16 od 17 test klasa su čisti Mockito unit testovi** i uopšte ne diraju bazu. Pogađa samo `FoodOrderingApplicationTests`, jedini `@SpringBootTest`. Zato nije hitno, ali treba da postoji: svaki `mvn test` dodirne pravu bazu i troši ~12s samo na konekciju, a Flyway se pusti kao nusprodukt (tako su V14 i V15 ušle pre nego što su namerno puštene).
 Ne postoji `src/test/resources/`, pa testovi koriste isti `application.properties` + `.env` kao aplikacija → `mvn test` se povezuje na **produkcionu Neon bazu**. Konkretno: `FoodOrderingApplicationTests` (diže ceo Spring context) pri svakom ranu pokrene Flyway na Neon-u — tako je V14 primenjena „usput", pre nego što je namerno puštena. Rizik: test-ran može da menja/zaključa pravu bazu, spor je (~10s samo na konekciju), i ne radi offline.
 Fix: dodati `src/test/resources/application-test.properties` + `@ActiveProfiles("test")` (ili `application.properties` u test resources) sa H2 in-memory (`jdbc:h2:mem:...;MODE=PostgreSQL`) ili Testcontainers (`postgres:16`) ako treba pravi Postgres. Uz to `spring.flyway.enabled=true` da migracije prođu i na test bazi — ujedno postaje provera da migracije rade od nule. Unit testovi (Mockito) su već izolovani; ovo pogađa samo context/integracione testove.
 
-**🟡 0h. Popuniti opise proizvoda (`Proizvod.opis`)**
-`Proizvod` u modelu ima polje `opis`, ali je prazno/null za većinu (Glumac, Dubai palačinka...). Zbog toga MeniPage (ProizvodKartica) i HomePage preporuke nemaju šta da prikažu kao opis. Popuniti opise kroz seed/admin (npr. "Eurokrem, plazma, višnja"). Frontend je već spreman da ih prikaže čim postoje.
+**✅ 0h. Opisi proizvoda (`Proizvod.opis`) — URAĐENO 2026-07-31**
+Ispravka polazne pretpostavke: polje **nije postojalo** na backendu (ni entitet, ni DTO, ni kolona) — samo TypeScript tip i tri komponente koje bi ga prikazale, pa je uvek bilo `undefined`.
+Urađeno: **V17** dodaje kolonu `opis TEXT` (nullable), polje provučeno kroz `Proizvod`, `ProizvodViewDto`, `ProizvodDto` (`@Size(max=500)`) i `ProizvodMapper`; **V18** upisuje opise. Frontend nije menjan.
+Opis dobija **13 od 167** stavki — samo one kojima naziv ne kaže sastav (Palačinka Glumac, Vegeterijana, Giros, salate, Dubai kadaif, Kifla tuna, Tortilja pileća bečka, Džem posni). Ostatak menija nabraja sastojke već u nazivu („Nutela, plazma, višnja") i namerno ostaje bez opisa, da kartica ne bi pisala isto dvaput. Iz istog razloga posne slane palačinke nemaju opis — njihov naziv *jeste* lista sastojaka.
+Bez opisa su ostali i **Premium kremovi** (Krem pistać, Beli krem, Ferrero krem, Kinder Bueno krem) i **Prazna** — za njih sastav nije bio poznat. Dopuniti kad se zna (nova migracija ili admin panel).
+
+**✅ 0n. Usklađivanje menija sa aktuelnim stanjem (V19) — URAĐENO 2026-07-31**
+Migracija `V19__uskladi_meni_2026_07.sql`: **101 nova cena**, `Bel krem` → `Beli krem`, „Džem posni" podeljen na četiri palačinke (kajsija/šljiva/šipurak/jagoda, po 600) jer se ukus u lokalu bira usmeno a kroz aplikaciju nije imao gde da se unese, dodat `Tzatziki` (110) i četiri preliva kao dodaci sa prefiksom („Preliv jagoda"… — meni ima i dodatak „Jagode" i preliv „Jagoda", pa bi bez prefiksa bile dve iste stavke), sastojci sendviča prebačeni u `opis`. Baza je posle migracije proverena istom skriptom kojom je pravljen diff: **0 neslaganja** sa menijem.
+Četiri stavke kojih više nema u ponudi (Spanać+sir+tartar, Šunka+sir+pavlaka+tartar, Jagoda krem, Džem posni) **ugašene su kao `DO_DALJNJEG`, ne obrisane** — „Spanać" je vezan za 2 porudžbine i 2 omiljene, pa bi brisanje pokidalo istoriju.
+
+**✅ 0o. Dve vrste nedostupnosti se sad prikazuju različito — URAĐENO 2026-07-31**
+Ranije je `ProizvodKartica` gledala samo `dostupan`, pa je i stavka skinuta sa ponude stajala na meniju uz „nema danas", poruku koja obećava povratak sutra.
+Sad: `DO_KRAJA_SMENE` ostaje na meniju zasivljeno sa „nema danas" (danas je nestalo), a `DO_DALJNJEG` se **ne prikazuje uopšte**. Filter je predikat `uPonudi(p)` u `types/proizvod.ts`, primenjen u `MeniPage` i `HomePage`. Panel zaposlenog namerno **ne** koristi filter — obe vrste mora da vidi da bi mogao da ih vrati u ponudu.
+
+**🔵 0q. Redni broj stavke na meniju (kao na štampanoj karti) — NIJE ODLUČENO**
+Gosti u lokalu naručuju po broju sa štampane karte („daj mi peticu" = `Kajmak, pečenica, šunka, pavlaka, kačkavalj`, peta slana palačinka). U bazi taj broj ne postoji, pa se nigde ne može prikazati; numeracija u preporukama na početnoj je samo pozicija u listi i ne poklapa se sa kartom.
+Ako se ikad radi: kolona `redniBroj` na `Proizvod` (po kategoriji, ne globalno) + prikaz uz naziv u meniju. Komplikacija je održavanje — brojevi se pomeraju kad se stavka doda ili skine, pa bi to trebalo da bude ručno polje u admin panelu, a ne izračunato.
+
+**🟡 0p. Dodaci uz sendviče imaju svoje cene**
+Meni navodi Krastavac 80, Paradajz 80, Jaje 90 uz sendviče, a `Krastavac` već postoji kao dodatak uz palačinke po 100; `Paradajz` i `Jaje` ne postoje. Model ima jednu cenu po dodatku, pa se to sad ne može predstaviti. Rešenje traži ili cenu dodatka po kategoriji, ili zasebne stavke tipa „Krastavac (sendvič)". Svesno preskočeno pri V19.
 
 **🟡 0m. Refresh token (opoziv pristupa) — za produkciju, nije hitno**
 Sada postoji jedan JWT koji i autentifikuje i drži sesiju, sa rokom od 30 dana (`JWT_EXPIRATION_MS=2592000000`, podignuto sa 24h 2026-07-28). Posledica: **pristup se ne može opozvati pre isteka.** Nema „odjavi me sa svih uređaja", izgubljen telefon ostaje prijavljen do 30 dana, a radnici koja ode iz lokala panel radi dok token ne istekne.
@@ -107,14 +126,33 @@ Backend ima ceo `Notifikacija` model + 6 tipova (`PORUDZBINA_PRIHVACENA`, `PORUD
 Helper `src/utils/tekst.ts` (`normalizuj` + `sadrzi`): ćirilica se prvo preslovi u latinicu (digrafi љ→lj, њ→nj, џ→dz, ђ→dj), pa NFD skida kvačice sa ć/č/š/ž, a `đ` ide ručno na `dj` (NFD ga ne razlaže, zaseban je glif U+0111). Radi u oba smera — „шунка" nalazi „Šunka", „sunka" bi našlo i ćirilični naziv. Koriste ga `MeniPage` (kupac) i `PanelProizvodi` (panel) — pre toga je `MeniPage` imao svoju kopiju bez ćirilice, a panel je radio golo `toLowerCase().includes()`.
 Ostalo za kasnije: backend `GET /api/proizvodi?q=` (`findByNazivContainingIgnoreCase...`) i dalje jeste osetljiv na dijakritiku, ali ga trenutno **ne zove nijedan klijent** (React filtrira lokalno, Angular i Android ga ne koriste). Ako pretraga ikad ode na server, treba `unaccent` ekstenzija u Postgresu ili normalizovana kolona.
 
-**🟡 8. Animacije umesto tekstualnih „Učitavam…/Šaljem…" stanja**
-Trenutno se svuda pri učitavanju/slanju prikazuje običan tekst („Učitavam porudžbine…", „Šaljem…", „Nije moguće učitati…"). Zameniti to konzistentnim loading animacijama u papirnom stilu — spinner/skeleton (npr. treperava „linija rukopisa", tačkice, ili skeleton kartice). Napraviti 1–2 reusable komponente (`Spinner`, `SkeletonKartica`) i provući ih kroz: panel (učitavanje porudžbina, akcije), meni, istorija, omiljene, login/register (dugmad u toku slanja), status porudžbine. Cilj: nigde goli tekst kao indikator rada.
+**✅ 8. Animacije umesto tekstualnih „Učitavam…/Šaljem…" stanja — URAĐENO 2026-07-31**
+`components/Ucitavanje.tsx`: `Tackice` (tri tačke koje poskakuju, nasleđuju `currentColor` pa rade i na tamnom dugmetu), `Spinner` (rukom povučen luk koji kruži) i podrazumevani `Ucitavanje` blok (spinner + tekst, `role="status"`). Provučeno kroz dugmad (prijava, registracija, naruči u draweru i MiniKorpi, sačuvaj u istoriji, ponovi u omiljenima, zatvori smenu) i blokove (panel, loyalty aktivnosti, radno vreme na početnoj i meniju, status porudžbine). Skeletoni koji su već postojali (meni, istorija, omiljene, lista dodataka) ostavljeni kakvi jesu. Uz `prefers-reduced-motion` animacije se gase, ali indikator ostaje vidljiv.
 
 ---
 
 ## Veliki feature-i (posle odbrane / pred produkciju)
 
-### 🛠️ Admin panel (NE POSTOJI — treba napraviti)
+### 🛠️ Admin panel — U TOKU (faze 0 i 1 gotove 2026-08-01)
+
+Radi se po dizajnu iz `Website redesign concept (1)/design_handoff_glumac_plus/`, sekcija 9a.
+
+**✅ Faza 0 — skelet.** `/admin` (`AdminPanel.tsx`), tamni sidebar 230px sa 8 sekcija i žutim levim borderom na aktivnoj, dole „vlasnik · ime" + odjava. Ruta traži prijavu, a sama strana proverava `uloga === 'ADMIN'` i vraća ostale na početnu. Navbar i floating dugme se sakrivaju na `/admin`. Na užem ekranu sidebar prelazi u traku na vrhu.
+
+**✅ Faza 1 — MENI.** `components/admin/AdminMeni.tsx` + `ProizvodModal.tsx`: katalog grupisan po kategorijama, pretraga (radi i po opisu, koristi `sadrzi` pa hvata i ćirilicu), tabela sa cenom, alergenima i statusom, „+ NOVI PROIZVOD", izmena kroz modal (naziv, kategorija, cena, opis, ukus, alergeni), „sakrij"/„vrati". Desne kolone (alergeni, cena, status, akcije) su fiksne širine preko `colgroup` + `table-layout: fixed` — svaka sekcija je zasebna tabela, pa bi ih automatski raspored razvukao različito i poravnanje bi „igralo" između sekcija.
+„Sakrij" postavlja `DO_DALJNJEG`, **ne briše** — brisanje bi palo na stranom ključu čim je proizvod jednom naručen.
+Backend dopune uz ovo: `ProizvodDto` dobio `ukus` i `jedinicaMere` više nije obavezna (nijedan proizvod je nema, a `@NotBlank` bi blokirao čuvanje); `update()` sad postavlja i `opis` i `ukus` (ranije ih je ignorisao); `ProizvodViewDto` vraća i `alergeniIds` da forma zna šta je već izabrano; kreiranje/izmena/brisanje proizvoda **zaključani na ADMIN** (zaposlenom ostaje samo `/dostupnost`, tj. 86-lista u smeni).
+
+**Preostale faze:** 2 — radno vreme + zaposleni · 3 — korisnici (± bodovi, blokiranje) · 4 — loyalty (CRUD nivoa; kurs bodova je sad zakucan u servisu) · 5 — porudžbine (pretraga, opseg datuma, refundacija) · 6 — pregled/statistika (agregatni endpointi, najveći backend posao) · 7 — promo kodovi (nov entitet + integracija u cenu).
+
+**Napomene:** slike proizvoda su svesno preskočene (nema ni polja ni skladišta; meni koristi doodle placeholder). Prevlačenje reda za redosled takođe — vezano za 0q. U bazi trenutno **nema nijednog alergena**, pa se prvi pravi iz same forme („+ novi" uz alergene, gađa `POST /api/alergeni`).
+
+**Kategorije proizvoda kao pravi šifarnik — kad bude vremena.**
+`tip` je običan `String` na `Proizvod`; nema ni enum ni tabelu, kategorija „postoji" samo dok je neki proizvod nosi u toj koloni. Forma zato nudi `<select>` postojećih plus „+ nova kategorija…" — čuva od greške u kucanju, ali ne sprečava je: „Palacinke" pored „Palačinke" daje dve sekcije koje izgledaju isto. Gore od kozmetike — `Proizvod.TIP_DODACI = "Dodaci"` poredi **tačan tekst**, pa dodatak upisan kao „dodaci" prestaje da se ponaša kao dodatak i ispliva kupcu u meniju kao obična stavka.
+Pravo rešenje: tabela `kategorija` (id, naziv, redosled) + migracija koja prebaci zatečene vrednosti, `tip` postane strani ključ, a redosled sekcija prestane da zavisi od abecede. Vezuje se sa 0q (brojevi stavki na meniju) — isti `redosled` bi služio i tome.
+
+<details><summary>Originalni opis obima</summary>
+
 Trenutno postoji samo **panel zaposlenog** (`/panel` = `PanelPorudzbina`, upravljanje porudžbinama uživo). Ne postoji admin panel za upravljanje **katalogom i konfiguracijom**. (Napomena: stari TODO/docs ponegde pominju "AdminPage" kao da postoji — NE postoji u kodu.)
 
 **Obim (predlog):** zaseban ekran `/admin` (role ADMIN), odvojen od panela zaposlenog:
@@ -126,6 +164,7 @@ Trenutno postoji samo **panel zaposlenog** (`/panel` = `PanelPorudzbina`, upravl
 6. (Opciono) **Statistika / dashboard:** promet, broj porudžbina po statusu, popularne stavke, ušteđeno — može da povuče isti agregat kao `/loyalty/stats` ideja.
 
 **Backend:** većina CRUD endpointa za `Proizvod`/`LoyaltyProgram`/`RadnoVreme` verovatno delom postoji (proveriti kontrolere) — treba upotpuniti + zaključati na ADMIN. Frontend je glavni posao.
+</details>
 
 ### ✅ Dostupnost proizvoda ("86 lista") — URAĐENO 2026-07-23 (pun dizajn)
 Zaposleni skida/vraća proizvode iz ponude preko **panela** (tab "PROIZVODI"). Implementirano prema dizajnu ("Panel zaposlenih" handoff).

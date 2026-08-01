@@ -11,6 +11,8 @@ export default function Navbar() {
     const { korisnik, popust, logout } = useAuth();
     const { pathname } = useLocation();
     const jeHome = pathname === '/';
+    // Admin panel ima svoj sidebar preko cele visine — gornja traka bi mu smetala.
+    const jeAdmin = pathname.startsWith('/admin');
     const [scrolled, setScrolled] = useState(false);
     const [menuOtvoren, setMenuOtvoren] = useState(false);
     const [dropOtvoren, setDropOtvoren] = useState(false);
@@ -61,6 +63,8 @@ export default function Navbar() {
         `${styles.mobLink} ${isActive ? styles.mobLinkAktivan : ''}`;
 
     const zatvori = () => setMenuOtvoren(false);
+
+    if (jeAdmin) return null;
 
     // Klik na logo — uvek na vrh home stranice (bilo da sam na home ili ne),
     // ne tamo dokle je skrol stao.
