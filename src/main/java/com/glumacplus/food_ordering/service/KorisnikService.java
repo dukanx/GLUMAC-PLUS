@@ -9,6 +9,7 @@ import com.glumacplus.food_ordering.model.LoyaltyProgram;
 import com.glumacplus.food_ordering.model.Uloga;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
 import com.glumacplus.food_ordering.repository.LoyaltyProgramRepository;
+import com.glumacplus.food_ordering.util.LoyaltyNivo;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -178,6 +179,69 @@ public class KorisnikService {
         korisnik.setUloga(novaUloga);
         korisnik = korisnikRepo.save(korisnik);
         return KorisnikMapper.toViewDto(korisnik);
+    }
+
+    /**
+     * Ručno ispravlja broj bodova korisniku i usklađuje loyalty nivo.
+     *
+     * <p>Nivo se preračunava istim pravilom kojim se dodeljuje pri preuzimanju
+     * porudžbine ({@link LoyaltyNivo}), pa može i da <em>padne</em> ako se bodovi
+     * smanje — inače bi nivo i bodovi vremenom prestali da odgovaraju jedno
+     * drugom.</p>
+     *
+     * @param korisnikId identifikator korisnika
+     * @param promena koliko bodova dodati; negativna vrednost oduzima
+     * @return ažurirani korisnik
+     * @throws ResponseStatusException sa statusom 400 ako je promena {@code null}
+     *         ili nula, odnosno ako bi rezultat bio negativan, i 404 ako
+     *         korisnik ne postoji
+     */
+    @Transactional
+    public KorisnikViewDto promeniBodove(Long korisnikId, Integer promena) {
+        if (promena == null || promena == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Promena bodova je obavezna i ne sme biti nula");
+        }
+
+        Korisnik korisnik = korisnikRepo.findById(korisnikId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Korisnik nije pronađen!"));
+
+        double novoStanje = korisnik.getBrojBodova() + promena;
+        if (novoStanje < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Korisnik ima " + (int) korisnik.getBrojBodova() + " bodova, ne može se oduzeti " + Math.abs(promena));
+        }
+
+        korisnik.setBrojBodova(novoStanje);
+        korisnik.setLoyaltyProgram(LoyaltyNivo.odredi(loyaltyRepo.findAll(), novoStanje).orElse(null));
+
+        return KorisnikMapper.toViewDto(korisnikRepo.save(korisnik));
+    }
+
+    /**
+     * Blokira ili odblokira nalog.
+     *
+     * <p>Blokiran korisnik ne može ni da se prijavi ni da koristi već izdati
+     * token — status naloga se proverava i u {@code JwtAuthenticationFilter}.</p>
+     *
+     * @param korisnikId identifikator korisnika
+     * @param blokiran {@code true} da se nalogu oduzme pristup
+     * @return ažurirani korisnik
+     * @throws ResponseStatusException sa statusom 400 ako admin pokuša da blokira
+     *         sam sebe, i 404 ako korisnik ne postoji
+     */
+    @Transactional
+    public KorisnikViewDto postaviBlokiran(Long korisnikId, boolean blokiran) {
+        Korisnik korisnik = korisnikRepo.findById(korisnikId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Korisnik nije pronađen!"));
+
+        // Blokiranje samog sebe bi zaključalo panel bez načina da se otključa
+        // iz aplikacije — jedini izlaz bi bio ručna izmena u bazi.
+        if (blokiran && getCurrentUserEntity().getId().equals(korisnik.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ne možete blokirati sopstveni nalog");
+        }
+
+        korisnik.setBlokiran(blokiran);
+        return KorisnikMapper.toViewDto(korisnikRepo.save(korisnik));
     }
 
     /**

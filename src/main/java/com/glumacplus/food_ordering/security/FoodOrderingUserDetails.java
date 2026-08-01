@@ -41,8 +41,13 @@ public class FoodOrderingUserDetails implements UserDetails {
     @Override
     public boolean isCredentialsNonExpired() { return true; }
 
+    /**
+     * Blokiran nalog Spring Security odbija pri prijavi ({@code DisabledException}).
+     * Za već izdate tokene ovo nije dovoljno — {@code JwtAuthenticationFilter}
+     * sam gradi authentication token, pa proveru mora da uradi izričito.
+     */
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() { return !korisnik.isBlokiran(); }
 
 
     public Korisnik getKorisnik() {

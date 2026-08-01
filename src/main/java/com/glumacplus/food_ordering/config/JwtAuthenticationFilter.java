@@ -62,8 +62,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
-                // 5. Proveravamo validnost tokena
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                // 5. Proveravamo validnost tokena i to da nalog nije blokiran.
+                //    Status naloga se ovde mora proveriti izričito: Spring ga sam
+                //    proverava samo pri prijavi, kroz DaoAuthenticationProvider,
+                //    a ovde authentication token pravimo ručno. Bez ovoga bi
+                //    blokiran korisnik radio dok mu JWT ne istekne (30 dana).
+                if (userDetails.isEnabled() && jwtService.isTokenValid(jwt, userDetails)) {
 
                     // 6. Pravimo Authentication objekat i ubacujemo ga u Spring Context
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

@@ -58,6 +58,14 @@ public class Korisnik {
     private LocalDateTime zadnjaUpotrebaPopusta;
 
     /**
+     * Da li je nalog blokiran. Blokiran korisnik ne može ni da se prijavi ni da
+     * koristi već izdati token — vidi {@code FoodOrderingUserDetails.isEnabled()}
+     * i proveru u {@code JwtAuthenticationFilter}.
+     */
+    @Column(nullable = false)
+    private boolean blokiran = false;
+
+    /**
      * Podrazumevani konstruktor.
      */
     public Korisnik() {}
@@ -220,4 +228,18 @@ public class Korisnik {
      * @param zadnjaUpotrebaPopusta datum poslednje upotrebe popusta
      */
     public void setZadnjaUpotrebaPopusta(LocalDateTime zadnjaUpotrebaPopusta) { this.zadnjaUpotrebaPopusta = zadnjaUpotrebaPopusta; }
+
+    /**
+     * Vraća da li je nalog blokiran.
+     *
+     * @return {@code true} ako je nalog blokiran
+     */
+    public boolean isBlokiran() { return blokiran; }
+
+    /**
+     * Postavlja da li je nalog blokiran.
+     *
+     * @param blokiran {@code true} da se nalogu oduzme pristup
+     */
+    public void setBlokiran(boolean blokiran) { this.blokiran = blokiran; }
 }

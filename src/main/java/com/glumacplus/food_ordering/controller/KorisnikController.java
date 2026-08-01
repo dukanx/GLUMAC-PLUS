@@ -1,6 +1,8 @@
 package com.glumacplus.food_ordering.controller;
 
 
+import com.glumacplus.food_ordering.dto.KorisnikBlokiranUpdateDto;
+import com.glumacplus.food_ordering.dto.KorisnikBodoviUpdateDto;
 import com.glumacplus.food_ordering.dto.KorisnikDto;
 import com.glumacplus.food_ordering.dto.KorisnikMeUpdateDto;
 import com.glumacplus.food_ordering.dto.KorisnikUlogaUpdateDto;
@@ -64,5 +66,17 @@ public class KorisnikController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<KorisnikViewDto> updateUserRole(@PathVariable Long id, @RequestBody @Valid KorisnikUlogaUpdateDto dto) {
         return ResponseEntity.ok(service.updateUserRole(id, dto.getUloga()));
+    }
+
+    @PatchMapping("/{id}/bodovi")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<KorisnikViewDto> promeniBodove(@PathVariable Long id, @RequestBody @Valid KorisnikBodoviUpdateDto dto) {
+        return ResponseEntity.ok(service.promeniBodove(id, dto.getPromena()));
+    }
+
+    @PatchMapping("/{id}/blokiran")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<KorisnikViewDto> postaviBlokiran(@PathVariable Long id, @RequestBody @Valid KorisnikBlokiranUpdateDto dto) {
+        return ResponseEntity.ok(service.postaviBlokiran(id, dto.getBlokiran()));
     }
 }

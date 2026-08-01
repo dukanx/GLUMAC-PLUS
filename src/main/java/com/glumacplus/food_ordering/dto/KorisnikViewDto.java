@@ -16,6 +16,7 @@ public class KorisnikViewDto {
     private double brojBodova;
     private String loyaltyNivo;
     private Uloga uloga;
+    private boolean blokiran;
 
     public KorisnikViewDto(Long id, String ime, String email, double brojBodova, String loyaltyNivo, Uloga uloga) {
         this.id = id;
@@ -64,4 +65,12 @@ public class KorisnikViewDto {
 
     public Uloga getUloga() { return uloga; }
     public void setUloga(Uloga uloga) { this.uloga = uloga; }
+
+    public boolean isBlokiran() {
+        return blokiran;
+    }
+
+    public void setBlokiran(boolean blokiran) {
+        this.blokiran = blokiran;
+    }
 }

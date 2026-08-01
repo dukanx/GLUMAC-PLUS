@@ -232,4 +232,145 @@ class KorisnikServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         verify(korisnikRepo, never()).save(any());
     }
+
+    // SO: promeniBodove
+
+    private java.util.List<LoyaltyProgram> nivoi() {
+        return java.util.List.of(
+                new LoyaltyProgram("Nova zvezda", 0.0, 0),
+                new LoyaltyProgram("Srebro", 5.0, 100),
+                new LoyaltyProgram("Zlato", 10.0, 500)
+        );
+    }
+
+    private Korisnik gost(long id, double bodovi, LoyaltyProgram nivo) {
+        Korisnik k = new Korisnik("Pera", "pera@gmail.com", "x", bodovi, Uloga.KORISNIK);
+        k.setId(id);
+        k.setLoyaltyProgram(nivo);
+        return k;
+    }
+
+    @Test
+    void testPromeniBodoveDodajePodizeNivo() {
+        Korisnik k = gost(7L, 90, new LoyaltyProgram("Nova zvezda", 0.0, 0));
+        when(korisnikRepo.findById(7L)).thenReturn(Optional.of(k));
+        when(loyaltyRepo.findAll()).thenReturn(nivoi());
+        when(korisnikRepo.save(any(Korisnik.class))).thenAnswer(i -> i.getArgument(0));
+
+        korisnikService.promeniBodove(7L, 20);
+
+        ArgumentCaptor<Korisnik> captor = ArgumentCaptor.forClass(Korisnik.class);
+        verify(korisnikRepo).save(captor.capture());
+        assertEquals(110, captor.getValue().getBrojBodova());
+        assertEquals("Srebro", captor.getValue().getLoyaltyProgram().getNivo());
+    }
+
+    @Test
+    void testPromeniBodoveOduzimaSpustaNivo() {
+        // Dogovoreno pravilo: nivo prati bodove u OBA smera, pa sme i da padne.
+        Korisnik k = gost(7L, 120, new LoyaltyProgram("Srebro", 5.0, 100));
+        when(korisnikRepo.findById(7L)).thenReturn(Optional.of(k));
+        when(loyaltyRepo.findAll()).thenReturn(nivoi());
+        when(korisnikRepo.save(any(Korisnik.class))).thenAnswer(i -> i.getArgument(0));
+
+        korisnikService.promeniBodove(7L, -30);
+
+        ArgumentCaptor<Korisnik> captor = ArgumentCaptor.forClass(Korisnik.class);
+        verify(korisnikRepo).save(captor.capture());
+        assertEquals(90, captor.getValue().getBrojBodova());
+        assertEquals("Nova zvezda", captor.getValue().getLoyaltyProgram().getNivo());
+    }
+
+    @Test
+    void testPromeniBodoveIspodNuleBaca400() {
+        Korisnik k = gost(7L, 10, new LoyaltyProgram("Nova zvezda", 0.0, 0));
+        when(korisnikRepo.findById(7L)).thenReturn(Optional.of(k));
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> korisnikService.promeniBodove(7L, -11)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(korisnikRepo, never()).save(any());
+    }
+
+    @Test
+    void testPromeniBodoveNulaBaca400() {
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> korisnikService.promeniBodove(7L, 0)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(korisnikRepo, never()).save(any());
+    }
+
+    @Test
+    void testPromeniBodoveKorisnikNePostojiBaca404() {
+        when(korisnikRepo.findById(99L)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> korisnikService.promeniBodove(99L, 10)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    // SO: postaviBlokiran
+
+    @Test
+    void testPostaviBlokiranUspesno() {
+        setupSecurityContext("admin@gmail.com");
+        Korisnik admin = new Korisnik();
+        admin.setId(1L);
+        admin.setEmail("admin@gmail.com");
+        admin.setUloga(Uloga.ADMIN);
+        Korisnik k = gost(7L, 0, null);
+
+        when(korisnikRepo.findByEmail("admin@gmail.com")).thenReturn(Optional.of(admin));
+        when(korisnikRepo.findById(7L)).thenReturn(Optional.of(k));
+        when(korisnikRepo.save(any(Korisnik.class))).thenAnswer(i -> i.getArgument(0));
+
+        KorisnikViewDto rezultat = korisnikService.postaviBlokiran(7L, true);
+
+        assertTrue(rezultat.isBlokiran());
+        ArgumentCaptor<Korisnik> captor = ArgumentCaptor.forClass(Korisnik.class);
+        verify(korisnikRepo).save(captor.capture());
+        assertTrue(captor.getValue().isBlokiran());
+    }
+
+    @Test
+    void testPostaviBlokiranSebeBaca400() {
+        setupSecurityContext("admin@gmail.com");
+        Korisnik admin = new Korisnik();
+        admin.setId(1L);
+        admin.setEmail("admin@gmail.com");
+        admin.setUloga(Uloga.ADMIN);
+
+        when(korisnikRepo.findByEmail("admin@gmail.com")).thenReturn(Optional.of(admin));
+        when(korisnikRepo.findById(1L)).thenReturn(Optional.of(admin));
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> korisnikService.postaviBlokiran(1L, true)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(korisnikRepo, never()).save(any());
+    }
+
+    @Test
+    void testOdblokiranjeSebeJeDozvoljeno() {
+        // Odblokiranje ne može nikoga da zaključa, pa nema razloga da se brani.
+        Korisnik k = gost(7L, 0, null);
+        k.setBlokiran(true);
+        when(korisnikRepo.findById(7L)).thenReturn(Optional.of(k));
+        when(korisnikRepo.save(any(Korisnik.class))).thenAnswer(i -> i.getArgument(0));
+
+        KorisnikViewDto rezultat = korisnikService.postaviBlokiran(7L, false);
+
+        assertFalse(rezultat.isBlokiran());
+    }
 }

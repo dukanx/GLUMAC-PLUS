@@ -10,6 +10,7 @@ export interface Korisnik {
     brojBodova: number;
     loyaltyNivo: string | null;
     uloga: Uloga;
+    blokiran: boolean;
 }
 
 export function getSvi() {
@@ -25,6 +26,26 @@ export function promeniUlogu(id: number, uloga: Uloga) {
     return apiFetch<Korisnik>(`/api/korisnici/${id}/uloga`, {
         method: 'PATCH',
         body: { uloga },
+        auth: true,
+    });
+}
+
+/**
+ * Šalje se promena, ne novo stanje — dva istovremena dodavanja se tako sabiraju
+ * umesto da drugo pregazi prvo. Backend uz bodove usklađuje i loyalty nivo.
+ */
+export function promeniBodove(id: number, promena: number) {
+    return apiFetch<Korisnik>(`/api/korisnici/${id}/bodovi`, {
+        method: 'PATCH',
+        body: { promena },
+        auth: true,
+    });
+}
+
+export function postaviBlokiran(id: number, blokiran: boolean) {
+    return apiFetch<Korisnik>(`/api/korisnici/${id}/blokiran`, {
+        method: 'PATCH',
+        body: { blokiran },
         auth: true,
     });
 }

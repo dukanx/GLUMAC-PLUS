@@ -5,7 +5,7 @@ import com.glumacplus.food_ordering.model.Korisnik;
 public class KorisnikMapper {
 
     public static KorisnikViewDto toViewDto(Korisnik k) {
-        return new KorisnikViewDto(
+        KorisnikViewDto dto = new KorisnikViewDto(
                 k.getId(),
                 k.getIme(),
                 k.getEmail(),
@@ -13,5 +13,7 @@ public class KorisnikMapper {
                 (k.getLoyaltyProgram() != null) ? k.getLoyaltyProgram().getNivo() : "Nema",
                 k.getUloga()
         );
+        dto.setBlokiran(k.isBlokiran());
+        return dto;
     }
 }

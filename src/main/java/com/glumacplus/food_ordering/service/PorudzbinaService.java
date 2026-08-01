@@ -3,6 +3,7 @@ package com.glumacplus.food_ordering.service;
 import com.glumacplus.food_ordering.dto.*;
 import com.glumacplus.food_ordering.model.*;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
+import com.glumacplus.food_ordering.util.LoyaltyNivo;
 import com.glumacplus.food_ordering.util.Novac;
 import com.glumacplus.food_ordering.repository.LoyaltyProgramRepository;
 import com.glumacplus.food_ordering.repository.PorudzbinaRepository;
@@ -22,7 +23,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -245,11 +245,8 @@ public class PorudzbinaService {
             k.setBrojBodova(k.getBrojBodova() + noviBodovi);
             dodeljeniBodovi = noviBodovi;
 
-            List<LoyaltyProgram> sviNivoi = loyaltyRepo.findAll();
-
-            Optional<LoyaltyProgram> sadasnji = sviNivoi.stream()
-                    .filter(nivo -> k.getBrojBodova() >= nivo.getPragBodova())
-                    .max(Comparator.comparing(LoyaltyProgram::getPragBodova));
+            // Isto pravilo koristi i ručna ispravka bodova u KorisnikService.
+            Optional<LoyaltyProgram> sadasnji = LoyaltyNivo.odredi(loyaltyRepo.findAll(), k.getBrojBodova());
 
             LoyaltyProgram prethodniNivo = k.getLoyaltyProgram();
             if (sadasnji.isPresent()) {
