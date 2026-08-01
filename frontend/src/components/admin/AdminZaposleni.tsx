@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Ucitavanje, { NatpisDugmeta } from '../Ucitavanje';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../api/korisnici';
 import { ApiError } from '../../api/client';
+import { useSekcija } from './kes';
 import styles from './Admin.module.css';
 
 /**
@@ -21,21 +22,16 @@ const OPIS_ULOGE: Record<api.Uloga, string> = {
 
 export default function AdminZaposleni() {
     const { korisnik: ja } = useAuth();
-    const [svi, setSvi] = useState<api.Korisnik[]>([]);
-    const [ucitava, setUcitava] = useState(true);
-    const [greska, setGreska] = useState('');
+    // Isti ključ kao sekcija Korisnici — obe gledaju istu listu, pa promena
+    // uloge ovde mora da se vidi i tamo.
+    const { podaci: svi, zapamti: setSvi, ucitava, greska, setGreska } =
+        useSekcija<api.Korisnik[]>('korisnici', api.getSvi, []);
     // Pamti se i koja uloga se upisuje, da tačkice iskoče na tačnoj piluli.
     const [uToku, setUToku] = useState<{ id: number; uloga: api.Uloga } | null>(null);
 
     const [email, setEmail] = useState('');
     const [dodaje, setDodaje] = useState(false);
     const [porukaDodavanja, setPorukaDodavanja] = useState('');
-
-    useEffect(() => {
-        api.getSvi()
-            .then(d => { setSvi(d); setUcitava(false); })
-            .catch(() => { setGreska('Ne mogu da učitam korisnike.'); setUcitava(false); });
-    }, []);
 
     const osoblje = useMemo(
         () => svi.filter(k => k.uloga === 'ADMIN' || k.uloga === 'ZAPOSLENI')

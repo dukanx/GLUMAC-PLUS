@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Lupa } from '../Doodle';
 import Ucitavanje, { NatpisDugmeta } from '../Ucitavanje';
 import { sadrzi } from '../../utils/tekst';
@@ -7,6 +7,7 @@ import * as proizvodiApi from '../../api/proizvodi';
 import * as alergeniApi from '../../api/alergeni';
 import { ApiError } from '../../api/client';
 import ProizvodModal from './ProizvodModal';
+import { useSekcija } from './kes';
 import styles from './Admin.module.css';
 
 /**
@@ -17,25 +18,14 @@ import styles from './Admin.module.css';
  * jednom naručen, i pokidalo bi istoriju.
  */
 export default function AdminMeni() {
-    const [proizvodi, setProizvodi] = useState<Proizvod[]>([]);
-    const [alergeni, setAlergeni] = useState<alergeniApi.Alergen[]>([]);
+    const { podaci: proizvodi, zapamti: setProizvodi, ucitava, greska, setGreska, osvezi: ucitaj } =
+        useSekcija<Proizvod[]>('proizvodi', proizvodiApi.getSvi, []);
+    const { podaci: alergeni, zapamti: setAlergeni } =
+        useSekcija<alergeniApi.Alergen[]>('alergeni', alergeniApi.getSvi, []);
     const [pretraga, setPretraga] = useState('');
-    const [ucitava, setUcitava] = useState(true);
-    const [greska, setGreska] = useState('');
     // null = zatvoreno, 'novi' = prazna forma, Proizvod = izmena postojećeg.
     const [uredjivanje, setUredjivanje] = useState<Proizvod | 'novi' | null>(null);
     const [uToku, setUToku] = useState<number | null>(null);
-
-    const ucitaj = useCallback(() => {
-        proizvodiApi.getSvi()
-            .then(data => { setProizvodi(data); setUcitava(false); })
-            .catch(() => { setGreska('Ne mogu da učitam katalog.'); setUcitava(false); });
-    }, []);
-
-    useEffect(() => {
-        ucitaj();
-        alergeniApi.getSvi().then(setAlergeni).catch(() => setAlergeni([]));
-    }, [ucitaj]);
 
     // Grupisano po kategoriji, redosled kategorija po prvom pojavljivanju.
     const grupe = useMemo(() => {
