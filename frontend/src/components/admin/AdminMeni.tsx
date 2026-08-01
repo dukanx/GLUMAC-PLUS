@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Lupa } from '../Doodle';
-import Ucitavanje from '../Ucitavanje';
+import Ucitavanje, { NatpisDugmeta } from '../Ucitavanje';
 import { sadrzi } from '../../utils/tekst';
 import type { Proizvod } from '../../types/proizvod';
 import * as proizvodiApi from '../../api/proizvodi';
 import * as alergeniApi from '../../api/alergeni';
 import { ApiError } from '../../api/client';
 import ProizvodModal from './ProizvodModal';
-import styles from './AdminMeni.module.css';
+import styles from './Admin.module.css';
 
 /**
  * Admin → Meni: ceo katalog grupisan po kategorijama, sa izmenom kroz modal.
@@ -108,10 +108,7 @@ export default function AdminMeni() {
                                 — {tip.toLowerCase()} <span className={styles.sekcijaBroj}>· {lista.length}</span>
                             </p>
                             <div className={styles.kartica}>
-                                <table className={styles.tabela}>
-                                    {/* Fiksne širine da se kolone poklope između sekcija — svaka
-                                        sekcija je zasebna tabela, pa bi ih automatski raspored
-                                        razvukao različito i desna strana bi „igrala". */}
+                                <table className={styles.tabelaFiksna}>
                                     <colgroup>
                                         <col />
                                         <col className={styles.kolAlergeni} />
@@ -172,7 +169,12 @@ export default function AdminMeni() {
                                                             onClick={() => promeniDostupnost(p, !dostupan)}
                                                             disabled={uToku === p.id}
                                                         >
-                                                            {dostupan ? 'sakrij' : 'vrati'}
+                                                            <NatpisDugmeta
+                                                                uToku={uToku === p.id}
+                                                                opis={dostupan ? 'Sklanjam sa menija' : 'Vraćam u ponudu'}
+                                                            >
+                                                                {dostupan ? 'sakrij' : 'vrati'}
+                                                            </NatpisDugmeta>
                                                         </button>
                                                     </td>
                                                 </tr>

@@ -1,5 +1,9 @@
-/* Admin → Meni. Tabele su u Lato (brojevi moraju da se čitaju),
-   rukopis (Caveat, rust) samo za naslove sekcija i komentare. */
+/* Zajednički stilovi admin panela — dele ih sve sekcije.
+   Tabele su u Lato (brojevi moraju da se čitaju), rukopis (Caveat, rust)
+   samo za naslove, oznake i komentare.
+
+   Sekcijski stilovi koji ne mogu nikom drugom da trebaju stoje dole,
+   pod svojim zaglavljem. */
 
 .glava {
     display: flex;
@@ -85,18 +89,6 @@
 }
 
 /* ── Tabela ── */
-.sekcija {
-    font-family: var(--font-cav);
-    font-size: 22px;
-    color: var(--rust);
-    transform: rotate(-1deg);
-    margin: 26px 0 10px;
-}
-
-.sekcijaBroj {
-    color: var(--ink40);
-}
-
 .kartica {
     background: #fff;
     box-shadow: 0 8px 24px hsl(22 30% 14% / .1);
@@ -107,16 +99,7 @@
 .tabela {
     width: 100%;
     border-collapse: collapse;
-    /* Uz colgroup ispod: desne kolone drže istu širinu u svim sekcijama.
-       Prva kolona nema zadatu širinu pa uzima ostatak. */
-    table-layout: fixed;
-    min-width: 760px;
 }
-
-.kolAlergeni { width: 170px; }
-.kolCena { width: 80px; }
-.kolStatus { width: 120px; }
-.kolAkcije { width: 150px; }
 
 .th {
     font-family: var(--font-cav);
@@ -163,12 +146,6 @@ tbody tr:last-child .td {
     font-size: 16px;
     color: var(--ink55);
     margin-top: 1px;
-}
-
-.alergeni {
-    font-family: var(--font-cav);
-    font-size: 16px;
-    color: var(--ink55);
 }
 
 .tagDa {
@@ -380,6 +357,12 @@ tbody tr:last-child .td {
     line-height: 1.2;
 }
 
+/* Bez ovoga ugašena pilula izgleda isto kao živa, pa deluje da dugme ne radi. */
+.pilula:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
 .pilulaOn {
     composes: pilula;
     border-style: solid;
@@ -405,6 +388,30 @@ tbody tr:last-child .td {
     border-top: 2px dashed var(--ink12);
 }
 
+/* ── Napomene ── */
+
+/* Tvrdo upozorenje: nešto je podešeno tako da se ponaša suprotno očekivanju. */
+.upozorenje {
+    border: 2px dashed hsl(14 65% 44% / .6);
+    border-radius: var(--wob);
+    background: hsl(14 65% 44% / .06);
+    padding: 12px 18px 14px;
+    margin: 20px 0 0;
+    font-family: var(--font-cav);
+    font-size: 19px;
+    color: var(--ink);
+    line-height: 1.35;
+}
+
+/* Tiha napomena: objašnjava gde se radi nešto srodno, ne traži reakciju. */
+.info {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--ink55);
+    margin: 16px 0 0;
+    line-height: 1.35;
+}
+
 @media (max-width: 640px) {
     .alatke {
         width: 100%;
@@ -421,4 +428,110 @@ tbody tr:last-child .td {
     .poljeUsko {
         flex: 1;
     }
+}
+
+/* ══════════════════════════════════════════════════
+   Sekcija MENI
+   ══════════════════════════════════════════════════ */
+
+.sekcija {
+    font-family: var(--font-cav);
+    font-size: 22px;
+    color: var(--rust);
+    transform: rotate(-1deg);
+    margin: 26px 0 10px;
+}
+
+.sekcijaBroj {
+    color: var(--ink40);
+}
+
+/* Fiksne širine da se desne kolone poklope između sekcija — svaka kategorija
+   je zasebna tabela, pa bi ih automatski raspored razvukao različito. */
+.tabelaFiksna {
+    composes: tabela;
+    table-layout: fixed;
+    min-width: 760px;
+}
+
+.kolAlergeni { width: 170px; }
+.kolCena { width: 80px; }
+.kolStatus { width: 120px; }
+.kolAkcije { width: 150px; }
+
+.alergeni {
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--ink55);
+}
+
+/* ══════════════════════════════════════════════════
+   Sekcija RADNO VREME
+   ══════════════════════════════════════════════════ */
+
+.dan {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: .03em;
+}
+
+.danDanas {
+    composes: dan;
+    color: var(--rust);
+}
+
+.danasZnak {
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--rust);
+    font-weight: 400;
+    letter-spacing: 0;
+    margin-left: 8px;
+}
+
+/* Širina mora da primi i 12-časovni zapis („11:30 PM") — `input[type=time]`
+   prati jezik browsera, ne jezik stranice, pa se format ne može nametnuti. */
+.unosVreme {
+    composes: unos;
+    width: 148px;
+    padding: 6px 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.unosVreme:disabled {
+    background: var(--ink07);
+    color: var(--ink40);
+}
+
+.crtica {
+    color: var(--ink40);
+    margin: 0 8px;
+}
+
+/* ══════════════════════════════════════════════════
+   Sekcija ZAPOSLENI
+   ══════════════════════════════════════════════════ */
+
+.ti {
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--rust);
+    margin-left: 8px;
+}
+
+.mail {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--ink55);
+    display: block;
+    margin-top: 2px;
+}
+
+.dodavanje {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-top: 8px;
 }

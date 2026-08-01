@@ -6,7 +6,7 @@ import type { Alergen } from '../../api/alergeni';
 import * as proizvodiApi from '../../api/proizvodi';
 import * as alergeniApi from '../../api/alergeni';
 import { ApiError } from '../../api/client';
-import styles from './AdminMeni.module.css';
+import styles from './Admin.module.css';
 
 /** Sentinel u <select>-u — ne sme da se poklopi ni sa jednim nazivom kategorije. */
 const NOVA = '__nova__';

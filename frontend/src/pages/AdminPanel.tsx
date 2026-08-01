@@ -5,6 +5,8 @@ import {
     Grafikon, Priznanica, Klose, Zvezda, Kupon, Ljudi, Osoba, Sat,
 } from '../components/Doodle';
 import AdminMeni from '../components/admin/AdminMeni';
+import AdminRadnoVreme from '../components/admin/AdminRadnoVreme';
+import AdminZaposleni from '../components/admin/AdminZaposleni';
 import styles from './AdminPanel.module.css';
 import logoDark from '../assets/logoDark.png';
 
@@ -65,8 +67,9 @@ export default function AdminPanel() {
             </aside>
 
             <main className={styles.glavni}>
-                {sekcija === 'MENI'
-                    ? <AdminMeni />
+                {sekcija === 'MENI' ? <AdminMeni />
+                    : sekcija === 'RADNO_VREME' ? <AdminRadnoVreme />
+                    : sekcija === 'ZAPOSLENI' ? <AdminZaposleni />
                     : <Uskoro naziv={SEKCIJE.find(s => s.kljuc === sekcija)!.naziv} />}
             </main>
         </div>

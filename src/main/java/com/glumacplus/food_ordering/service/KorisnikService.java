@@ -12,6 +12,7 @@ import com.glumacplus.food_ordering.repository.LoyaltyProgramRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -93,6 +94,7 @@ public class KorisnikService {
      * @throws ResponseStatusException sa statusom 400 ako email već postoji,
      *         ili 500 ako početni loyalty nivo ne postoji u bazi
      */
+    @Transactional
     public KorisnikViewDto create(KorisnikDto dto) {
 
         if (korisnikRepo.existsByEmail(dto.getEmail())) {
@@ -135,6 +137,7 @@ public class KorisnikService {
      * @return ažurirani korisnik
      * @throws ResponseStatusException sa statusom 401 ako korisnik nije prijavljen
      */
+    @Transactional
     public KorisnikViewDto updateCurrentUser(KorisnikMeUpdateDto dto) {
         Korisnik korisnik = getCurrentUserEntity();
         korisnik.setIme(dto.getIme());
@@ -158,6 +161,7 @@ public class KorisnikService {
      *         ili ako admin pokuša da sebi skine ADMIN ulogu, odnosno 404 ako
      *         korisnik ne postoji
      */
+    @Transactional
     public KorisnikViewDto updateUserRole(Long korisnikId, Uloga novaUloga) {
         if (novaUloga == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nova uloga je obavezna");
