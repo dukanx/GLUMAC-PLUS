@@ -154,7 +154,7 @@ Ostalo za kasnije: backend `GET /api/proizvodi?q=` (`findByNazivContainingIgnore
 
 ## Veliki feature-i (posle odbrane / pred produkciju)
 
-### 🛠️ Admin panel — U TOKU (faze 0, 1 i 2 gotove 2026-08-01)
+### 🛠️ Admin panel — U TOKU (faze 0–3 gotove 2026-08-01)
 
 Radi se po dizajnu iz `Website redesign concept (1)/design_handoff_glumac_plus/`, sekcija 9a.
 
@@ -169,7 +169,20 @@ Upozorenje kad nijedan dan nije radni: `RadnoVremeService.jeOtvorenoSada()` u to
 `AdminZaposleni.tsx`: lista onih koji imaju ADMIN/ZAPOSLENI, prebacivanje uloge i „ukloni pristup" (vraća na `KORISNIK`, ne briše nalog). Pristup se daje **postojećem nalogu preko e-maila** (`GET /api/korisnici/search`) jer backend nema kreiranje naloga sa ulogom — čovek se prvo registruje kao gost. Zaključano: sebi se uloga ne dira (zaključao bi se van panela) i poslednji ADMIN ne može da ostane bez uloge.
 Stilovi su iz `AdminMeni.module.css` preseljeni u zajednički `Admin.module.css` — sekcija je od faze 2 više od jedne, pa je tabela/dugme/modal jedno mesto istine.
 
-**Preostale faze:** 3 — korisnici (± bodovi, blokiranje) · 4 — loyalty (CRUD nivoa; kurs bodova je sad zakucan u servisu) · 5 — porudžbine (pretraga, opseg datuma, refundacija) · 6 — pregled/statistika (agregatni endpointi, najveći backend posao) · 7 — promo kodovi (nov entitet + integracija u cenu).
+**✅ Faza 3 — KORISNICI.** Prva faza koja je tražila i backend: ni ispravka bodova ni blokiranje nisu postojali.
+`AdminKorisnici.tsx`: svi nalozi, pretraga po imenu i e-mailu, filter „samo gosti", bodovi i nivo, blokiranje. Ispravka bodova ide kroz modal koji šalje **promenu, ne novo stanje** — dva istovremena dodavanja se tako sabiraju umesto da drugo pregazi prvo.
+Nivo prati bodove **u oba smera**: pravilo je izvučeno u `util/LoyaltyNivo.java` i koriste ga i dodela pri preuzimanju porudžbine i ručna ispravka, pa ne mogu da se raziđu. Ako se bodovi smanje ispod praga, nivo pada.
+Blokiranje (**V20**, kolona `blokiran`) važi **odmah, i za već izdate tokene**. `isEnabled()` sam nije dovoljan: `JwtAuthenticationFilter` ručno gradi authentication token, pa Spring ne proverava status naloga kao pri prijavi — provera je zato izričita u filteru. Bez toga bi blokiran korisnik radio do isteka JWT-a, dakle do 30 dana (isto ograničenje kao 0m). Dokazano privremenim MockMvc testom: isti token daje **200 pre blokade i 401 posle**.
+Zaključano: sebe ne možeš blokirati (panel bi ostao bez ulaza, otključavao bi se samo ručno u bazi). Odblokiranje nema to ograničenje.
+Blokiranje je namerno odvojeno od uloge — gost nema ulogu koju bi izgubio, pa mu se pristup drugačije ne može oduzeti. Nalog se ne briše, porudžbine i bodovi ostaju.
+
+**Brzina panela — mereno 2026-08-01, protiv pravog backenda.**
+Sekcije su se pri svakom povratku dohvatale iznova. `components/admin/kes.ts`: keširano se prikazuje odmah, a u pozadini se svejedno dohvata — ne samo radi svežine, nego zato što Korisnici i Zaposleni gledaju **istu listu**, pa bi bez toga izmena u jednoj ostala nevidljiva u drugoj. Keš je u modulu, ne u `localStorage`, pa se gubi na refresh (nema gledanja jučerašnjih cena). Radno vreme je **namerno** izostavljeno — to je forma sa neupisanim izmenama, koje bi osvežavanje u pozadini pregazilo.
+Povratak na sekciju: Zaposleni 1303 → **37 ms**, Korisnici 833 → **78 ms**, Meni 1306 → **151 ms**. Prvo otvaranje ostaje ~800 ms i to se kodom ne skraćuje.
+
+Gde vreme zapravo odlazi: ruta koja **ne dira bazu** odgovara za **1–6 ms**; `/api/alergeni` vraća 2 bajta a traje do 1181 ms, dok `/api/proizvodi` vraća 46 KB za ~700 ms. Dakle ne podaci i ne aplikacija. Samo TCP handshake do baze traje 247–498 ms, ali nije Neon kriv — `google.com:443` sa iste mašine daje 158–821 ms. **Veza ima visoku i neujednačenu latenciju**, što objašnjava zašto ista merenja variraju 60–900 ms. U produkciji, sa serverom blizu baze, ovo pada na skoro ništa; dotle svaki ušteđen upit vredi ~250 ms (vidi 0r).
+
+**Preostale faze:** ~~3 — korisnici~~ (± bodovi, blokiranje) · 4 — loyalty (CRUD nivoa; kurs bodova je sad zakucan u servisu) · 5 — porudžbine (pretraga, opseg datuma, refundacija) · 6 — pregled/statistika (agregatni endpointi, najveći backend posao) · 7 — promo kodovi (nov entitet + integracija u cenu).
 
 **Napomene:** slike proizvoda su svesno preskočene (nema ni polja ni skladišta; meni koristi doodle placeholder). Prevlačenje reda za redosled takođe — vezano za 0q. U bazi trenutno **nema nijednog alergena**, pa se prvi pravi iz same forme („+ novi" uz alergene, gađa `POST /api/alergeni`).
 
