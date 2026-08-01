@@ -18,6 +18,8 @@ public class ProizvodViewDto {
     /** Ukus proizvoda (SLATKO/SLANO) — za poklapanje dodataka; {@code null} gde nije primenljiv. */
     private String ukus;
     private List<String> alergeniNazivi = new ArrayList<>();
+    /** ID-jevi alergena — admin forma njima označava već izabrane, bez poklapanja po nazivu. */
+    private List<Long> alergeniIds = new ArrayList<>();
 
 
     public Long getId() { return id; }
@@ -46,6 +48,8 @@ public class ProizvodViewDto {
     public void setNedostupanRazlog(String nedostupanRazlog) { this.nedostupanRazlog = nedostupanRazlog; }
     public String getUkus() { return ukus; }
     public void setUkus(String ukus) { this.ukus = ukus; }
+    public List<Long> getAlergeniIds() { return alergeniIds; }
+    public void setAlergeniIds(List<Long> alergeniIds) { this.alergeniIds = alergeniIds; }
     public List<String> getAlergeniNazivi() { return alergeniNazivi; }
     public void setAlergeniNazivi(List<String> alergeniNazivi) { this.alergeniNazivi = alergeniNazivi; }
 }

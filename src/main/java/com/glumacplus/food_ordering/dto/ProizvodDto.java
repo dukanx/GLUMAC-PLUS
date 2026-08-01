@@ -1,5 +1,7 @@
 package com.glumacplus.food_ordering.dto;
 
+import com.glumacplus.food_ordering.model.Ukus;
+
 import java.math.BigDecimal;
 import jakarta.validation.constraints.*;
 
@@ -18,8 +20,15 @@ public class ProizvodDto {
     @DecimalMin(value = "0.01", message = "Cena mora biti pozitivna")
     private BigDecimal cena;
 
-    @NotBlank(message = "Jedinica mere je obavezna")
+    /**
+     * Opciono. Nijedan proizvod u bazi nema popunjenu jedinicu mere i nigde se
+     * ne prikazuje — dok je bila obavezna, admin panel ne bi mogao da sačuva
+     * proizvod bez izmišljene vrednosti.
+     */
     private String jedinicaMere;
+
+    /** Ukus (SLATKO/SLANO) — određuje koji dodaci smeju uz stavku; {@code null} za piće. */
+    private Ukus ukus;
 
     @PositiveOrZero private double kalorije;
     @PositiveOrZero private double proteini;
@@ -40,6 +49,8 @@ public class ProizvodDto {
     public void setCena(BigDecimal cena) { this.cena = cena; }
     public String getJedinicaMere() { return jedinicaMere; }
     public void setJedinicaMere(String jedinicaMere) { this.jedinicaMere = jedinicaMere; }
+    public Ukus getUkus() { return ukus; }
+    public void setUkus(Ukus ukus) { this.ukus = ukus; }
     public double getKalorije() { return kalorije; }
     public void setKalorije(double kalorije) { this.kalorije = kalorije; }
     public double getProteini() { return proteini; }

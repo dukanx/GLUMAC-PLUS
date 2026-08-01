@@ -27,8 +27,10 @@ public class ProizvodController {
 
 
 
+    // Menjanje kataloga (cena, naziv, sastav) je vlasnikov posao i radi se iz
+    // admin panela. Zaposleni zadržava samo /dostupnost — "86 listu" u smeni.
     @PostMapping
-    @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProizvodViewDto> create(@RequestBody @Valid ProizvodDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(dto));
     }
@@ -52,13 +54,13 @@ public class ProizvodController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProizvodViewDto> update(@PathVariable Long id, @RequestBody @Valid ProizvodDto dto) {
         return ResponseEntity.ok(service.update(id, dto));
     }
 
     @PutMapping("/{id}/alergeni")
-    @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProizvodViewDto> setAlergeni(
             @PathVariable Long id,
             @RequestBody @Valid ProizvodAlergeniUpdateDto dto
@@ -77,7 +79,7 @@ public class ProizvodController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ZAPOSLENI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

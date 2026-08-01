@@ -26,6 +26,12 @@ public class ProizvodMapper {
                         .sorted()
                         .collect(Collectors.toList())
         );
+        dto.setAlergeniIds(
+                p.getAlergeni().stream()
+                        .map(alergen -> alergen.getId())
+                        .sorted()
+                        .collect(Collectors.toList())
+        );
         return dto;
     }
 
@@ -40,6 +46,7 @@ public class ProizvodMapper {
         p.setProteini(dto.getProteini());
         p.setMasti(dto.getMasti());
         p.setUgljeniHidrati(dto.getUgljeniHidrati());
+        p.setUkus(dto.getUkus());
         p.setDostupan(dto.getDostupan() == null || dto.getDostupan());
         return p;
     }

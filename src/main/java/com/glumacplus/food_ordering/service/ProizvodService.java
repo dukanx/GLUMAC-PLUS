@@ -124,7 +124,9 @@ public class ProizvodService {
 
         p.setNaziv(dto.getNaziv());
         p.setTip(dto.getTip());
+        p.setOpis(dto.getOpis());
         p.setCena(dto.getCena());
+        p.setUkus(dto.getUkus());
         p.setJedinicaMere(dto.getJedinicaMere());
         p.setKalorije(dto.getKalorije());
         p.setProteini(dto.getProteini());
