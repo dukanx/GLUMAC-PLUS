@@ -19,7 +19,7 @@ Frontend trenutno prati "Sačuvano" stanje samo per-sesija (resetuje se na refre
 - Frontend onda trajno obeležava "Sačuvano" na karticama u istoriji
 
 **🟡 0c. Dnevni redni broj porudžbine (umesto globalnog ID-a)**
-`porudzbinaId` je globalni auto-increment PK — raste zauvek (#1, #2, ... #1547), pa brojevi postanu dugački i nezgodni za doviknuti kupcu. Dodati **dnevni redni broj** koji se resetuje svako jutro ("#42" = 42. porudžbina danas). Interni ID ostaje globalan; dodati polje tipa `dnevniBroj` na `Porudzbina` (računato pri kreiranju: broj porudžbina tog datuma + 1) i vraćati ga u `PorudzbinaViewDto`. Frontend (AdminPage, StatusPorudzbine) prikazuje dnevni broj umesto/pored globalnog ID-a.
+`porudzbinaId` je globalni auto-increment PK — raste zauvek (#1, #2, ... #1547), pa brojevi postanu dugački i nezgodni za doviknuti kupcu. Dodati **dnevni redni broj** koji se resetuje svako jutro ("#42" = 42. porudžbina danas). Interni ID ostaje globalan; dodati polje tipa `dnevniBroj` na `Porudzbina` (računato pri kreiranju: broj porudžbina tog datuma + 1) i vraćati ga u `PorudzbinaViewDto`. Frontend (`PanelPorudzbina`, `StatusPorudzbine`) prikazuje dnevni broj umesto/pored globalnog ID-a.
 
 **✅ 0d. Zaokruživanje novca na ceo dinar (konzistentno) — URAĐENO 2026-07-30**
 Pravilo živi na po jednom mestu na svakoj strani: `util/Novac.java` (backend) i `utils/korpa.ts` (frontend), sa istim HALF_UP na ceo dinar. Zaokružuju se i linije računa (`iznosStavke`) i osnovica i finalni iznos, a **popust se nikad ne računa zasebno** nego kao razlika `originalnaCena − ukupanIznos`, pa jednakost važi bez ostatka. Rounding je pomeren u settere entiteta, tako da nijedan put u `Porudzbina`/`StavkaPorudzbine` ne može da unese decimalu. `NovacTest` prolazi kroz ~1200 kombinacija osnovice i procenta i proverava da se zbir uvek poklapa.
@@ -49,7 +49,7 @@ Fix: dodati `src/test/resources/application-test.properties` + `@ActiveProfiles(
 Ispravka polazne pretpostavke: polje **nije postojalo** na backendu (ni entitet, ni DTO, ni kolona) — samo TypeScript tip i tri komponente koje bi ga prikazale, pa je uvek bilo `undefined`.
 Urađeno: **V17** dodaje kolonu `opis TEXT` (nullable), polje provučeno kroz `Proizvod`, `ProizvodViewDto`, `ProizvodDto` (`@Size(max=500)`) i `ProizvodMapper`; **V18** upisuje opise. Frontend nije menjan.
 Opis dobija **13 od 167** stavki — samo one kojima naziv ne kaže sastav (Palačinka Glumac, Vegeterijana, Giros, salate, Dubai kadaif, Kifla tuna, Tortilja pileća bečka, Džem posni). Ostatak menija nabraja sastojke već u nazivu („Nutela, plazma, višnja") i namerno ostaje bez opisa, da kartica ne bi pisala isto dvaput. Iz istog razloga posne slane palačinke nemaju opis — njihov naziv *jeste* lista sastojaka.
-Bez opisa su ostali i **Premium kremovi** (Krem pistać, Beli krem, Ferrero krem, Kinder Bueno krem) i **Prazna** — za njih sastav nije bio poznat. Dopuniti kad se zna (nova migracija ili admin panel).
+Bez opisa su ostali i **Premium kremovi** (Krem pistać, Beli krem, Ferrero krem, Kinder Bueno krem) i **Prazna** — za njih sastav nije bio poznat. Dopuniti kad se zna — od faze 1 admin panela to je obično kucanje u formi, bez migracije.
 
 **✅ 0n. Usklađivanje menija sa aktuelnim stanjem (V19) — URAĐENO 2026-07-31**
 Migracija `V19__uskladi_meni_2026_07.sql`: **101 nova cena**, `Bel krem` → `Beli krem`, „Džem posni" podeljen na četiri palačinke (kajsija/šljiva/šipurak/jagoda, po 600) jer se ukus u lokalu bira usmeno a kroz aplikaciju nije imao gde da se unese, dodat `Tzatziki` (110) i četiri preliva kao dodaci sa prefiksom („Preliv jagoda"… — meni ima i dodatak „Jagode" i preliv „Jagoda", pa bi bez prefiksa bile dve iste stavke), sastojci sendviča prebačeni u `opis`. Baza je posle migracije proverena istom skriptom kojom je pravljen diff: **0 neslaganja** sa menijem.
@@ -82,6 +82,23 @@ Fix: kolona `datum_smene DATE` na `smena_stanje` (migracija V16) kao identitet s
 Ograničenje koje treba imati u vidu: ako smena ikad pređe ponoć (npr. 20:00–02:00), datum se promeni usred smene. Tad umesto `DATE` pamtiti vreme početka smene.
 Nije prioritet — pogađa samo scenario restarta usred ručno zatvorene smene.
 
+**✅ 0r. Suvišni upiti na korisnicima (admin panel, sekcija Zaposleni) — URAĐENO 2026-08-01**
+Mereno Hibernate statistikom, naizmenično po tri kruga (Neon jako varira, isti kod je davao 60–900 ms, pa je **broj upita dokaz, a vreme samo indikacija**).
+
+| poziv | pre | posle |
+|---|---|---|
+| `GET /api/korisnici` (`getAll`) | 3 upita | **1** |
+| `PATCH /{id}/uloga` (`updateUserRole`) | 5 upita, 2 transakcije | **3 upita, 1 transakcija** |
+
+Tri uzroka, sva tri poučna:
+1. **`Korisnik.loyaltyProgram` je `@ManyToOne` bez `fetch`, dakle EAGER.** Jedini takav u celom modelu — svi ostali imaju eksplicitan `fetch`. Rešeno `@EntityGraph`-om na `findAll()` i `findByEmail()`.
+2. **`findById` i izveden upit se ne ponašaju isto.** `findById` ide preko `EntityManager.find()`, koji EAGER `@ManyToOne` spaja u isti `SELECT`. Izveden upit (`findByEmail`) to **ne** radi — vrati korisnika pa zasebnim upitom njegov loyalty program. Zato je `@EntityGraph` na `findByEmail` bio potreban, a na `findById` nije.
+3. **`KorisnikService` je bio jedini servis bez ijednog `@Transactional`.** Posledica: svaki poziv repozitorijuma je svoja transakcija, pa je entitet iz `findById` do `save()` već bio **detached** — `save()` je onda radio `merge`, što znači dodatni `SELECT` pre `UPDATE`. Sa `@Transactional` entitet ostaje managed i `UPDATE` ide kroz dirty checking.
+
+Ovo **nije** bio N+1 koji raste (za razliku od 0j): loyalty program se kešira u persistence contextu, pa je gornja granica bila `1 + broj različitih nivoa` bez obzira na broj korisnika. Bila su to prosto suvišna mrežna putovanja na svaki zahtev, jer svaki HTTP poziv dobija nov context.
+
+Preostala tri upita u `updateUserRole` su `findByEmail` (prijavljeni admin), `findById` (meta) i `UPDATE`. Prvi bi se mogao izbaciti poređenjem e-maila iz `SecurityContext`-a sa e-mailom učitanog korisnika, ali **namerno nije** — `getCurrentUserEntity()` usput proverava da prijavljeni korisnik još postoji u bazi, pa bi izbacivanje značilo da obrisan nalog sa još važećim JWT-om prolazi.
+
 **✅ 0j. N+1 upiti pri mapiranju porudžbina (stavke → dodaci) — URAĐENO 2026-07-27**
 Rešeno sa `@BatchSize(size = 100)` na `StavkaPorudzbine.dodaci`, `OmiljenaPorudzbinaStavka.dodaci` i `OmiljenaPorudzbina.stavke` (konvencija je već postojala na `Porudzbina.stavke` i `Proizvod`). Mereno preko Hibernate `Statistics` na pravim podacima: istorija (8 porudžbina) **13 → 4 upita, 496 → 159 ms**; omiljene (7 sačuvanih) **24 → 3 upita, 865 → 108 ms**. Baza je Neon u Frankfurtu, RTT ~45–60 ms po upitu, pa je broj mrežnih putovanja bio ceo problem, ne količina podataka.
 Opis problema (zadržan jer objašnjava zašto `@EntityGraph` nije bio rešenje):
@@ -97,11 +114,15 @@ Isti obrazac je važio i za `/moje` (istorija kupca) i `findAllByStatus` — pok
 Nigde više nema golog `http://localhost:8080`. Preostalih pet pojava (`api/client.ts`, `hooks/useRadnoVreme.ts`, `pages/IstorijaPage.tsx`, `pages/OmiljenePage.tsx`, `pages/PanelPorudzbina.tsx`) su oblika `import.meta.env.VITE_API_URL ?? 'http://localhost:8080'`, dakle env vrednost sa lokalnim fallback-om. Većina poziva ionako ide kroz `apiFetch` iz `api/client.ts`.
 Eventualno kasnije: svesti i tih pet na jedan izvor (npr. izvezti `API` iz `api/client.ts`), ali to je kozmetika.
 
-**🔴 2. Auto-logout na istekao token (401/403)**
-Trenutno kada JWT istekne, zaštićeni pozivi vrate 403 i frontend samo prikaže sirovu grešku ("Forbidden" / "Nije moguće učitati..."). Treba centralno hvatanje 401/403 → `logout()` + redirect na `/login` sa porukom "Sesija je istekla, prijavite se ponovo." Najčistije kroz wrapper oko `fetch` (npr. `apiFetch` helper) ili interceptor. Pogađa sve zaštićene pozive (porudžbine, omiljene, /me...).
+**✅ 2. Auto-logout na istekao token — URAĐENO**
+Backend je prvo razdvojen: istekao/neispravan token daje **401**, a validan token bez dovoljne uloge **403** (ranije je oboje bilo 403, pa se nije moglo razlikovati). `apiFetch` u `api/client.ts` hvata 401 na zaštićenim pozivima i emituje `DOGADJAJ_SESIJA_ISTEKLA`; `AuthContext` ga sluša i odjavljuje. **403 se namerno NE hvata** — to nije istekla sesija nego korisnik koji nema pravo na tu stranu, i odjava bi ga zbunila.
+Kad se uradi 0m (refresh token), 401 prvo pokušava tihu obnovu, pa tek onda odjavu.
 
-**🟢 3. Stilizovati preostale stranice u Calm Editorial dizajn**
-Sve glavne korisničke/admin stranice gotove: `MeniPage`, `IstorijaPage`, `OmiljenePage`, `AdminPage`. (Proveriti još `HomePage` i `LoyaltyPage` da li su usklađene.)
+<details><summary>3. Stilizovati preostale stranice u Calm Editorial dizajn — prevaziđeno</summary>
+
+Stavka je iz vremena „Calm Editorial" pravca. Ceo frontend je u međuvremenu prebačen na **papirni rukopisni stil** (commit „redizajn frontenda u papirni rukopisni stil"), pa je ova podela stranica bespredmetna — sve su prošle kroz novi stil, uključujući `HomePage` i `LoyaltyPage` koje su ovde stajale kao neproverene.
+
+</details>
 
 **✅ 3. Dodati 404 stranicu — URAĐENO 2026-07-30**
 `NotFoundPage.tsx` + `.module.css` u papirnom stilu (traka, veliki bledi "404", ispisana putanja koja je pokušana, linkovi na `/meni` i `/`), i `<Route path="*" element={<NotFoundPage />} />` kao poslednja ruta u `App.tsx`.
@@ -133,7 +154,7 @@ Ostalo za kasnije: backend `GET /api/proizvodi?q=` (`findByNazivContainingIgnore
 
 ## Veliki feature-i (posle odbrane / pred produkciju)
 
-### 🛠️ Admin panel — U TOKU (faze 0 i 1 gotove 2026-08-01)
+### 🛠️ Admin panel — U TOKU (faze 0, 1 i 2 gotove 2026-08-01)
 
 Radi se po dizajnu iz `Website redesign concept (1)/design_handoff_glumac_plus/`, sekcija 9a.
 
@@ -143,7 +164,12 @@ Radi se po dizajnu iz `Website redesign concept (1)/design_handoff_glumac_plus/`
 „Sakrij" postavlja `DO_DALJNJEG`, **ne briše** — brisanje bi palo na stranom ključu čim je proizvod jednom naručen.
 Backend dopune uz ovo: `ProizvodDto` dobio `ukus` i `jedinicaMere` više nije obavezna (nijedan proizvod je nema, a `@NotBlank` bi blokirao čuvanje); `update()` sad postavlja i `opis` i `ukus` (ranije ih je ignorisao); `ProizvodViewDto` vraća i `alergeniIds` da forma zna šta je već izabrano; kreiranje/izmena/brisanje proizvoda **zaključani na ADMIN** (zaposlenom ostaje samo `/dostupnost`, tj. 86-lista u smeni).
 
-**Preostale faze:** 2 — radno vreme + zaposleni · 3 — korisnici (± bodovi, blokiranje) · 4 — loyalty (CRUD nivoa; kurs bodova je sad zakucan u servisu) · 5 — porudžbine (pretraga, opseg datuma, refundacija) · 6 — pregled/statistika (agregatni endpointi, najveći backend posao) · 7 — promo kodovi (nov entitet + integracija u cenu).
+**✅ Faza 2 — RADNO VREME + ZAPOSLENI.** `AdminRadnoVreme.tsx`: sedam dana, uključivanje/isključivanje radnog dana i sat od–do, čuvanje po redu (dugme se pali tek kad se red promeni). Menja se **stalni raspored**; jednokratno „danas ne radimo" ostaje u panelu zaposlenog (zatvaranje smene), i to piše ispod tabele da se ne traži na pogrešnom mestu.
+Upozorenje kad nijedan dan nije radni: `RadnoVremeService.jeOtvorenoSada()` u tom slučaju vraća **`true`** (nema aktivnih intervala → „otvoreno"), pa bi lokal primao porudžbine 0–24. Blokira se i čuvanje kad su početak i kraj isti. Kraj pre početka je dozvoljen i označen kao „preko ponoći" — servis to podržava.
+`AdminZaposleni.tsx`: lista onih koji imaju ADMIN/ZAPOSLENI, prebacivanje uloge i „ukloni pristup" (vraća na `KORISNIK`, ne briše nalog). Pristup se daje **postojećem nalogu preko e-maila** (`GET /api/korisnici/search`) jer backend nema kreiranje naloga sa ulogom — čovek se prvo registruje kao gost. Zaključano: sebi se uloga ne dira (zaključao bi se van panela) i poslednji ADMIN ne može da ostane bez uloge.
+Stilovi su iz `AdminMeni.module.css` preseljeni u zajednički `Admin.module.css` — sekcija je od faze 2 više od jedne, pa je tabela/dugme/modal jedno mesto istine.
+
+**Preostale faze:** 3 — korisnici (± bodovi, blokiranje) · 4 — loyalty (CRUD nivoa; kurs bodova je sad zakucan u servisu) · 5 — porudžbine (pretraga, opseg datuma, refundacija) · 6 — pregled/statistika (agregatni endpointi, najveći backend posao) · 7 — promo kodovi (nov entitet + integracija u cenu).
 
 **Napomene:** slike proizvoda su svesno preskočene (nema ni polja ni skladišta; meni koristi doodle placeholder). Prevlačenje reda za redosled takođe — vezano za 0q. U bazi trenutno **nema nijednog alergena**, pa se prvi pravi iz same forme („+ novi" uz alergene, gađa `POST /api/alergeni`).
 
