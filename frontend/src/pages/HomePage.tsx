@@ -27,6 +27,21 @@ const WOLT_URL = 'https://wolt.com/en/srb/belgrade/restaurant/palainkarnica-glum
 const MAPS_URL = 'https://www.google.com/maps/place/Glumac+plus/data=!4m2!3m1!1s0x0:0xb7899385a5114972?sa=X&ved=1t:2428&ictx=111';
 const SLOGAN = '— sveže, brzo, u srcu Dorćola —';
 
+// Preporuke na početnoj — nazivi moraju da se poklope sa katalogom.
+// "Kajmak, pečenica, šunka, pavlaka, kačkavalj" je peta stavka slanog menija;
+// gosti je u lokalu traže kao „peticu".
+const PREPORUKE = [
+    'Dubai kadaif palačinka',
+    'Palačinka Glumac',
+    'Kajmak, pečenica, šunka, pavlaka, kačkavalj',
+    'Palačinka Piletina',
+];
+
+// Oznaka uz naziv u preporukama.
+const OZNAKE: Record<string, string> = {
+    'Palačinka Glumac': 'HIT',
+};
+
 const MARQUEE = [
     'Nutella Plazma', 'Glumac palačinka', 'Specijalni kremovi', 'Šunka kačkavalj',
     'Palačinka piletina', 'Pohovani meni', 'Giros',
@@ -120,9 +135,15 @@ export default function HomePage() {
             .catch(() => setProizvodi([]));
     }, []);
 
-    // Preporuke — prvih 5 proizvoda iz kataloga (opis je opcion, ide u hover tooltip)
+    // Preporuke su ručno izabrane, po dogovorenom redosledu. Ranije je ovde
+    // stajalo `proizvodi.slice(0, 5)` — prvih pet iz kataloga, bez filtera po
+    // kategoriji, pa je kao „preporuka" mogao da osvane i dodatak (Kokos, Plazma).
+    // Rasprodato danas se preskače, da „+" ne bi ubacio u korpu nešto što kuhinja
+    // odbije pri slanju.
     const preporuke = useMemo(
-        () => proizvodi.slice(0, 5),
+        () => PREPORUKE
+            .map(naziv => proizvodi.find(p => p.naziv === naziv))
+            .filter((p): p is Proizvod => !!p && p.dostupan !== false),
         [proizvodi]
     );
 
@@ -382,7 +403,12 @@ export default function HomePage() {
                                     >
                                         {p.opis && <span className={styles.mtip}>{p.opis}</span>}
                                         <span className={styles.mnum}>{String(i + 1).padStart(2, '0')}</span>
-                                        <h3 className={styles.mnaz}>{p.naziv}</h3>
+                                        <h3 className={styles.mnaz}>
+                                            {p.naziv}
+                                            {OZNAKE[p.naziv] && (
+                                                <span className={styles.mznak}>{OZNAKE[p.naziv]}</span>
+                                            )}
+                                        </h3>
                                         <span className={styles.mdots} />
                                         <span className={styles.mcena}>
                                             {Math.round(p.cena)}<span className={styles.mrsd}>RSD</span>
@@ -402,7 +428,7 @@ export default function HomePage() {
                             ))}
                         </div>
                         <div className={styles.mfoot}>
-                            <span>Cela karta u meniju — preko 40 vrsta.</span>
+                            <span>Cela karta u meniju.</span>
                             <Link to="/meni" className={styles.mfootBtn}>Otvori meni →</Link>
                         </div>
                     </div>

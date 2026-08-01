@@ -716,6 +716,25 @@
     min-width: 0;
 }
 
+/* Oznaka uz naziv u preporukama ("HIT") — mala nalepnica, ne sme da odnese
+   pažnju sa samog naziva. */
+.mznak {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 10px;
+    font-family: var(--font-cav);
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: .04em;
+    line-height: 1;
+    color: var(--paper);
+    background: var(--rust);
+    padding: 4px 10px 5px;
+    border-radius: var(--wob);
+    transform: rotate(-2deg);
+    white-space: nowrap;
+}
+
 .mdots {
     flex: 1;
     border-bottom: 3px dotted var(--ink20);
@@ -842,6 +861,7 @@
     transform: rotate(45deg);
 }
 
+/* Sastojci se vide i na prelazak mišem (desktop) i na dodir/klik (mobilni). */
 .mrow:hover .mtip,
 .mtipOn .mtip {
     opacity: 1;
