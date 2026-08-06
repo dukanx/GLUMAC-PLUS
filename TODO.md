@@ -154,7 +154,7 @@ Ostalo za kasnije: backend `GET /api/proizvodi?q=` (`findByNazivContainingIgnore
 
 ## Veliki feature-i (posle odbrane / pred produkciju)
 
-### 🛠️ Admin panel — U TOKU (faze 0–3 gotove 2026-08-01)
+### 🛠️ Admin panel — U TOKU (faze 0–3 i 5 gotove 2026-08-01)
 
 Radi se po dizajnu iz `Website redesign concept (1)/design_handoff_glumac_plus/`, sekcija 9a.
 
@@ -182,7 +182,24 @@ Povratak na sekciju: Zaposleni 1303 → **37 ms**, Korisnici 833 → **78 ms**, 
 
 Gde vreme zapravo odlazi: ruta koja **ne dira bazu** odgovara za **1–6 ms**; `/api/alergeni` vraća 2 bajta a traje do 1181 ms, dok `/api/proizvodi` vraća 46 KB za ~700 ms. Dakle ne podaci i ne aplikacija. Samo TCP handshake do baze traje 247–498 ms, ali nije Neon kriv — `google.com:443` sa iste mašine daje 158–821 ms. **Veza ima visoku i neujednačenu latenciju**, što objašnjava zašto ista merenja variraju 60–900 ms. U produkciji, sa serverom blizu baze, ovo pada na skoro ništa; dotle svaki ušteđen upit vredi ~250 ms (vidi 0r).
 
-**Preostale faze:** ~~3 — korisnici~~ (± bodovi, blokiranje) · 4 — loyalty (CRUD nivoa; kurs bodova je sad zakucan u servisu) · 5 — porudžbine (pretraga, opseg datuma, refundacija) · 6 — pregled/statistika (agregatni endpointi, najveći backend posao) · 7 — promo kodovi (nov entitet + integracija u cenu).
+**✅ Faza 5 — PORUDŽBINE (istorija).** `AdminPorudzbine.tsx` + `GET /api/porudzbine/pretraga` (ADMIN): pretraga po broju porudžbine ili kupcu, opseg datuma sa prečicama (danas / 7 / 30 dana), filter po statusu, straničenje i razlaganje porudžbine na stavke sa dodacima, načinom, popustom i napomenom gosta.
+**Refundacija je izbačena iz obima.** Kroz aplikaciju ne prolazi nijedan dinar — nema integracije plaćanja, novac se naplaćuje na kasi. Aplikacija koja nikad nije naplatila ne može ni da vrati; posledicu (pogrešno dodeljeni bodovi) pokriva ručna ispravka iz faze 3. Stavka je bila nasleđena iz starog plana, ne iz potrebe.
+Filtriranje je **na bazi**, ne u pregledaču, jer je rezultat straničen — sečenje posle dohvata dalo bi pogrešan broj strana.
+
+**Dorada posle probe (2026-08-03).**
+- **Pretraga zanemaruje kvačice i pismo.** `lower()` u SQL-u hvata samo velika i mala slova. Pravilo je postojalo samo na frontendu (`utils/tekst.ts`), pa je preneto u `util/Tekst.java` — mora biti isto, inače isti pojam daje različit rezultat u meniju i u panelu. Postgresov `unaccent` nije uzet: ne zna za ćirilicu i prevodi **đ** u „d" umesto u „dj". Poklapanje se radi u Javi nad šifarnicima (8 korisnika, ~180 proizvoda), pa se upitu prosleđuju samo pronađeni ID-jevi. **Ako korisnici narastu na hiljade, preći na normalizovan indeksiran stubac.**
+- **Broj traži isključivo porudžbinu s tim brojem.** Ranije se broj tražio i u e-mailu kupca, pa je „78" izbacivalo i porudžbinu naloga `ng_test_1782846011@test.com` — rezultat koji se iz tabele ne može objasniti.
+- **Pretraga hvata i naručene proizvode**, kroz `exists` podupit (ne join, koji bi umnožio porudžbinu sa više poklapajućih stavki).
+- **Izvoz u CSV**: sve što odgovara filterima, ne samo tekuća strana. Razdvajač `;` jer Excel na srpskom podešavanju sa zarezom sve strpa u jednu ćeliju; BOM na početku da kvačice ne budu krš.
+- Ceo red otvara detalje (i mišem i tastaturom), brze prečice za datum se vide kao aktivne, „poništi filtere" je pravo dugme uz brojač.
+- **Ćorsokak na praznom rezultatu.** Traka sa brojačem i dugmetom „poništi filtere" stajala je unutar grane koja se crta samo kad ima redova — pa je nestajala tačno kad je najpotrebnija: pojam bez pogotka ostavljao je prazan ekran bez izlaza u jednom kliku. Traka se sad crta i za nula redova (brojač javlja „ništa ne odgovara filterima", CSV se sklanja jer nema šta da se izveze). **Pravilo: kontrola koja poništava stanje ne sme da živi u grani koja zavisi od tog stanja.**
+- **Zamka na koju sam nasankao:** novu klasu za red tabele sam nazvao `.red`, a tako se već zvao *red polja u modalu* koji je `display: flex` — `<tr>` je prestao da bude red tabele i kolone su se raspale. Otkriveno merenjem položaja ćelija; test sad proverava da se kolone zaglavlja i tela poklapaju.
+
+**Zašto `Specification`, a ne `@Query`.** Prvo napisan `@Query` sa opcionim uslovima oblika `(:param is null or ...)` **pada na Postgresu**: `ERROR: could not determine data type of parameter $3` (SQLState 42P18) — baza ne može da zaključi tip parametra koji se poredi sa NULL. `Specification` gradi upit samo od zadatih filtera, pa se problem i ne pojavi, a SQL je uz to uži. Otkriveno tek pokretanjem pravog backenda; kompajler i unit testovi to ne hvataju.
+Razlaganje pojma i granice opsega su izvučeni u `util/FilterPorudzbina.java` da ostanu proverivi kao čista funkcija (7 testova) — kroz `Specification` se to teško ispituje. Tu je pokriveno i da je **kraj opsega uključiv** (šalje se početak sledećeg dana, inače porudžbina od 16:45 poslednjeg dana ispada iz rezultata).
+Pojam više ne ide u SQL kao `LIKE`, pa nema ni bekstvovanja džokera: poređenje je u Javi (`Tekst.sadrzi`), a upitu se prosleđuju samo ID-jevi, kroz `in`. Time je otpao i raniji rizik da `_` u pojmu hvata bilo koje slovo.
+
+**Preostale faze:** ~~3 — korisnici (± bodovi, blokiranje)~~ · ~~5 — porudžbine (pretraga, opseg datuma, CSV)~~ · 4 — loyalty (CRUD nivoa; kurs bodova je sad zakucan u servisu) · 6 — pregled/statistika (agregatni endpointi, najveći backend posao; **grana `origin/feature/analitika` već ima `/api/analitika/top-proizvodi`, `/prihod`, `/statusi` + `StavkaPorudzbineRepository` za spajanje**) · 7 — promo kodovi (nov entitet + integracija u cenu).
 
 **Napomene:** slike proizvoda su svesno preskočene (nema ni polja ni skladišta; meni koristi doodle placeholder). Prevlačenje reda za redosled takođe — vezano za 0q. U bazi trenutno **nema nijednog alergena**, pa se prvi pravi iz same forme („+ novi" uz alergene, gađa `POST /api/alergeni`).
 
