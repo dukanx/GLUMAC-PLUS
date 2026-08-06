@@ -69,6 +69,36 @@ export function getStranica(page = 0, size = 100) {
     });
 }
 
+/* ── Admin panel ── */
+
+export interface PretragaFilter {
+    /** Deo imena ili e-maila kupca, ili broj porudžbine. */
+    q?: string;
+    /** `yyyy-MM-dd`, uključivo. */
+    od?: string;
+    /** `yyyy-MM-dd`, takođe uključivo — backend sam pomera na kraj dana. */
+    doDatuma?: string;
+    status?: string;
+}
+
+/**
+ * Istorija porudžbina. Filtriranje ide na bazi, ne u pregledaču — rezultat se
+ * stranicira, pa bi sečenje posle dohvata dalo pogrešan broj strana.
+ */
+export function pretrazi(filter: PretragaFilter, page = 0, size = 20) {
+    return apiFetch<StranicaOdgovor<Porudzbina>>('/api/porudzbine/pretraga', {
+        auth: true,
+        query: {
+            page,
+            size,
+            q: filter.q || undefined,
+            od: filter.od || undefined,
+            doDatuma: filter.doDatuma || undefined,
+            status: filter.status || undefined,
+        },
+    });
+}
+
 export function promeniStatus(id: number, status: string) {
     return apiFetch<void>(`/api/porudzbine/${id}/status`, {
         method: 'PATCH',

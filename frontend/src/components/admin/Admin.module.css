@@ -529,6 +529,149 @@ tbody tr:last-child .td {
 }
 
 /* ══════════════════════════════════════════════════
+   Sekcija PORUDŽBINE
+   ══════════════════════════════════════════════════ */
+
+.filteri {
+    display: flex;
+    gap: 22px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin: 22px 0 4px;
+}
+
+.filterPolje {
+    display: flex;
+    flex-direction: column;
+}
+
+.trakaIznad {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 20px 0 10px;
+}
+
+/* Ceo red otvara detalje, pa mora i da izgleda kao da se može kliknuti.
+   NE zvati ovo `.red` — tako se već zove red polja u modalu, koji je `display: flex`,
+   pa bi `<tr>` prestao da bude red tabele i kolone bi se raspale. */
+.redTabele {
+    cursor: pointer;
+}
+
+.redTabele:hover,
+.redTabele:focus-visible {
+    background: hsl(38 30% 96% / .8);
+    outline: none;
+}
+
+.redTabeleOtvoren {
+    composes: redTabele;
+    background: hsl(38 30% 96% / .8);
+}
+
+.redTabele:focus-visible td:first-child,
+.redTabeleOtvoren:focus-visible td:first-child {
+    box-shadow: inset 3px 0 0 var(--zut);
+}
+
+/* Red sa detaljima nema tačkastu liniju — vezan je za red iznad sebe. */
+.tdDetalji {
+    padding: 0 20px 18px;
+    border-bottom: 2px dotted var(--ink07);
+    background: hsl(38 30% 96% / .6);
+}
+
+.detalji {
+    display: flex;
+    gap: 32px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding-top: 12px;
+}
+
+.stavke {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    min-width: 260px;
+}
+
+.stavka {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 3px 0;
+    font-size: 14px;
+    font-family: var(--font-body);
+}
+
+.stavkaKol {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink55);
+    min-width: 28px;
+}
+
+.dodaci {
+    font-family: var(--font-cav);
+    font-size: 16px;
+    color: var(--ink55);
+}
+
+.stavkaCena {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink70);
+}
+
+.detaljiDesno {
+    min-width: 200px;
+}
+
+.detaljRed {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-family: var(--font-body);
+}
+
+.detaljRed span {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    color: var(--ink55);
+}
+
+.napomenaGosta {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--rust);
+    transform: rotate(-.5deg);
+    margin: 10px 0 0;
+    line-height: 1.3;
+}
+
+.pager {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 22px;
+}
+
+.pagerBroj {
+    font-family: var(--font-cav);
+    font-size: 19px;
+    color: var(--ink55);
+}
+
+/* ══════════════════════════════════════════════════
    Sekcija KORISNICI
    ══════════════════════════════════════════════════ */
 

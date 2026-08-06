@@ -3,8 +3,10 @@ package com.glumacplus.food_ordering.service;
 import com.glumacplus.food_ordering.dto.*;
 import com.glumacplus.food_ordering.model.*;
 import com.glumacplus.food_ordering.repository.KorisnikRepository;
+import com.glumacplus.food_ordering.util.FilterPorudzbina;
 import com.glumacplus.food_ordering.util.LoyaltyNivo;
 import com.glumacplus.food_ordering.util.Novac;
+import com.glumacplus.food_ordering.util.Tekst;
 import com.glumacplus.food_ordering.repository.LoyaltyProgramRepository;
 import com.glumacplus.food_ordering.repository.PorudzbinaRepository;
 import com.glumacplus.food_ordering.repository.ProizvodRepository;
@@ -13,15 +15,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -101,6 +109,86 @@ public class PorudzbinaService {
                 : porudzbinaRepo.findByStatus(status, pageable);
 
         return page.map(PorudzbinaMapper::toViewDto);
+    }
+
+    /**
+     * Pretraga istorije porudžbina za admin panel: po broju porudžbine ili
+     * kupcu, u opsegu datuma, opciono po statusu.
+     *
+     * <p>Pojam koji je ceo broj traži <b>isključivo</b> porudžbinu s tim brojem.
+     * Sve ostalo se traži u imenu i e-mailu kupca <b>i u nazivima naručenih
+     * proizvoda</b>, pri čemu se kvačice i pismo zanemaruju (vidi {@link Tekst}) —
+     * „sunka", „šunka" i „шунка" daju isti rezultat.</p>
+     *
+     * @param status filter po statusu, ili {@code null} za sve
+     * @param od prvi dan opsega uključivo, ili {@code null}
+     * @param doDatuma poslednji dan opsega UKLJUČIVO, ili {@code null}
+     * @param pojam broj porudžbine, deo imena/e-maila kupca ili naziv proizvoda, ili {@code null}
+     * @param pageNo redni broj stranice (od 0)
+     * @param pageSize broj elemenata po stranici
+     * @return stranica pronađenih porudžbina, najnovije prve
+     */
+    public Page<PorudzbinaViewDto> pretrazi(StatusPorudzbine status, LocalDate od, LocalDate doDatuma,
+                                            String pojam, int pageNo, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "id"));
+        FilterPorudzbina f = FilterPorudzbina.napravi(status, od, doDatuma, pojam);
+
+        // Kvačice i pismo se ne mogu zanemariti u SQL-u a da se poklope sa
+        // pravilom koje koristi ostatak aplikacije, pa se poklapanje radi u Javi
+        // nad šifarnicima (nekoliko korisnika, ~180 proizvoda), a upitu se
+        // prosleđuju samo pronađeni ID-jevi. Vidi `util/Tekst`.
+        List<Long> kupci = List.of();
+        List<Long> proizvodi = List.of();
+        if (f.pojam() != null) {
+            kupci = korisnikRepo.findAll().stream()
+                    .filter(k -> Tekst.sadrzi(k.getIme(), f.pojam()) || Tekst.sadrzi(k.getEmail(), f.pojam()))
+                    .map(Korisnik::getId)
+                    .toList();
+            proizvodi = proizvodRepo.findAll().stream()
+                    .filter(pr -> Tekst.sadrzi(pr.getNaziv(), f.pojam()))
+                    .map(Proizvod::getId)
+                    .toList();
+        }
+
+        final List<Long> idKupaca = kupci;
+        final List<Long> idProizvoda = proizvodi;
+
+        Specification<Porudzbina> uslov = (root, upit, cb) -> {
+            List<Predicate> uslovi = new java.util.ArrayList<>();
+
+            if (f.status() != null) uslovi.add(cb.equal(root.get("status"), f.status()));
+            if (f.od() != null) uslovi.add(cb.greaterThanOrEqualTo(root.get("datum"), f.od()));
+            if (f.doVremena() != null) uslovi.add(cb.lessThan(root.get("datum"), f.doVremena()));
+
+            if (f.imaPretragu()) {
+                List<Predicate> ili = new java.util.ArrayList<>();
+
+                if (f.brojPorudzbine() != null) {
+                    ili.add(cb.equal(root.get("id"), f.brojPorudzbine()));
+                }
+                if (!idKupaca.isEmpty()) {
+                    ili.add(root.get("korisnik").get("id").in(idKupaca));
+                }
+                if (!idProizvoda.isEmpty()) {
+                    // Podupit umesto join-a: join bi umnožio porudžbinu sa više
+                    // stavki koje se poklapaju, pa bi ista ušla u rezultat dvaput.
+                    Subquery<Long> ima = upit.subquery(Long.class);
+                    Root<StavkaPorudzbine> st = ima.from(StavkaPorudzbine.class);
+                    ima.select(st.get("id")).where(cb.and(
+                            cb.equal(st.get("porudzbina"), root),
+                            st.get("proizvod").get("id").in(idProizvoda)
+                    ));
+                    ili.add(cb.exists(ima));
+                }
+
+                // Pojam koji ne odgovara ničemu ne sme da vrati sve.
+                uslovi.add(ili.isEmpty() ? cb.disjunction() : cb.or(ili.toArray(new Predicate[0])));
+            }
+
+            return cb.and(uslovi.toArray(new Predicate[0]));
+        };
+
+        return porudzbinaRepo.findAll(uslov, pageable).map(PorudzbinaMapper::toViewDto);
     }
 
     /**

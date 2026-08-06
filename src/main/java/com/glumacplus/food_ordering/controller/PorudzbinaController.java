@@ -6,11 +6,13 @@ import com.glumacplus.food_ordering.model.StatusPorudzbine;
 import com.glumacplus.food_ordering.service.PorudzbinaService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -44,6 +46,20 @@ public class PorudzbinaController {
             @RequestParam(defaultValue = "20") int size
     ) {
         return ResponseEntity.ok(service.getAllPaged(status, page, size));
+    }
+
+    /** Istorija porudžbina za admin panel: pretraga po kupcu ili broju, opseg datuma. */
+    @GetMapping("/pretraga")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<PorudzbinaViewDto>> pretrazi(
+            @RequestParam(required = false) StatusPorudzbine status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate od,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate doDatuma,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(service.pretrazi(status, od, doDatuma, q, page, size));
     }
 
 

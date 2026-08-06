@@ -578,4 +578,5 @@ class PorudzbinaServiceTest {
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
         verify(porudzbinaRepo, never()).save(any());
     }
+
 }
