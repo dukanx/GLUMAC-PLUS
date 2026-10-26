@@ -199,7 +199,24 @@ Filtriranje je **na bazi**, ne u pregledaču, jer je rezultat straničen — se�
 Razlaganje pojma i granice opsega su izvučeni u `util/FilterPorudzbina.java` da ostanu proverivi kao čista funkcija (7 testova) — kroz `Specification` se to teško ispituje. Tu je pokriveno i da je **kraj opsega uključiv** (šalje se početak sledećeg dana, inače porudžbina od 16:45 poslednjeg dana ispada iz rezultata).
 Pojam više ne ide u SQL kao `LIKE`, pa nema ni bekstvovanja džokera: poređenje je u Javi (`Tekst.sadrzi`), a upitu se prosleđuju samo ID-jevi, kroz `in`. Time je otpao i raniji rizik da `_` u pojmu hvata bilo koje slovo.
 
-**Preostale faze:** ~~3 — korisnici (± bodovi, blokiranje)~~ · ~~5 — porudžbine (pretraga, opseg datuma, CSV)~~ · 4 — loyalty (CRUD nivoa; kurs bodova je sad zakucan u servisu) · 6 — pregled/statistika (agregatni endpointi, najveći backend posao; **grana `origin/feature/analitika` već ima `/api/analitika/top-proizvodi`, `/prihod`, `/statusi` + `StavkaPorudzbineRepository` za spajanje**) · 7 — promo kodovi (nov entitet + integracija u cenu).
+**✅ Faza 6 — PREGLED (analitika).** `AdminPregled.tsx` + `GET /api/analitika/pregled` (samo ADMIN): promet, broj porudžbina, prosečna korpa i dat popust za period, grafikon prihoda po danima, najprodavaniji proizvodi i raspodela po statusima. Panel se sad otvara na Pregledu; ulazna sekcija je do sada bio Meni.
+
+**Šta je uzeto sa grane `feature/analitika`, a šta prepravljeno.** Grana je pisana pre dodataka, popusta i statusa `NOVA`, pa je preneta ideja i oblik upita, ne kod:
+- **`NOVA` je ispadala iz raspodele.** `switch` u `getStatusi` nije imao tu granu; kako je to `switch` *naredba* nad enumom, prevodilac ne traži iscrpnost — nepoklopljena vrednost prosto prođe. Nove porudžbine bi se tiho gubile i iz `ukupno`.
+- **Novac je bio `double`.** Ostatak aplikacije računa u `BigDecimal` (vidi `util/Novac`), pa su DTO-ovi prepravljeni; `record` umesto klase sa geterima, po uzoru na `SmenaStatDto`.
+- **Promet po proizvodu se sabirao kao `iznosStavke`**, a on po definiciji uključuje i dodatke — novac od eurokrema bio bi pripisan palačinci, a sam eurokrem se ne bi video. Sad su dva upita: `kolicina * cena` po stavkama i `d.kolicina * s.kolicina * d.cena` po dodacima, pa se spajaju po proizvodu. **Provereno na pravim podacima: zbir po proizvodima = prihod + popust, u dinar.**
+- **`Object[]` kao povratni tip** za jednoredni zbir zamenjen je projekcijom sa imenovanim geterima.
+- **Četiri endpointa svedena na jedan** (`/pregled`). Baza je u Frankfurtu, jedno putovanje ~50 ms; četiri poziva značila bi četiri čekanja pre nego što se stranica sklopi. Mereno: ceo pregled za 30 dana stiže za **~270 ms**.
+- **Uloga:** grana je puštala i `ZAPOSLENI`. Ovde je promet celog lokala, pa je ostavljen samo `ADMIN`; zaposleni ima svoj dnevni sažetak kroz `/api/smena`.
+- Dodato čega na grani nije bilo: prosečna korpa, ukupno dat popust, prihod po danima (za grafikon) i gornja granica perioda (366 dana).
+
+**Dani bez prometa se popunjavaju u servisu.** Baza vraća samo dane u kojima nečega ima; da se to prosledilo kako jeste, grafikon bi spojio ponedeljak i četvrtak kao da su susedni.
+**Grafikon je HTML, ne SVG.** U SVG-u sa `viewBox`-om skalira se sve, pa bi na širokom ekranu natpisi i debljine linija bili krupniji nego na uskom.
+**Loš parametar više ne vraća 500.** `?od=juce` ili izostavljen `do` padali su u opšti hvatač i javljali „interna greška servera" za grešku koju je napravio klijent. `GlobalExceptionHandler` sad hvata `MissingServletRequestParameterException` i `MethodArgumentTypeMismatchException` → 400 sa jasnom porukom; isto važi i za pretragu porudžbina.
+
+**Preostale faze:** ~~3 — korisnici (± bodovi, blokiranje)~~ · ~~5 — porudžbine (pretraga, opseg datuma, CSV)~~ · ~~6 — pregled/statistika~~ · 4 — loyalty (CRUD nivoa; kurs bodova je sad zakucan u servisu) · 7 — promo kodovi (nov entitet + integracija u cenu).
+
+**🟡 Sitnica koju je faza 6 otkrila:** `SmenaService.statistika()` računa dnevni promet tako što **učita sve realizovane porudžbine** (`findAllByStatus`) pa filtrira u Javi. Radi dok ih je stotinak, ali raste zauvek. Sad postoji agregatni upit (`prihodZaPeriod`) koji to radi na bazi — zamena je nekoliko linija, ali dira panel zaposlenog, pa nije rađena uz analitiku.
 
 **Napomene:** slike proizvoda su svesno preskočene (nema ni polja ni skladišta; meni koristi doodle placeholder). Prevlačenje reda za redosled takođe — vezano za 0q. U bazi trenutno **nema nijednog alergena**, pa se prvi pravi iz same forme („+ novi" uz alergene, gađa `POST /api/alergeni`).
 

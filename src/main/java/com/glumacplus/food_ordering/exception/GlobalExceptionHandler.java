@@ -7,8 +7,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -50,6 +52,22 @@ public class GlobalExceptionHandler {
                 greske
         );
         return ResponseEntity.badRequest().body(error);
+    }
+
+    /*
+     * 2b. Loš zahtev na nivou parametara: obavezan query parametar nedostaje
+     * (`?od=` bez `do`) ili se ne da pretvoriti u traženi tip (`?od=juce`).
+     * Bez ovoga takav zahtev pada u opšti hvatač i vraća 500 — poruka koja
+     * klijentu kaže „server je pukao" za grešku koju je sam napravio.
+     */
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ApiError> handleLosParametar(Exception ex, HttpServletRequest request) {
+        String poruka = ex instanceof MissingServletRequestParameterException nedostaje
+                ? "Nedostaje obavezan parametar '" + nedostaje.getParameterName() + "'."
+                : "Parametar '" + ((MethodArgumentTypeMismatchException) ex).getName() + "' nije u očekivanom obliku.";
+
+        return ResponseEntity.badRequest()
+                .body(new ApiError(HttpStatus.BAD_REQUEST.value(), poruka, request.getRequestURI()));
     }
 
     // 3. Neautorizovan pristup (nema tokena / loš token)

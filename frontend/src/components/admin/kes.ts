@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { ApiError } from '../../api/client';
 
 /**
  * Podaci sekcija admin panela, keširani dok je kartica otvorena.
@@ -47,10 +48,16 @@ export function useSekcija<T>(kljuc: string, dohvati: () => Promise<T>, prazno: 
                 setUcitava(false);
                 setGreska('');
             })
-            .catch(() => {
+            .catch((e: unknown) => {
                 setUcitava(false);
                 // Ako nešto već stoji na ekranu, ne rušimo ga porukom o grešci.
-                if (!kes.has(kljuc)) setGreska('Ne mogu da učitam podatke.');
+                // Kad backend kaže šta ne valja (npr. „period ne može biti duži
+                // od 366 dana"), prenosi se njegova poruka — opšte „ne mogu da
+                // učitam" ostavlja vlasnika da nagađa šta je pogrešio.
+                if (!kes.has(kljuc)) {
+                    const poruka = e instanceof ApiError ? e.body?.message : undefined;
+                    setGreska(poruka ?? 'Ne mogu da učitam podatke.');
+                }
             });
     }, [kljuc, dohvati]);
 

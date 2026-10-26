@@ -6,6 +6,7 @@ import {
 } from '../components/Doodle';
 import AdminMeni from '../components/admin/AdminMeni';
 import AdminPorudzbine from '../components/admin/AdminPorudzbine';
+import AdminPregled from '../components/admin/AdminPregled';
 import AdminKorisnici from '../components/admin/AdminKorisnici';
 import AdminRadnoVreme from '../components/admin/AdminRadnoVreme';
 import AdminZaposleni from '../components/admin/AdminZaposleni';
@@ -36,7 +37,9 @@ const SEKCIJE: { kljuc: Sekcija; naziv: string; Ikona: typeof Grafikon }[] = [
 
 export default function AdminPanel() {
     const { korisnik, logout } = useAuth();
-    const [sekcija, setSekcija] = useState<Sekcija>('MENI');
+    // Panel se otvara na Pregledu — brojevi su ono zbog čega se ovde i ulazi.
+    // Dok Pregled nije postojao, ulazna sekcija je bio Meni.
+    const [sekcija, setSekcija] = useState<Sekcija>('PREGLED');
 
     // Panel je samo vlasnikov. Zaposleni ima svoj panel, kupac nema šta da traži.
     if (!korisnik) return <Navigate to="/login" replace />;
@@ -74,6 +77,7 @@ export default function AdminPanel() {
                     : sekcija === 'ZAPOSLENI' ? <AdminZaposleni />
                     : sekcija === 'KORISNICI' ? <AdminKorisnici />
                     : sekcija === 'PORUDZBINE' ? <AdminPorudzbine />
+                    : sekcija === 'PREGLED' ? <AdminPregled />
                     : <Uskoro naziv={SEKCIJE.find(s => s.kljuc === sekcija)!.naziv} />}
             </main>
         </div>

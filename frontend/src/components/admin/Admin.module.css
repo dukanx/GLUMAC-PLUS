@@ -701,3 +701,261 @@ tbody tr:last-child .td {
     flex-wrap: wrap;
     margin-top: 8px;
 }
+
+/* ══════════════════════════════════════════════════
+   Sekcija PREGLED
+
+   Jedan niz podataka po grafikonu, pa nema legende ni palete — boja nosi
+   samo naglasak (rust = novac, ink = ostalo). Rust na papiru daje kontrast
+   4.58:1, dovoljno i za sitan tekst; ink55 ne bi bio, pa natpisi idu u ink70.
+   ══════════════════════════════════════════════════ */
+
+.kpiRed {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+    margin: 22px 0 6px;
+}
+
+.kpi {
+    background: #fff;
+    border: 2px solid var(--ink12);
+    border-radius: var(--wob);
+    padding: 14px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Prihod je razlog zbog kog se ova strana i otvara. */
+.kpiJak {
+    composes: kpi;
+    border-color: hsl(14 65% 44% / .45);
+}
+
+.kpiOznaka {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--ink55);
+    line-height: 1;
+}
+
+.kpiBroj {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--ink);
+    /* Cifre iste širine — inače brojevi poskakuju pri osvežavanju. */
+    font-variant-numeric: tabular-nums;
+}
+
+.kpiJak .kpiBroj {
+    color: var(--rust);
+}
+
+.kpiJedinica {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    color: var(--ink40);
+    line-height: 1;
+}
+
+.podnaslov {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 1;
+    margin: 0 0 10px;
+}
+
+.grafSekcija {
+    margin-top: 26px;
+}
+
+.grafGlava {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.grafMax {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--ink55);
+}
+
+.graf {
+    background: #fff;
+    border: 2px solid var(--ink12);
+    border-radius: var(--wob);
+    padding: 26px 18px 10px;
+    /* Oblačić sme da izađe iz kartice. */
+    overflow: visible;
+}
+
+.stubici {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 190px;
+}
+
+.stubacOkvir {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    position: relative;
+    /* Osnovica je jedina linija na grafikonu — mreža bi ovde bila šum. */
+    border-bottom: 2px solid var(--ink20);
+}
+
+.stubac {
+    width: 100%;
+    background: hsl(14 65% 44% / .55);
+    border-radius: 4px 4px 0 0;
+    cursor: default;
+    transition: background .12s;
+    /* Dan bez prometa ostaje prazan, ali okvir i dalje drži mesto u nizu. */
+    min-height: 0;
+}
+
+.stubac:hover,
+.stubac:focus-visible {
+    background: var(--rust);
+    outline: none;
+}
+
+/* Najbolji dan se vidi bez čitanja brojeva. */
+.stubacJak {
+    composes: stubac;
+    background: var(--rust);
+}
+
+.stubacDatum {
+    font-family: var(--font-cav);
+    font-size: 15px;
+    color: var(--ink70);
+    margin-top: 4px;
+    white-space: nowrap;
+    line-height: 1;
+    min-height: 15px;
+}
+
+.oblacic {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 10px;
+    padding: 6px 12px 8px;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 5;
+    pointer-events: none;
+    font-family: var(--font-cav);
+    font-size: 19px;
+    line-height: 1.15;
+    box-shadow: 0 6px 16px hsl(22 30% 14% / .25);
+}
+
+.oblacicRed {
+    display: block;
+    font-size: 16px;
+    opacity: .75;
+}
+
+.dvaStuba {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 26px;
+    margin-top: 28px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .dvaStuba {
+        grid-template-columns: 1fr;
+    }
+}
+
+.mesto {
+    font-family: var(--font-cav);
+    font-size: 18px;
+    color: var(--ink40);
+    margin-right: 7px;
+}
+
+.trakaOkvir {
+    display: block;
+    height: 5px;
+    background: var(--ink07);
+    border-radius: 999px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.traka {
+    display: block;
+    height: 100%;
+    background: hsl(14 65% 44% / .55);
+    border-radius: 999px;
+}
+
+.trakaNe {
+    composes: traka;
+    background: var(--ink20);
+}
+
+.statusi {
+    background: #fff;
+    border: 2px solid var(--ink12);
+    border-radius: var(--wob);
+    padding: 14px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.statusRed {
+    display: grid;
+    grid-template-columns: 92px 1fr 66px;
+    align-items: center;
+    gap: 10px;
+}
+
+.statusNaziv {
+    font-family: var(--font-cav);
+    font-size: 19px;
+    color: var(--ink70);
+    line-height: 1;
+}
+
+.statusBroj {
+    font-family: var(--font-body);
+    font-size: 15px;
+    text-align: right;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.statusUdeo {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    color: var(--ink40);
+    margin-left: 6px;
+}
+
+.fusnota {
+    font-family: var(--font-cav);
+    font-size: 17px;
+    color: var(--ink55);
+    margin: 8px 0 0;
+}
