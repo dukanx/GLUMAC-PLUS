@@ -8,9 +8,11 @@ ovde je sačuvano da se primeni na zasebnoj test grani (npr. `eksperiment-zaoblj
 
 ### 1. Tokeni — `frontend/src/index.css`, u `:root` (posle font tokena)
 ```css
+:root {
   /* ── Zaobljenja (blagi mobilni/iOS osećaj, a da ostane editorialno) ── */
   --r-sm: 8px;    /* dugmad, inputi, badge-evi, male kutije */
   --r-md: 14px;   /* kartice, modali, veće površine */
+}
 ```
 Vrednosti su podesive na jednom mestu. Probano 8px/14px — delovalo taman; isprobati i 10px.
 
