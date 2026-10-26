@@ -11,7 +11,7 @@ data class Korisnik(
     val ime: String,
     val email: String,
     val uloga: String? = null,        // ? + = null → polje sme da fali (nullable, kao "?" u TS)
-    val brojBodova: Int = 0,
+    val brojBodova: Double = 0.0,     // backend šalje decimalno (0.0), pa Double (ne Int)
     val loyaltyNivo: String? = null
 )
 
@@ -19,7 +19,7 @@ data class Korisnik(
 data class LoyaltyProgram(
     val id: Long,
     val nivo: String,
-    val popust: Int,
+    val popust: Double,      // procenat popusta — backend šalje decimalno (npr. 0.0, 5.0)
     val pragBodova: Int
 )
 

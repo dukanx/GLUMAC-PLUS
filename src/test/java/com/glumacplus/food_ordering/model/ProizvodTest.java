@@ -52,6 +52,16 @@ class ProizvodTest {
     }
 
     @Test
+    void testSetNazivNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> p.setNaziv(null));
+    }
+
+    @Test
+    void testSetNazivPrazanBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> p.setNaziv("  "));
+    }
+
+    @Test
     void testSetTip() {
         p.setTip("palacinka");
         assertEquals("palacinka", p.getTip());
@@ -64,15 +74,52 @@ class ProizvodTest {
     }
 
     @Test
-    void testSetCenaMozeBitiNull() {
-        p.setCena(null);
-        assertNull(p.getCena());
+    void testSetCenaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> p.setCena(null));
+    }
+
+    @Test
+    void testSetCenaNulaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> p.setCena(BigDecimal.ZERO));
+    }
+
+    @Test
+    void testSetCenaNegativnaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> p.setCena(new BigDecimal("-10.00")));
     }
 
     @Test
     void testSetJedinicaMere() {
         p.setJedinicaMere("kom");
         assertEquals("kom", p.getJedinicaMere());
+    }
+
+    @Test
+    void testSetKalorijeNegativneBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> p.setKalorije(-1));
+    }
+
+    @Test
+    void testSetProteiniNegativniBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> p.setProteini(-1));
+    }
+
+    @Test
+    void testSetMastiNegativneBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> p.setMasti(-1));
+    }
+
+    @Test
+    void testSetUgljeniHidratiNegativniBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> p.setUgljeniHidrati(-1));
+    }
+
+    @Test
+    void testSetNutritivneNulaDozvoljena() {
+        p.setKalorije(0);
+        p.setProteini(0);
+        assertEquals(0, p.getKalorije());
+        assertEquals(0, p.getProteini());
     }
 
     @Test

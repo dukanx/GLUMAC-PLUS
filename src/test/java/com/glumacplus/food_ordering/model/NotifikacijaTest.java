@@ -36,9 +36,24 @@ class NotifikacijaTest {
     }
 
     @Test
+    void testSetKorisnikNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> n.setKorisnik(null));
+    }
+
+    @Test
     void testSetPoruka() {
         n.setPoruka("Vaša porudžbina je prihvaćena.");
         assertEquals("Vaša porudžbina je prihvaćena.", n.getPoruka());
+    }
+
+    @Test
+    void testSetPorukaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> n.setPoruka(null));
+    }
+
+    @Test
+    void testSetPorukaPraznaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> n.setPoruka("   "));
     }
 
     @Test
@@ -48,9 +63,19 @@ class NotifikacijaTest {
     }
 
     @Test
+    void testSetTipNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> n.setTip(null));
+    }
+
+    @Test
     void testSetProcitana() {
         n.setProcitana(true);
         assertTrue(n.getProcitana());
+    }
+
+    @Test
+    void testSetProcitanaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> n.setProcitana(null));
     }
 
     @Test
@@ -58,5 +83,10 @@ class NotifikacijaTest {
         LocalDateTime datum = LocalDateTime.of(2025, 6, 1, 12, 0);
         n.setDatum(datum);
         assertEquals(datum, n.getDatum());
+    }
+
+    @Test
+    void testSetDatumNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> n.setDatum(null));
     }
 }

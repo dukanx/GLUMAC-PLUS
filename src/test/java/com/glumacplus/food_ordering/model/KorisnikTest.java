@@ -33,11 +33,20 @@ class KorisnikTest {
         assertEquals(Uloga.KORISNIK, noviK.getUloga());
     }
 
-
     @Test
     void testSetIme() {
         k.setIme("Nikola");
         assertEquals("Nikola", k.getIme());
+    }
+
+    @Test
+    void testSetImeNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> k.setIme(null));
+    }
+
+    @Test
+    void testSetImePraznoBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> k.setIme("   "));
     }
 
     @Test
@@ -47,9 +56,24 @@ class KorisnikTest {
     }
 
     @Test
+    void testSetEmailNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> k.setEmail(null));
+    }
+
+    @Test
+    void testSetEmailPrazanBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> k.setEmail(""));
+    }
+
+    @Test
     void testSetLozinka() {
         k.setLozinka("lozinka123");
         assertEquals("lozinka123", k.getLozinka());
+    }
+
+    @Test
+    void testSetLozinkaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> k.setLozinka(null));
     }
 
     @Test
@@ -59,9 +83,25 @@ class KorisnikTest {
     }
 
     @Test
+    void testSetBrojBodovaNegativanBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> k.setBrojBodova(-1));
+    }
+
+    @Test
+    void testSetBrojBodovaNulaJeDozvoljena() {
+        k.setBrojBodova(0);
+        assertEquals(0, k.getBrojBodova());
+    }
+
+    @Test
     void testSetUloga() {
         k.setUloga(Uloga.ZAPOSLENI);
         assertEquals(Uloga.ZAPOSLENI, k.getUloga());
+    }
+
+    @Test
+    void testSetUlogaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> k.setUloga(null));
     }
 
     @Test

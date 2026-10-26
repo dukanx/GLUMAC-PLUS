@@ -87,9 +87,13 @@ public class OmiljenaPorudzbina {
     /**
      * Postavlja korisnika kome omiljena porudžbina pripada.
      *
-     * @param korisnik korisnik
+     * @param korisnik korisnik; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je korisnik {@code null}
      */
     public void setKorisnik(Korisnik korisnik) {
+        if (korisnik == null) {
+            throw new IllegalArgumentException("Korisnik je obavezan");
+        }
         this.korisnik = korisnik;
     }
 
@@ -105,9 +109,13 @@ public class OmiljenaPorudzbina {
     /**
      * Postavlja naziv omiljene porudžbine.
      *
-     * @param naziv naziv
+     * @param naziv naziv; ne sme biti {@code null} niti prazan
+     * @throws IllegalArgumentException ako je naziv {@code null} ili prazan
      */
     public void setNaziv(String naziv) {
+        if (naziv == null || naziv.isBlank()) {
+            throw new IllegalArgumentException("Naziv je obavezan");
+        }
         this.naziv = naziv;
     }
 
@@ -123,9 +131,13 @@ public class OmiljenaPorudzbina {
     /**
      * Postavlja datum i vreme kreiranja.
      *
-     * @param datumKreiranja datum kreiranja
+     * @param datumKreiranja datum kreiranja; ne sme biti {@code null}
+     * @throws IllegalArgumentException ako je datum kreiranja {@code null}
      */
     public void setDatumKreiranja(LocalDateTime datumKreiranja) {
+        if (datumKreiranja == null) {
+            throw new IllegalArgumentException("Datum kreiranja je obavezan");
+        }
         this.datumKreiranja = datumKreiranja;
     }
 

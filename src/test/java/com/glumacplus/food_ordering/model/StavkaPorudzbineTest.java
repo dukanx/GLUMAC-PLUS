@@ -23,19 +23,29 @@ class StavkaPorudzbineTest {
     }
 
     @Test
-    void testSetCenaIzracunaIznos() {
-        s.setKolicina(2);
-        s.setCena(new BigDecimal("590.00"));
-
-        assertEquals(new BigDecimal("1180.00"), s.getIznosStavke());
-    }
-
-    @Test
     void testSetKolicinaIzracunaIznos() {
         s.setCena(new BigDecimal("300.00"));
         s.setKolicina(3);
 
         assertEquals(new BigDecimal("900.00"), s.getIznosStavke());
+    }
+
+    @Test
+    void testSetKolicinaNulaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> s.setKolicina(0));
+    }
+
+    @Test
+    void testSetKolicinaNegativnaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> s.setKolicina(-3));
+    }
+
+    @Test
+    void testSetCenaIzracunaIznos() {
+        s.setKolicina(2);
+        s.setCena(new BigDecimal("590.00"));
+
+        assertEquals(new BigDecimal("1180.00"), s.getIznosStavke());
     }
 
     @Test
@@ -47,11 +57,18 @@ class StavkaPorudzbineTest {
     }
 
     @Test
-    void testCenaNullJednakoIznosNull() {
-        s.setKolicina(2);
-        s.setCena(null);
+    void testSetCenaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> s.setCena(null));
+    }
 
-        assertNull(s.getIznosStavke());
+    @Test
+    void testSetCenaNegativnaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> s.setCena(new BigDecimal("-1.00")));
+    }
+
+    @Test
+    void testSetCenaNulaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> s.setCena(BigDecimal.ZERO));
     }
 
     @Test
@@ -64,10 +81,20 @@ class StavkaPorudzbineTest {
     }
 
     @Test
+    void testSetProizvodNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> s.setProizvod(null));
+    }
+
+    @Test
     void testSetPorudzbina() {
         Porudzbina por = new Porudzbina();
         s.setPorudzbina(por);
 
         assertNotNull(s.getPorudzbina());
+    }
+
+    @Test
+    void testSetPorudzbinaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> s.setPorudzbina(null));
     }
 }

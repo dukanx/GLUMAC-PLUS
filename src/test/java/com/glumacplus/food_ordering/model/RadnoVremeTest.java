@@ -49,9 +49,19 @@ class RadnoVremeTest {
     }
 
     @Test
+    void testSetDanNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> rv.setDan(null));
+    }
+
+    @Test
     void testSetOdVremena() {
         rv.setOdVremena(LocalTime.of(9, 0));
         assertEquals(LocalTime.of(9, 0), rv.getOdVremena());
+    }
+
+    @Test
+    void testSetOdVremenaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> rv.setOdVremena(null));
     }
 
     @Test
@@ -61,8 +71,18 @@ class RadnoVremeTest {
     }
 
     @Test
+    void testSetDoVremenaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> rv.setDoVremena(null));
+    }
+
+    @Test
     void testSetAktivno() {
         rv.setAktivno(false);
         assertFalse(rv.getAktivno());
+    }
+
+    @Test
+    void testSetAktivnoNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> rv.setAktivno(null));
     }
 }

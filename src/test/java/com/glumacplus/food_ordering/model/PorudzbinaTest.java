@@ -40,15 +40,46 @@ class PorudzbinaTest {
     }
 
     @Test
+    void testSetUkupanIznosNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> por.setUkupanIznos(null));
+    }
+
+    @Test
+    void testSetUkupanIznosNegativanBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> por.setUkupanIznos(new BigDecimal("-1.00")));
+    }
+
+    @Test
+    void testSetUkupanIznosNulaDozvoljena() {
+        por.setUkupanIznos(BigDecimal.ZERO);
+        assertEquals(new BigDecimal("0.00"), por.getUkupanIznos());
+    }
+
+    @Test
     void testSetOriginalnaCenaSkalira() {
         por.setOriginalnaCena(new BigDecimal("590.999"));
         assertEquals(new BigDecimal("591.00"), por.getOriginalnaCena());
     }
 
     @Test
+    void testSetOriginalnaCenaNegativnaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> por.setOriginalnaCena(new BigDecimal("-5.00")));
+    }
+
+    @Test
     void testSetStatus() {
         por.setStatus(StatusPorudzbine.SPREMNA);
         assertEquals(StatusPorudzbine.SPREMNA, por.getStatus());
+    }
+
+    @Test
+    void testSetStatusNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> por.setStatus(null));
+    }
+
+    @Test
+    void testSetTipPorudzbineNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> por.setTipPorudzbine(null));
     }
 
     @Test
@@ -59,12 +90,22 @@ class PorudzbinaTest {
     }
 
     @Test
+    void testSetDatumNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> por.setDatum(null));
+    }
+
+    @Test
     void testDodajStavkuPostavljaBidirekciju() {
         StavkaPorudzbine stavka = new StavkaPorudzbine();
         por.dodajStavku(stavka);
 
         assertTrue(por.getStavke().contains(stavka));
         assertEquals(por, stavka.getPorudzbina());
+    }
+
+    @Test
+    void testSetKorisnikNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> por.setKorisnik(null));
     }
 
     @Test

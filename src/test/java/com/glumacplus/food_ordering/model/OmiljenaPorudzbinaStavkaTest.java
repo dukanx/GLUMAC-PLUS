@@ -27,6 +27,16 @@ class OmiljenaPorudzbinaStavkaTest {
     }
 
     @Test
+    void testSetKolicinaNulaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> ops.setKolicina(0));
+    }
+
+    @Test
+    void testSetKolicinaNegativnaBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> ops.setKolicina(-2));
+    }
+
+    @Test
     void testSetProizvod() {
         Proizvod p = new Proizvod();
         p.setNaziv("Kafa");
@@ -35,10 +45,20 @@ class OmiljenaPorudzbinaStavkaTest {
     }
 
     @Test
+    void testSetProizvodNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> ops.setProizvod(null));
+    }
+
+    @Test
     void testSetOmiljenaPorudzbina() {
         OmiljenaPorudzbina op = new OmiljenaPorudzbina();
         op.setNaziv("Jutarnja");
         ops.setOmiljenaPorudzbina(op);
         assertEquals("Jutarnja", ops.getOmiljenaPorudzbina().getNaziv());
+    }
+
+    @Test
+    void testSetOmiljenaPorudzbinaNullBacaIzuzetak() {
+        assertThrows(IllegalArgumentException.class, () -> ops.setOmiljenaPorudzbina(null));
     }
 }

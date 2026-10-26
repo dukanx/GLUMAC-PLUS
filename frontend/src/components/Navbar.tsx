@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     UtensilsCrossed, Star, ClipboardList, Bookmark,
     LogIn, LogOut, LayoutDashboard,
@@ -14,6 +14,8 @@ export default function Navbar() {
     const { pathname } = useLocation();
     const [scrolled, setScrolled] = useState(false);
     const [menuOtvoren, setMenuOtvoren] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const hamburgerRef = useRef<HTMLButtonElement>(null);
     const uloga = korisnik?.uloga;
     const jeZaposleni = uloga === 'ADMIN' || uloga === 'ZAPOSLENI';
     const jeHome = pathname === '/';
@@ -28,6 +30,19 @@ export default function Navbar() {
     useEffect(() => {
         document.body.style.overflow = menuOtvoren ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
+    }, [menuOtvoren]);
+
+    // Klik van menija (i van hamburgera) zatvara meni
+    useEffect(() => {
+        if (!menuOtvoren) return;
+        const onClickVan = (e: MouseEvent) => {
+            const cilj = e.target as Node;
+            if (menuRef.current?.contains(cilj)) return;
+            if (hamburgerRef.current?.contains(cilj)) return;
+            setMenuOtvoren(false);
+        };
+        document.addEventListener('mousedown', onClickVan);
+        return () => document.removeEventListener('mousedown', onClickVan);
     }, [menuOtvoren]);
 
     const handleLogout = () => {
@@ -98,7 +113,7 @@ export default function Navbar() {
                     {korisnik ? (
                         <>
                             <Link to="/omiljene" className={styles.ikonicaDugme} title="Omiljene">
-                                <Bookmark size={16} strokeWidth={1.5} />
+                                <Bookmark size={16} strokeWidth={2.25} />
                             </Link>
                             <span className={styles.korisnikIme}>{korisnik.ime}</span>
                             <button onClick={handleLogout} className={styles.dugmeOdjava} title="Odjavi se">
@@ -112,20 +127,19 @@ export default function Navbar() {
                     )}
                 </div>
 
-                {/* Mobilni desni ugao — ime i omiljene */}
-                <div className={styles.mobileDesno}>
-                    {korisnik && (
-                        <>
-                            <span className={styles.mobileIme}>{korisnik.ime}</span>
-                            <Link to="/omiljene" className={styles.mobileSrce} onClick={zatvori} title="Omiljene">
-                                <Bookmark size={17} strokeWidth={1.5} />
-                            </Link>
-                        </>
-                    )}
-                </div>
+                {/* Mobilni desni ugao — ime i omiljene (samo kad je ulogovan) */}
+                {korisnik && (
+                    <div className={styles.mobileDesno}>
+                        <span className={styles.mobileIme}>{korisnik.ime}</span>
+                        <Link to="/omiljene" className={styles.mobileSrce} onClick={zatvori} title="Omiljene">
+                            <Bookmark size={17} strokeWidth={2.25} />
+                        </Link>
+                    </div>
+                )}
 
                 {/* Hamburger */}
                 <button
+                    ref={hamburgerRef}
                     className={`${styles.hamburger} ${menuOtvoren ? styles.hamburgerOtvoren : ''}`}
                     onClick={() => setMenuOtvoren(v => !v)}
                     aria-label={menuOtvoren ? 'Zatvori meni' : 'Otvori meni'}
@@ -138,36 +152,36 @@ export default function Navbar() {
 
             {/* Mobilni drop meni */}
             {menuOtvoren && (
-                <div className={`${styles.mobileMenu} ${!svetli ? styles.mobileMenuSvetli : ''}`}>
+                <div className={styles.mobileMenu} ref={menuRef}>
                     <NavLink to="/meni" className={styles.mobilniLink} onClick={zatvori}>
-                        <UtensilsCrossed size={15} strokeWidth={1.5} /> Meni
+                        <UtensilsCrossed size={15} strokeWidth={2.25} /> Meni
                     </NavLink>
                     <NavLink to="/loyalty" className={styles.mobilniLink} onClick={zatvori}>
-                        <Star size={15} strokeWidth={1.5} /> Loyalty
+                        <Star size={15} strokeWidth={2.25} /> Loyalty
                     </NavLink>
                     {korisnik && !jeZaposleni && (
                         <>
                             <NavLink to="/istorija" className={styles.mobilniLink} onClick={zatvori}>
-                                <ClipboardList size={15} strokeWidth={1.5} /> Porudžbine
+                                <ClipboardList size={15} strokeWidth={2.25} /> Porudžbine
                             </NavLink>
                             <NavLink to="/omiljene" className={styles.mobilniLink} onClick={zatvori}>
-                                <Bookmark size={15} strokeWidth={1.5} /> Omiljene
+                                <Bookmark size={15} strokeWidth={2.25} /> Omiljene
                             </NavLink>
                         </>
                     )}
                     {jeZaposleni && (
                         <NavLink to="/panel" className={styles.mobilniLink} onClick={zatvori}>
-                            <LayoutDashboard size={15} strokeWidth={1.5} /> Panel
+                            <LayoutDashboard size={15} strokeWidth={2.25} /> Panel
                         </NavLink>
                     )}
                     <div className={styles.mobilniDivider} />
                     {korisnik ? (
                         <button onClick={handleLogout} className={styles.mobilniOdjava}>
-                            <LogOut size={15} strokeWidth={1.5} /> Odjavi se
+                            <LogOut size={15} strokeWidth={2.25} /> Odjavi se
                         </button>
                     ) : (
-                        <NavLink to="/login" className={styles.mobilniLink} onClick={zatvori}>
-                            <LogIn size={15} strokeWidth={1.5} /> Prijava
+                        <NavLink to="/login" className={`${styles.mobilniLink} ${styles.mobilniPrijava}`} onClick={zatvori}>
+                            <LogIn size={15} strokeWidth={2.25} /> Prijava
                         </NavLink>
                     )}
                 </div>
