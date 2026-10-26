@@ -1,14 +1,15 @@
-# React ↔ Angular — poređenje implementacija (TKI)
+# React ↔ Angular ↔ Android — poređenje implementacija (TKI)
 
 Dokument prati **istu aplikaciju** (Glumac Plus — naručivanje palačinki) implementiranu u
-dva framework-a. Backend (Spring Boot) je isti; obe verzije gađaju iste REST endpointe.
+**tri tehnologije**. Backend (Spring Boot) je isti; sve tri verzije gađaju iste REST endpointe.
 
 - **React verzija:** `frontend/` — gotova, predata.
-- **Angular verzija:** `frontend-angular/` — vertikalni isečak korisničkog toka
+- **Angular verzija:** `frontend-angular/` — vertikalni isečak korisničkog toka.
+- **Android verzija:** `glumacplusandroid/` — native, **Kotlin + Jetpack Compose**, isti isečak
   (Login/Register → Meni → Korpa/Naručivanje → Status → Istorija).
 
-Cilj poređenja: pokazati kako se **isti koncepti UI tehnologija** rešavaju u oba alata,
-sloj po sloj. (Treća tačka poređenja — native Android — dolazi kasnije.)
+Cilj poređenja: pokazati kako se **isti koncepti UI tehnologija** rešavaju u sva tri alata,
+sloj po sloj. Za detaljne mapiranje Android-a vidi sekciju **„Android — Kotlin + Jetpack Compose"** niže.
 
 ---
 
@@ -30,6 +31,24 @@ sloj po sloj. (Treća tačka poređenja — native Android — dolazi kasnije.)
 **Arhitektonski potpis Angular verzije:** standalone komponente, `inject()`, `BehaviorSubject`
 servisi (umesto Context), scoped CSS (umesto CSS Modules), template-driven forme (`ngModel`),
 `loadComponent` lazy rute.
+
+## Inventar Android projekta (`glumacplusandroid/`)
+
+| Sloj | Fajlovi | Status |
+|---|---|---|
+| Bootstrap | `MainActivity.kt` (setContent + ViewModel-i), `AndroidManifest.xml` | gotovo |
+| Build/deps | `app/build.gradle.kts`, `gradle/libs.versions.toml` (Retrofit, coroutines, Navigation, DataStore, ikonice) | gotovo |
+| Dizajn (tema) | `ui/theme/{Color,Theme,Type}.kt` (Calm Editorial: Fraunces/Inter/JetBrains Mono, bež paleta) | gotovo |
+| Modeli | `data/model/{Korisnik,Proizvod,Porudzbina}.kt` (`@Serializable data class`) | gotovo |
+| Mreža | `data/remote/{ApiService,ApiClient}.kt` (Retrofit interfejs + klijent) | gotovo |
+| Lokalno | `data/local/TokenStore.kt` (DataStore) | gotovo |
+| ViewModel-i (stanje) | `viewmodel/{Auth,Cart,Meni,Istorija,Status,AktivnaPorudzbina}ViewModel.kt` (`StateFlow`) | gotovo |
+| Navigacija | `ui/AppNav.kt` (`NavHost` + rute) | gotovo |
+| Ekrani | `ui/{auth,meni,korpa,istorija,status}/…Screen.kt` (`@Composable`) | gotovo |
+
+**Arhitektonski potpis Android verzije:** `@Composable` funkcije, `ViewModel` + `StateFlow` (umesto
+Context/servisa), Retrofit + Coroutines (`suspend`/`Flow`), Navigation Compose (`NavHost`), DataStore
+(umesto localStorage), `data class` modeli, Material 3 tema. Backend host iz emulatora = **`10.0.2.2:8080`**.
 
 ---
 
@@ -357,37 +376,180 @@ toggleRazvij(id) { this.razvijeni.has(id) ? this.razvijeni.delete(id) : this.raz
 
 ---
 
-## Sažetak razlika (cheat-sheet)
+## Android — Kotlin + Jetpack Compose (mapiranje po slojevima)
 
-| Koncept | React | Angular |
+Native Android, deklarativni UI (Jetpack Compose) — konceptualno najbliži React/Angular-u
+(stanje → UI se sam prekucava). Ključna razlika: nije browser (nema DOM/CSS/fetch/CORS),
+nego Kotlin + Android SDK.
+
+### A1: Bootstrap & DI — `MainActivity` + `viewModel()`
+
+```kotlin
+// MainActivity.kt — ulazna tačka; globalni ViewModel-i se kreiraju na nivou Activity-ja i dele.
+class MainActivity : ComponentActivity() {
+  override fun onCreate(...) {
+    setContent {
+      GlumacplusandroidTheme {
+        val auth: AuthViewModel = viewModel()      // Activity-scoped → deli se svim ekranima
+        val cart: CartViewModel = viewModel()
+        val aktivna: AktivnaPorudzbinaViewModel = viewModel()
+        AppNav(auth, cart, aktivna)
+      }
+    }
+  }
+}
+```
+- React ugnježdeni `<Provider>` / Angular `providedIn:'root'` ↔ Android **`viewModel()` skopiran na Activity** (deli se) ili na ekran (lokalno stanje).
+- HTTP: `fetch`/`HttpClient` ↔ **Retrofit** (`ApiClient`), registruje se ručno u `object`-u (nema DI kontejnera).
+- Env: `import.meta.env` / `environment.ts` ↔ `const BASE_URL = "http://10.0.2.2:8080/"` u `ApiClient`.
+
+### A2: Modeli — `data class`
+
+```kotlin
+@Serializable
+data class Proizvod(val id: Long, val naziv: String, val opis: String? = null,
+                    val cena: Double, val tip: String, val alergeniNazivi: List<String>? = null)
+```
+- TS `interface` ↔ Kotlin **`data class`** (+ `@Serializable` za JSON). Centralizovano u `data/model/` (kao Angular).
+- ⚠️ **Zamka (nije u web verzijama):** Kotlin je strogo tipiziran — backend šalje decimalne brojeve
+  (`brojBodova: 0.0`, `kolicina: 1.0`), a `Int` puca na `1.0`. TS `number` to nikad ne primeti.
+  Rešenje: takva polja su `Double`. **Konkretna prednost dinamičkog tipiziranja u web-u.**
+
+### A3: Deljeno stanje — `ViewModel` + `StateFlow`
+
+```kotlin
+class AuthViewModel(app: Application) : AndroidViewModel(app) {
+  private val _korisnik = MutableStateFlow<Korisnik?>(null)
+  val korisnik: StateFlow<Korisnik?> = _korisnik.asStateFlow()   // javno read-only
+  fun login(email, lozinka, onUspeh) = viewModelScope.launch {
+    val res = api.login(LoginRequest(email, lozinka))            // suspend poziv (coroutine)
+    _korisnik.value = res.korisnik; tokenStore.sacuvaj(...)
+  }
+}
+```
+| | React Context | Angular Service | **Android ViewModel** |
+|---|---|---|---|
+| Stanje | `useState` | `BehaviorSubject` | **`MutableStateFlow`** |
+| Javno | vrednost iz hooka | `Observable` (`xxx$`) | **`StateFlow` (`asStateFlow`)** |
+| Čitanje u UI | `useAuth()` | `\| async` / subscribe | **`collectAsState()`** |
+| Async I/O | `fetch` u komponenti | `HttpClient` u servisu | **`suspend` + `viewModelScope.launch`** |
+
+➡️ `private _xxx MutableStateFlow` + `public xxx StateFlow` je **tačna paralela** Angular
+`private Subject` + `public Observable`. HTTP je u ViewModel-u (kao Angular servis), ne u UI-ju.
+
+### A4: Zaštita ruta — `LaunchedEffect` redirect
+
+Nema deklarativnog guard-a; koristi se reakcija na auth stanje u navigaciji:
+```kotlin
+LaunchedEffect(korisnik) {
+  if (korisnik != null && ruta != MENI) nav.navigate(MENI) { popUpTo(LOGIN){inclusive=true} }
+  else if (korisnik == null && ...) nav.navigate(LOGIN) { popUpTo(0){inclusive=true} }
+}
+```
+- React `<PrivateRoute>` / Angular `canActivate` ↔ Android **`LaunchedEffect` koji reaguje na `StateFlow`** i preusmerava. Manje deklarativno, ali isti efekat.
+
+### A5: Komponente — `@Composable` (props ↔ parametri, callback ↔ lambda)
+
+```kotlin
+@Composable
+fun ProizvodKartica(p: Proizvod, kolicina: Int,
+                    onDodaj: () -> Unit, onPovecaj: () -> Unit, onSmanji: () -> Unit) {
+  Card { Column {
+    Text(p.naziv, style = MaterialTheme.typography.titleMedium)
+    if (kolicina == 0) Button(onClick = onDodaj) { Text("Dodaj") }
+    else Row { IconButton(onSmanji){...}; Text("$kolicina"); IconButton(onPovecaj){...} }
+  } }
+}
+```
+| | React | Angular | **Android Compose** |
+|---|---|---|---|
+| Ulaz | props | `@Input` | **parametri funkcije** |
+| Izlaz | callback props | `@Output` | **lambda parametri** (`() -> Unit`) |
+| Uslov | `{cond && …}` | `*ngIf` | **`if/when` u Kotlinu** |
+| Lista | `.map()` | `*ngFor` | **`LazyColumn { items(...) }`** (lazy = renderuje samo vidljivo) |
+| Lokalno stanje | `useState` | polje klase | **`remember { mutableStateOf() }`** |
+| Životni ciklus | `useEffect` | `ngOnInit` | **`LaunchedEffect(key)`** |
+
+### A6: Naručivanje + polling (Status)
+
+```kotlin
+// StatusViewModel — polling coroutine loop-om (ekvivalent RxJS timer+switchMap+takeWhile)
+job = viewModelScope.launch {
+  while (isActive) {
+    val p = api.porudzbina(bearer, id); _status.value = p.status
+    if (p.status == REALIZOVANA || p.status == OTKAZANA) break   // takeWhile
+    delay(8000)                                                   // timer(8000)
+  }
+}
+```
+- React `setInterval`/Angular `timer(0,8000)+switchMap` ↔ Android **coroutine `while+delay`** (ili `flow{}`). `switchMap` (auto-otkazivanje) ovde nije potreban jer je loop sekvencijalan.
+
+### A7: Navigacija i globalni FloatingBubble
+
+```kotlin
+NavHost(nav, startDestination = LOGIN) {
+  composable(MENI) { MeniScreen(...) }
+  composable("status/{porudzbinaId}",                              // ruta sa argumentom
+    arguments = listOf(navArgument("porudzbinaId"){ type = NavType.LongType })
+  ) { entry -> StatusScreen(id = entry.arguments!!.getLong("porudzbinaId"), ...) }
+}
+```
+- React `<Routes>` / Angular `Routes`+`<router-outlet>` ↔ Android **`NavHost` + `composable(ruta)`**.
+- Lazy: `React.lazy` / `loadComponent` ↔ ekrani su obične funkcije (nema lazy chunk-ova — sve u APK-u).
+- `FloatingBubble` (Angular) ↔ Compose **`ExtendedFloatingActionButton`** u `Scaffold`-u, uslovljen `AktivnaPorudzbinaViewModel` stanjem.
+
+### Dizajn — kako je postignut isti „Calm Editorial" izgled
+
+| | React/Angular (web) | **Android (Compose)** |
 |---|---|---|
-| Komponenta | funkcija + JSX | klasa + dekorator + HTML template |
-| Deljeno stanje | Context + hooks | servis + `BehaviorSubject` |
-| Reaktivnost | re-render (`useState`) | emit/subscribe (`Observable`) |
-| Props | props objekat | `@Input` |
-| Događaji ka roditelju | callback props | `@Output() EventEmitter` |
-| Uslovni prikaz | `{cond && ...}` / ternar | `*ngIf` / `ng-template` |
-| Lista | `.map()` | `*ngFor` |
-| Životni ciklus | `useEffect` | `ngOnInit`/`ngOnDestroy`/`@HostListener` |
-| Forma | controlled `value`+`onChange` | `[(ngModel)]` two-way |
-| Rute | `<Route>` JSX | `Routes` niz |
-| Zaštita rute | `<PrivateRoute>` | `canActivate:[guard]` |
-| Lazy | `React.lazy` | `loadComponent` |
-| DI | nema (props/context) | `inject()` / konstruktor |
-| Stilovi | CSS Modules | scoped component CSS |
-| HTTP | `fetch` | `HttpClient` (Observable) |
-| Env | `import.meta.env` (Vite) | `environment.ts` |
-| Ikone | `lucide-react` | `lucide-angular` |
-| Animacije | `motion` | CSS / `@angular/animations` |
+| Boje | CSS varijable (`--paper/--ink/--rust`) | **Material 3 `ColorScheme`** (`lightColorScheme(...)`) |
+| Fontovi | Google Fonts `@import` | **spakovani TTF-ovi** (`res/font/`) + `FontFamily` |
+| Tipografija | CSS klase | **`Typography` (Fraunces italik naslovi, Inter, JetBrains Mono labele)** |
+| Komponente stil | scoped CSS / CSS Modules | **Material 3 komponente** (`Card`, `TopAppBar`, `Button`) + tema |
+| Uglovi | oštri (0px, editorial) | zaobljeni (mobilni standard) — svesno odstupanje |
 
 ---
 
-## Status i sledeći koraci
+## Sažetak razlika (cheat-sheet)
 
-- **Faza A (gotovo):** temeljni slojevi + Login/Register + app shell + rute.
-- **Faza B (gotovo):** Meni stranica + Korpa (drawer) + naručivanje + `AktivnaPorudzbinaService`.
-- **Faza C (gotovo):** Status modal (RxJS polling) + `getJedan` u `PorudzbinaService` + Istorija stranica.
+| Koncept | React | Angular | Android (Kotlin + Compose) |
+|---|---|---|---|
+| UI jedinica | funkcija + JSX | klasa + HTML template | **`@Composable` funkcija** |
+| Deljeno stanje | Context + hooks | servis + `BehaviorSubject` | **`ViewModel` + `StateFlow`** |
+| Reaktivnost | re-render (`useState`) | emit/subscribe (`Observable`) | **emit/collect (`StateFlow`)** |
+| Čitanje stanja u UI | `useXxx()` | `\| async` / subscribe | **`collectAsState()`** |
+| Ulaz (props) | props objekat | `@Input` | **parametri funkcije** |
+| Događaji ka roditelju | callback props | `@Output() EventEmitter` | **lambda parametri** |
+| Uslovni prikaz | `{cond && ...}` / ternar | `*ngIf` / `ng-template` | **`if`/`when` (Kotlin)** |
+| Lista | `.map()` | `*ngFor` | **`LazyColumn { items() }`** |
+| Lokalno stanje | `useState` | polje klase | **`remember { mutableStateOf() }`** |
+| Životni ciklus | `useEffect` | `ngOnInit`/`ngOnDestroy` | **`LaunchedEffect(key)`** |
+| Forma | controlled `value`+`onChange` | `[(ngModel)]` two-way | **`value` + `onValueChange`** |
+| Rute | `<Route>` JSX | `Routes` niz | **`NavHost { composable() }`** |
+| Zaštita rute | `<PrivateRoute>` | `canActivate:[guard]` | **`LaunchedEffect` redirect** |
+| DI | nema (props/context) | `inject()` | **`viewModel()` (scope)** |
+| HTTP | `fetch` | `HttpClient` (Observable) | **Retrofit (`suspend`)** |
+| Async | Promise/async | RxJS Observable | **Coroutines / `Flow`** |
+| Polling | `setInterval` | `timer`+`switchMap` | **`while`+`delay` (coroutine)** |
+| Lokalno čuvanje | `localStorage` | `localStorage` | **DataStore** |
+| Env / base URL | `import.meta.env` | `environment.ts` | **konstanta (`10.0.2.2:8080`)** |
+| Modeli | `interface` | `interface` | **`data class` (`@Serializable`)** |
+| Stilovi | CSS Modules | scoped CSS | **Material 3 tema + `Modifier`** |
+| Ikone | `lucide-react` | `lucide-angular` | **`material-icons-extended`** |
+| Animacije | `motion` | CSS | **Compose animacije (izostavljeno)** |
 
-**Vertikalni isečak je završen.** Sledeća tačka poređenja: native Android implementacija.
+---
 
-Detaljan plan: vidi `/home/dukanx/.claude/plans/radiant-humming-fountain.md` (ili sažetak u sesiji).
+## Status
+
+Sve tri implementacije pokrivaju **isti vertikalni isečak** (Register → Login → Meni → Korpa →
+Naručivanje → Status → Istorija), gađaju **isti Spring Boot backend**, i imaju isti „Calm Editorial" dizajn.
+
+- **React** (`frontend/`) — ceo app, predat.
+- **Angular** (`frontend-angular/`) — vertikalni isečak, gotov i verifikovan.
+- **Android** (`glumacplusandroid/`) — Kotlin + Jetpack Compose, vertikalni isečak, gotov i verifikovan
+  (uklj. globalni FloatingBubble, praćenje aktivne porudžbine, editorial tema sa Fraunces/Inter/JetBrains Mono).
+
+**Glavna pouka poređenja:** deklarativni UI + reaktivno stanje su isti mentalni model u sva tri
+alata (React hooks ↔ Angular RxJS ↔ Compose `StateFlow`); najveće razlike su u **jeziku i platformi**
+(TS dinamički tipovi ↔ Kotlin strogi tipovi; browser DOM/CSS/fetch/CORS ↔ native Android SDK/Retrofit/`10.0.2.2`).
